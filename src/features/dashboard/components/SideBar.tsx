@@ -9,9 +9,9 @@ import {
   Bell,
   LogOut,
   Menu,
-  X,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
+import logo from "@/assets/Logotipo.png";
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -68,16 +68,14 @@ export const Sidebar = () => {
           lg:translate-x-0 lg:shadow-none
         `}
       >
-        <div className="mb-12 flex justify-between items-center text-center lg:block">
-          <h2 className="text-2xl font-bold tracking-wider w-full lg:text-center text-left">
-            Logo
-          </h2>
-          <button
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="lg:hidden text-[#E8BC6E] hover:text-white transition-colors"
-          >
-            <X size={24} />
-          </button>
+        <div className="lg:justify-center">
+          <div className="flex justify-center items-center">
+            <img
+              src={logo}
+              alt="Dulces Momentos"
+              className="h-40 object-fill"
+            />
+          </div>
         </div>
 
         <nav className="flex-1 space-y-3">
