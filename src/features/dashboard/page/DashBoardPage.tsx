@@ -68,7 +68,7 @@ export const DashboardPage = () => {
         <Card className="flex items-center justify-between p-6">
           <div>
             <p className="text-sm text-gray-500 font-medium mb-1">Ingresos de Hoy</p>
-            <h2 className="text-3xl font-bold text-[#2D2D2D]">$1,250</h2>
+            <h2 className="text-3xl font-bold text-[#2D2D2D]">C$1,250</h2>
             <div className="flex items-center mt-2 text-green-600 text-sm font-medium">
               <ArrowUpRight size={16} className="mr-1" />
               <span>+12% ayer</span>
@@ -159,12 +159,12 @@ export const DashboardPage = () => {
                 axisLine={false} 
                 tickLine={false} 
                 tick={{ fill: '#9CA3AF', fontSize: 12 }} 
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `C$${value}`}
               />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 itemStyle={{ color: '#593D31', fontWeight: 'bold' }}
-                formatter={(value) => [`$${value}`, 'Ingresos']}
+                formatter={(value) => [`C$${value}`, 'Ingresos']}
               />
               <Area
                 type="monotone"

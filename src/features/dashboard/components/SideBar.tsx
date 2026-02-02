@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -9,23 +9,30 @@ import {
   Bell,
   LogOut,
   Menu,
+  X,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import logo from "@/assets/Logotipo.png";
 
 export const Sidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: ShoppingBag, label: "Productos", active: false },
-    { icon: PlusCircle, label: "Nuevo Producto", active: false },
-    { icon: ClipboardList, label: "Nueva Orden", active: false },
-    { icon: Users, label: "Usuarios", active: false },
-    { icon: Bell, label: "Reportes", active: false },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: ShoppingBag, label: "Productos", path: "/productos" },
+    { icon: PlusCircle, label: "Nuevo Producto", path: "/nuevo-producto" },
+    { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },
+    { icon: Users, label: "Usuarios", path: "/usuarios" },
+    { icon: Bell, label: "Reportes", path: "/reportes" },
   ];
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsMobileMenuOpen(false);
+  };
 
   const handleLogoutClick = () => {
     setIsLogoutDialogOpen(true);
@@ -68,38 +75,51 @@ export const Sidebar = () => {
           lg:translate-x-0 lg:shadow-none
         `}
       >
-        <div className="lg:justify-center">
-          <div className="flex justify-center items-center">
+        <div className="mb-8 flex flex-col items-center relative">
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="lg:hidden absolute top-0 right-0 text-[#E8BC6E] hover:text-white transition-colors"
+          >
+            <X size={28} />
+          </button>
+
+          <div className="w-full flex justify-center mt-2 lg:mt-0">
             <img
               src={logo}
               alt="Dulces Momentos"
-              className="h-40 object-fill"
+              className="h-32 w-auto object-contain"
             />
           </div>
         </div>
 
         <nav className="flex-1 space-y-3">
-          {menuItems.map((item, index) => (
-            <button
-              key={index}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                item.active
-                  ? "bg-[#E8BC6E] text-white shadow-lg translate-x-1"
-                  : "text-gray-300 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <item.icon
-                size={20}
-                className={
-                  item.active
-                    ? "text-white"
-                    : "text-[#E8BC6E] group-hover:text-white"
-                }
-              />
-              <span className="font-medium text-sm">{item.label}</span>
-            </button>
-          ))}
+          {menuItems.map((item, index) => {
+            const isActive =
+              location.pathname === item.path ||
+              (item.path !== "/" && location.pathname.startsWith(item.path));
+
+            return (
+              <button
+                key={index}
+                onClick={() => handleNavigation(item.path)}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+                  isActive
+                    ? "bg-[#E8BC6E] text-white shadow-lg translate-x-1"
+                    : "text-gray-300 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <item.icon
+                  size={20}
+                  className={
+                    isActive
+                      ? "text-white"
+                      : "text-[#E8BC6E] group-hover:text-white"
+                  }
+                />
+                <span className="font-medium text-sm">{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
 
         <div className="mt-auto">

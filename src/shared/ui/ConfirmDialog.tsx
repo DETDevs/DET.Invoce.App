@@ -7,6 +7,9 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   title: string;
   message: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: "danger" | "warning" | "default";
 }
 
 export const ConfirmDialog = ({
@@ -15,15 +18,34 @@ export const ConfirmDialog = ({
   onConfirm,
   title,
   message,
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
+  variant = "default",
 }: ConfirmDialogProps) => {
   if (!isOpen) return null;
 
+  const getButtonStyles = () => {
+    switch (variant) {
+      case "danger":
+        return "bg-[#d87c68] hover:bg-[#c05e48] text-white";
+      case "warning":
+        return "bg-[#E8BC6E] hover:bg-[#dca34b] text-white";
+      default:
+        return "bg-[#E8BC6E] hover:bg-[#dca34b] text-white";
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
         <div className="flex justify-between items-center p-5 border-b border-gray-100">
           <h3 className="text-xl font-bold text-[#593D31] flex items-center gap-2">
-            <AlertTriangle className="text-[#E8BC6E]" size={24} />
+            <AlertTriangle
+              className={
+                variant === "danger" ? "text-[#d87c68]" : "text-[#E8BC6E]"
+              }
+              size={24}
+            />
             {title}
           </h3>
           <button
@@ -43,13 +65,13 @@ export const ConfirmDialog = ({
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
           >
-            Cancelar
+            {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className="px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] shadow-md transition-colors"
+            className={`px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors ${getButtonStyles()}`}
           >
-            Sí, salir
+            {confirmText}
           </button>
         </div>
       </div>
