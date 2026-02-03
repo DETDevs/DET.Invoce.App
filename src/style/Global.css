@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "swiper/css/free-mode";
+
+.product-carousel-swiper .swiper-button-prev,
+.product-carousel-swiper .swiper-button-next {
+  color: #593d31;
+  background-color: rgba(255, 255, 255, 0.95);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
+}
+
+.product-carousel-swiper .swiper-button-prev::after,
+.product-carousel-swiper .swiper-button-next::after {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.product-carousel-swiper .swiper-button-disabled {
+  opacity: 0;
+  pointer-events: none;
+}

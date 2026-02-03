@@ -80,7 +80,7 @@ export const ImageUploadField = ({
               size={40}
             />
             <p className="mt-2 text-sm font-medium text-gray-600">
-              <span className="text-[#E8BC6E] font-bold">
+              <span className="text-[#E8BC6E] font-bold px-1">
                 Haz clic para subir
               </span>
               o arrastra y suelta

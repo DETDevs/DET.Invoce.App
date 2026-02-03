@@ -3,66 +3,57 @@ import { X, Save } from "lucide-react";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
 
-interface Product {
+interface User {
   id: number;
   name: string;
-  price: number;
-  stock: number;
-  category: string;
+  email: string;
+  role: string;
+  status: string;
   image: string;
 }
 
-interface EditProductModalProps {
+interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: Product | null;
-  onSave: (updatedProduct: Product) => void;
+  user: User | null;
+  onSave: (updatedUser: User) => void;
 }
 
-export const EditProductModal = ({
+export const EditUserModal = ({
   isOpen,
   onClose,
-  product,
+  user,
   onSave,
-}: EditProductModalProps) => {
-  const [formData, setFormData] = useState<Product | null>(null);
+}: EditUserModalProps) => {
+  const [formData, setFormData] = useState<User | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (product) {
-      setFormData(product);
+    if (user) {
+      setFormData(user);
       setNewImageFile(null);
     }
-  }, [product]);
+  }, [user]);
 
   if (!isOpen || !formData) return null;
 
   const isFormValid =
     formData.name.trim() !== "" &&
-    formData.price > 0 &&
-    formData.stock >= 0 &&
-    (formData.image || newImageFile);
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (!e.target.value) {
-      toast.error(`El campo ${e.target.name} no puede estar vacío`, {
-        id: `error-${e.target.name}`,
-      });
-    }
-  };
+    formData.email.trim() !== "" &&
+    formData.role.trim() !== "";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isFormValid) {
-      toast.error("Por favor revisa los campos obligatorios");
+      toast.error("Todos los campos son obligatorios");
       return;
     }
 
     if (formData) {
-      console.log("Actualizando producto...", { ...formData, newImageFile });
+      console.log("Actualizando usuario...", { ...formData, newImageFile });
       onSave(formData);
-      toast.success("Producto actualizado correctamente");
+      toast.success("Usuario actualizado correctamente");
       onClose();
     }
   };
@@ -71,7 +62,7 @@ export const EditProductModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
-          <h3 className="text-2xl font-bold text-[#593D31]">Editar Producto</h3>
+          <h3 className="text-2xl font-bold text-[#593D31]">Editar Usuario</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -81,10 +72,10 @@ export const EditProductModal = ({
         </div>
 
         <div className="overflow-y-auto p-6 md:p-8">
-          <form id="edit-form" onSubmit={handleSubmit}>
+          <form id="edit-user-form" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-6">
               <ImageUploadField
-                label="Imagen del Producto"
+                label="Foto de Perfil"
                 currentImage={formData.image}
                 onImageSelected={setNewImageFile}
               />
@@ -92,83 +83,62 @@ export const EditProductModal = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Nombre del Producto
+                    Nombre Completo
                   </label>
                   <input
                     type="text"
-                    name="nombre"
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    onBlur={handleBlur}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Precio
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-3 text-gray-400">
-                      C$
-                    </span>
-                    <input
-                      type="number"
-                      name="precio"
-                      value={formData.price}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          price: Number(e.target.value),
-                        })
-                      }
-                      onBlur={handleBlur}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Cantidad
-                  </label>
-                  <input
-                    type="number"
-                    name="stock"
-                    value={formData.stock}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        stock: Number(e.target.value),
-                      })
-                    }
-                    onBlur={handleBlur}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                   />
                 </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Categoría
+                    Correo Electrónico
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                    Rol
                   </label>
                   <select
-                    value={formData.category}
+                    value={formData.role}
                     onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
+                      setFormData({ ...formData, role: e.target.value })
                     }
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D] appearance-none bg-no-repeat bg-right"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: "right 1rem center",
-                      backgroundSize: "1.5em 1.5em",
-                    }}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                   >
-                    <option value="Cake">Pasteles</option>
-                    <option value="Panes">Panes</option>
-                    <option value="Pastry">Repostería</option>
-                    <option value="Bebidas">Bebidas</option>
+                    <option value="Admin">Administrador</option>
+                    <option value="Vendedor">Vendedor</option>
+                    <option value="Pastelero">Pastelero</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                    Estado
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) =>
+                      setFormData({ ...formData, status: e.target.value })
+                    }
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                  >
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
                   </select>
                 </div>
               </div>
@@ -186,7 +156,7 @@ export const EditProductModal = ({
           </button>
           <button
             type="submit"
-            form="edit-form"
+            form="edit-user-form"
             disabled={!isFormValid}
             className={`flex items-center gap-2 px-6 py-3 font-bold rounded-xl shadow-md transition-all active:scale-95 ${
               isFormValid

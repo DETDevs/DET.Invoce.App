@@ -34,7 +34,7 @@ const INITIAL_PRODUCTS = [
     id: 4,
     name: "Red Velvet Slice",
     price: 18,
-    stock: 8,
+    stock: 3,
     category: "Cake",
     image: "https://images.unsplash.com/photo-1616541823729-00fe0aacd32c",
   },
@@ -83,6 +83,25 @@ export const ProductsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const navigate = useNavigate();
+
+  const getStockStatus = (stock: number) => {
+    if (stock <= 5) {
+      return {
+        color: "text-red-600 bg-red-50 border-red-100",
+        label: "Crítico",
+      };
+    } else if (stock <= 15) {
+      return {
+        color: "text-amber-600 bg-amber-50 border-amber-100",
+        label: "Bajo",
+      };
+    } else {
+      return {
+        color: "text-green-600 bg-green-50 border-green-100",
+        label: "Normal",
+      };
+    }
+  };
 
   useEffect(() => {
     let result = products;
@@ -142,12 +161,12 @@ export const ProductsPage = () => {
   };
 
   return (
-    <div className="p-8 bg-[#FDFBF7] min-h-screen">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-6 md:p-8 bg-[#FDFBF7] min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold text-[#2D2D2D]">Productos</h1>
         <button
           onClick={() => navigate("/nuevo-producto")}
-          className="flex items-center gap-2 bg-[#E8BC6E] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#dca34b] transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-[#E8BC6E] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#dca34b] transition-colors shadow-sm w-full md:w-auto justify-center"
         >
           <Plus size={20} />
           Agregar Producto
@@ -168,10 +187,10 @@ export const ProductsPage = () => {
           />
         </div>
 
-        <div className="relative">
+        <div className="relative w-full md:w-auto">
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl font-medium transition-colors ${
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 border rounded-xl font-medium transition-colors w-full md:w-auto ${
               isFilterOpen || filters.category || filters.minPrice
                 ? "border-[#E8BC6E] text-[#593D31] bg-[#F9F1D8]"
                 : "border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -195,7 +214,7 @@ export const ProductsPage = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
@@ -209,7 +228,7 @@ export const ProductsPage = () => {
                   Precio
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Stock
+                  Cantidad
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Categoría
@@ -246,9 +265,21 @@ export const ProductsPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {product.stock}
-                      </div>
+                      {(() => {
+                        const status = getStockStatus(product.stock);
+                        return (
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="text-sm font-bold text-[#2D2D2D]">
+                              {product.stock} und
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${status.color}`}
+                            >
+                              {status.label}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#F3EFE0] text-[#593D31]">
@@ -285,6 +316,69 @@ export const ProductsPage = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="md:hidden">
+          {paginatedProducts.length > 0 ? (
+            paginatedProducts.map((product) => {
+              const status = getStockStatus(product.stock);
+              return (
+                <div
+                  key={product.id}
+                  className="p-4 border-b border-gray-100 last:border-none flex items-center gap-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden border border-gray-100">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-[#2D2D2D] truncate">
+                      {product.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      <span className="text-xs bg-[#F3EFE0] text-[#593D31] px-2 py-0.5 rounded-full font-medium">
+                        {product.category}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-2 text-sm">
+                      <span className="font-bold text-[#E8BC6E]">
+                        C${product.price}
+                      </span>
+                      <span className="text-gray-300">|</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${status.color}`}
+                      >
+                        {product.stock} u.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => handleEditClick(product)}
+                      className="p-2 text-[#E8BC6E] bg-[#F9F1D8]/50 hover:bg-[#F9F1D8] rounded-lg transition-colors"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(product)}
+                      className="p-2 text-red-400 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-8 text-center text-gray-400">
+              No se encontraron productos
+            </div>
+          )}
         </div>
 
         {filteredProducts.length > 0 && (

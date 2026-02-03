@@ -95,7 +95,7 @@ export const DashboardPage = () => {
 
         <Card className="flex items-center justify-between p-6 md:col-span-2 xl:col-span-1">
           <div>
-            <p className="text-sm text-gray-500 font-medium mb-1">Alerta de Stock</p>
+            <p className="text-sm text-gray-500 font-medium mb-1">Alerta de Cantidad</p>
             <h2 className="text-3xl font-bold text-[#2D2D2D]">3 Prod.</h2>
             <div className="flex items-center mt-2 text-red-500 text-sm font-medium">
               <AlertTriangle size={16} className="mr-1" />
