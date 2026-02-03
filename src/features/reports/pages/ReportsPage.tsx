@@ -18,9 +18,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
-  Legend,
 } from "recharts";
 import { Card } from "@/shared/ui/Card";
 import toast from "react-hot-toast";
@@ -95,168 +92,150 @@ export const ReportsPage = () => {
   };
 
   return (
-    <div className="p-6 md:p-8 bg-[#FDFBF7] min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="p-4 md:p-8 bg-[#FDFBF7] min-h-screen w-full max-w-full overflow-x-hidden pb-20">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#2D2D2D]">Reportes</h1>
-          <p className="text-gray-500 mt-1">Resumen financiero y operativo</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#2D2D2D]">
+            Reportes
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">Resumen financiero</p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <div className="relative">
-            <Calendar
-              className="absolute left-3 top-2.5 text-gray-400"
-              size={18}
-            />
+        <div className="flex flex-wrap gap-2 w-full xl:w-auto">
+          <div className="relative flex-grow xl:flex-grow-0 min-w-[200px]">
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#E8BC6E]"
+              className="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#E8BC6E]"
             >
               <option>Hoy</option>
               <option>Esta Semana</option>
               <option>Este Mes</option>
-              <option>Este Año</option>
             </select>
+            <Calendar
+              className="absolute right-2.5 top-2.5 text-gray-400 pointer-events-none"
+              size={16}
+            />
           </div>
 
           <button
             onClick={() => handleExport("PDF")}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center justify-center flex-1 xl:flex-none"
           >
-            <Printer size={18} />
-            <span>Imprimir</span>
+            <Printer size={20} className="mr-2 md:mr-0" />
+            <span className="md:hidden text-sm font-medium">Imprimir</span>
           </button>
-
           <button
             onClick={() => handleExport("Excel")}
-            className="flex items-center gap-2 px-4 py-2 bg-[#593D31] text-white rounded-xl text-sm font-medium hover:bg-[#4a332a] transition-colors"
+            className="p-2 bg-[#593D31] text-white rounded-lg hover:bg-[#4a332a] flex items-center justify-center flex-1 xl:flex-none"
           >
-            <Download size={18} />
-            <span>Exportar CSV</span>
+            <Download size={20} className="mr-2 md:mr-0" />
+            <span className="md:hidden text-sm font-medium">CSV</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="p-6 flex items-center justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+        <Card className="p-5 flex items-center justify-between border-l-4 border-l-[#E8BC6E] shadow-sm">
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">
-              Ventas Totales
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+              Ventas
             </p>
-            <h3 className="text-3xl font-bold text-[#2D2D2D]">C$ 24,500</h3>
-            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full mt-2 inline-block">
-              +15% vs semana pasada
+            <h3 className="text-2xl font-bold text-[#2D2D2D]">C$ 24,500</h3>
+            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+              +15% vs ayer
             </span>
           </div>
-          <div className="p-4 bg-[#F9F1D8] rounded-full text-[#E8BC6E]">
-            <DollarSign size={28} />
+          <div className="p-3 bg-[#F9F1D8] rounded-xl text-[#E8BC6E]">
+            <DollarSign size={24} />
           </div>
         </Card>
 
-        <Card className="p-6 flex items-center justify-between">
+        <Card className="p-5 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">
-              Ticket Promedio
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+              Ticket Prom.
             </p>
-            <h3 className="text-3xl font-bold text-[#2D2D2D]">C$ 350</h3>
-            <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full mt-2 inline-block">
-              -2% vs semana pasada
+            <h3 className="text-2xl font-bold text-[#2D2D2D]">C$ 350</h3>
+            <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+              -2% vs ayer
             </span>
           </div>
-          <div className="p-4 bg-[#F9F1D8] rounded-full text-[#E8BC6E]">
-            <CreditCard size={28} />
+          <div className="p-3 bg-gray-50 rounded-xl text-gray-400">
+            <CreditCard size={24} />
           </div>
         </Card>
 
-        <Card className="p-6 flex items-center justify-between">
+        <Card className="p-5 flex items-center justify-between shadow-sm md:col-span-2 xl:col-span-1">
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">
-              Ganancia Neta
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+              Ganancia
             </p>
-            <h3 className="text-3xl font-bold text-[#2D2D2D]">C$ 8,200</h3>
-            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full mt-2 inline-block">
-              +8% Margen saludable
+            <h3 className="text-2xl font-bold text-[#2D2D2D]">C$ 8,200</h3>
+            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+              +8% margen
             </span>
           </div>
-          <div className="p-4 bg-[#F9F1D8] rounded-full text-[#E8BC6E]">
-            <TrendingUp size={28} />
+          <div className="p-3 bg-green-50 rounded-xl text-green-600">
+            <TrendingUp size={24} />
           </div>
         </Card>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-[#2D2D2D] mb-6">
-            Tendencia de Ingresos vs Costos
-          </h3>
-          <div className="h-80 w-full">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8 w-full min-w-0">
+        <div className="xl:col-span-2 bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 w-full">
+          <h3 className="text-lg font-bold text-[#2D2D2D] mb-4">Finanzas</h3>
+          <div className="h-[250px] md:h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={SALES_DATA}>
+              <AreaChart
+                data={SALES_DATA}
+                margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#E8BC6E" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#E8BC6E" stopOpacity={0} />
                   </linearGradient>
-                  <linearGradient id="colorCostos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#593D31" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#593D31" stopOpacity={0} />
-                  </linearGradient>
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke="#E5E7EB"
+                  stroke="#f0f0f0"
                 />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#9CA3AF" }}
+                  tick={{ fontSize: 11, fill: "#999" }}
                   dy={10}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#9CA3AF" }}
+                  tick={{ fontSize: 11, fill: "#999" }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#fff",
                     borderRadius: "12px",
                     border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                   }}
                 />
-                <Legend iconType="circle" />
                 <Area
                   type="monotone"
                   dataKey="ventas"
                   stroke="#E8BC6E"
+                  strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorVentas)"
-                  strokeWidth={3}
-                  name="Ventas"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="costos"
-                  stroke="#593D31"
-                  fillOpacity={1}
-                  fill="url(#colorCostos)"
-                  strokeWidth={3}
-                  name="Costos"
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-[#2D2D2D] mb-2">
-            Ventas por Categoría
-          </h3>
-          <div className="h-64 w-full flex justify-center items-center relative">
+        <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col w-full h-full min-h-[350px]">
+          <h3 className="text-lg font-bold text-[#2D2D2D] mb-2">Categorías</h3>
+          <div className="flex-1 w-full relative min-h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -278,22 +257,21 @@ export const ReportsPage = () => {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-3xl font-bold text-[#593D31]">100%</span>
+              <span className="text-xs text-gray-400">Total</span>
             </div>
           </div>
-          <div className="space-y-3 mt-4">
+
+          <div className="grid grid-cols-2 gap-3 mt-4">
             {CATEGORY_DATA.map((item, index) => (
-              <div
-                key={item.name}
-                className="flex items-center justify-between text-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-gray-600">{item.name}</span>
-                </div>
-                <span className="font-bold text-[#2D2D2D]">{item.value}%</span>
+              <div key={item.name} className="flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                />
+                <span className="text-xs text-gray-500 font-medium truncate">
+                  {item.name}{" "}
+                  <span className="text-[#2D2D2D] ml-1">{item.value}%</span>
+                </span>
               </div>
             ))}
           </div>
@@ -301,45 +279,37 @@ export const ReportsPage = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-[#2D2D2D]">
-            Transacciones Recientes
-          </h3>
+        <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-[#2D2D2D]">Últimas Ventas</h3>
           <button className="text-sm text-[#E8BC6E] font-bold hover:underline">
-            Ver todas
+            Ver todo
           </button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left min-w-[700px]">
+            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
-                <th className="px-6 py-4">ID Orden</th>
+                <th className="px-6 py-4">ID</th>
                 <th className="px-6 py-4">Fecha</th>
                 <th className="px-6 py-4">Cliente</th>
-                <th className="px-6 py-4">Método</th>
                 <th className="px-6 py-4">Estado</th>
                 <th className="px-6 py-4 text-right">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {RECENT_TRANSACTIONS.map((tx) => (
-                <tr
-                  key={tx.id}
-                  className="hover:bg-[#FDFBF7] transition-colors"
-                >
-                  <td className="px-6 py-4 font-bold text-[#2D2D2D]">
+                <tr key={tx.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 font-medium text-sm text-[#2D2D2D]">
                     {tx.id}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{tx.date}</td>
+                  <td className="px-6 py-4 text-gray-500 text-sm">{tx.date}</td>
                   <td className="px-6 py-4 text-sm text-[#2D2D2D]">
                     {tx.customer}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {tx.method}
-                  </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      className={`px-2 py-1 rounded-lg text-xs font-bold ${
                         tx.status === "Completado"
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
@@ -348,13 +318,52 @@ export const ReportsPage = () => {
                       {tx.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right font-bold text-[#2D2D2D]">
+                  <td className="px-6 py-4 text-right font-bold text-sm text-[#2D2D2D]">
                     C$ {tx.total}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="md:hidden divide-y divide-gray-100">
+          {RECENT_TRANSACTIONS.map((tx) => (
+            <div key={tx.id} className="p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold text-gray-400">
+                      {tx.id}
+                    </span>
+                    <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                      {tx.date.split(",")[0]}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-[#2D2D2D]">{tx.customer}</h4>
+                </div>
+                <span
+                  className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${
+                    tx.status === "Completado"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {tx.status}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center pt-2 border-t border-dashed border-gray-100 mt-1">
+                <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#E8BC6E]"></div>
+                  {tx.method}
+                </span>
+                <span className="text-lg font-bold text-[#2D2D2D]">
+                  C$ {tx.total}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
