@@ -21,6 +21,7 @@ import {
   YAxis,
   CartesianGrid
 } from "recharts";
+import { TopSellerCarousel } from "../components/TopSellerCarousel";
 
 const salesData = [
   { name: "Lun", value: 4000 },
@@ -107,29 +108,7 @@ export const DashboardPage = () => {
           </div>
         </Card>
 
-        <Card className="flex flex-col justify-center relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Package size={100} className="text-[#E8BC6E]" />
-          </div>
-          <h3 className="text-lg font-medium text-[#2D2D2D] mb-6 z-10">
-            Más Vendido
-          </h3>
-          <div className="flex items-center space-x-5 z-10">
-            <div className="w-20 h-20 bg-[#F3EFE0] rounded-2xl flex items-center justify-center shadow-inner">
-              <span className="text-3xl">🍰</span>
-            </div>
-            <div>
-              <span className="text-2xl font-bold text-[#593D31] block">Red Velvet</span>
-              <span className="text-sm text-gray-500">45 unidades vendidas</span>
-            </div>
-          </div>
-          <div className="mt-6 z-10">
-            <div className="w-full bg-gray-100 rounded-full h-2">
-              <div className="bg-[#E8BC6E] h-2 rounded-full" style={{ width: '75%' }}></div>
-            </div>
-            <p className="text-xs text-gray-400 mt-2 text-right">75% del stock vendido</p>
-          </div>
-        </Card>
+        <TopSellerCarousel />
 
         <Card className="md:col-span-2 xl:col-span-2 min-h-[300px]">
           <div className="flex justify-between items-center mb-6">

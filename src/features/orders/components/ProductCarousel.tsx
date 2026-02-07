@@ -1,14 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-
-export type Product = {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-};
+import type { Product } from "../types";
 
 type Props = {
   title: string;
@@ -47,29 +40,37 @@ export const ProductCarousel = ({ title, products, onAdd }: Props) => {
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
   return (
-    <div className="w-full mb-8">
-      <h3 className="text-lg font-bold text-[#2D2D2D] mb-4 px-1">{title}</h3>
+    <div className="w-full mb-8 max-w-full overflow-hidden">
+      {title && (
+        <h3 className="text-lg font-bold text-[#2D2D2D] mb-4 px-4 sm:px-6 lg:px-8">
+          {title}
+        </h3>
+      )}
 
-      <div className="relative group">
+      <div className="relative group px-4 sm:px-6 lg:px-8">
         <button
           onClick={scrollPrev}
           disabled={!canPrev}
-          className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 bg-white/90 p-2 rounded-full shadow-md text-[#593D31] border border-gray-100 hover:scale-110 transition-transform opacity-0 group-hover:opacity-100 disabled:opacity-0 disabled:pointer-events-none"
+          className="hidden sm:flex absolute -left-0 lg:left-2 top-1/2 -translate-y-1/2 z-20 bg-white shadow-lg p-2 rounded-full text-[#593D31] border border-gray-100 hover:scale-110 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 disabled:pointer-events-none"
         >
           <ChevronLeft size={20} />
         </button>
-        <div ref={emblaRef} className="overflow-hidden">
-          <div className="flex gap-4 pb-4 px-1 touch-pan-y">
+
+        <div
+          ref={emblaRef}
+          className="overflow-hidden rounded-xl cursor-grab active:cursor-grabbing"
+        >
+          <div className="flex gap-3 sm:gap-4 pb-4 touch-pan-y pl-1">
             {products.map((product) => (
               <div
                 key={`${product.id}-${product.name}`}
-                className="flex-shrink-0 w-[160px] snap-start"
+                className="flex-shrink-0 w-40 sm:w-48 snap-start"
               >
                 <div
                   onClick={() => onAdd(product)}
                   className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm cursor-pointer hover:border-[#E8BC6E] hover:shadow-md transition-all group/card h-full flex flex-col"
                 >
-                  <div className="relative h-28 w-full rounded-xl overflow-hidden mb-3 bg-gray-50 flex-shrink-0">
+                  <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-3 bg-gray-50 flex-shrink-0">
                     <img
                       src={product.image}
                       alt={product.name}
@@ -98,7 +99,7 @@ export const ProductCarousel = ({ title, products, onAdd }: Props) => {
         <button
           onClick={scrollNext}
           disabled={!canNext}
-          className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 bg-white/90 p-2 rounded-full shadow-md text-[#593D31] border border-gray-100 hover:scale-110 transition-transform opacity-0 group-hover:opacity-100 disabled:opacity-0 disabled:pointer-events-none"
+          className="hidden sm:flex absolute -right-0 lg:right-2 top-1/2 -translate-y-1/2 z-20 bg-white shadow-lg p-2 rounded-full text-[#593D31] border border-gray-100 hover:scale-110 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 disabled:pointer-events-none"
         >
           <ChevronRight size={20} />
         </button>
