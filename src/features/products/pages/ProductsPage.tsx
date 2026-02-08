@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Filter, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Filter, Edit, Trash2, Search, Boxes } from "lucide-react";
 import { FilterPanel } from "../components/FilterPanel";
 import { EditProductModal } from "../components/EditProductModal";
+import { StockAdjustmentModal } from "../components/StockAdjustmentModal";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 
@@ -79,6 +80,7 @@ export const ProductsPage = () => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -149,9 +151,27 @@ export const ProductsPage = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const handleStockClick = (product: any) => {
+    setSelectedProduct(product);
+    setIsStockModalOpen(true);
+  };
+
   const handleSaveProduct = (updatedProduct: any) => {
     setProducts(
       products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)),
+    );
+  };
+
+  const handleSaveStock = (
+    productId: number,
+    newStock: number,
+    reason: string,
+  ) => {
+    setProducts(
+      products.map((p) => (p.id === productId ? { ...p, stock: newStock } : p)),
+    );
+    console.log(
+      `Stock ajustado para producto ${productId}. Nuevo stock: ${newStock}. Razón: ${reason}`,
     );
   };
 
@@ -161,26 +181,29 @@ export const ProductsPage = () => {
   };
 
   return (
-    <div className="p-6 md:p-8 bg-[#FDFBF7] min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <h1 className="text-3xl font-bold text-[#2D2D2D]">Productos</h1>
+    <div className="p-4 md:p-6 lg:p-6 xl:p-8 bg-[#FDFBF7] min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#2D2D2D]">
+          Productos
+        </h1>
         <button
           onClick={() => navigate("/nuevo-producto")}
-          className="flex items-center gap-2 bg-[#E8BC6E] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#dca34b] transition-colors shadow-sm w-full md:w-auto justify-center"
+          className="flex items-center gap-2 bg-[#E8BC6E] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#dca34b] transition-colors shadow-sm w-full sm:w-auto justify-center"
         >
           <Plus size={20} />
-          Agregar Producto
+          <span className="hidden sm:inline">Agregar Producto</span>
+          <span className="sm:hidden">Agregar</span>
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-3 items-center">
         <div className="relative flex-1 w-full">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#E8BC6E] focus:border-[#E8BC6E] sm:text-sm transition duration-150 ease-in-out"
+            className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#E8BC6E]/50 focus:border-[#E8BC6E] sm:text-sm transition duration-150"
             placeholder="Buscar productos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -199,7 +222,6 @@ export const ProductsPage = () => {
             <Filter size={18} />
             Filtrar
           </button>
-
           <FilterPanel
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
@@ -215,26 +237,26 @@ export const ProductsPage = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full whitespace-nowrap">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Imagen
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Precio
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Cantidad
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Stock
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Categoría
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Acción
+                <th className="px-4 lg:px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Acciones
                 </th>
               </tr>
             </thead>
@@ -245,8 +267,8 @@ export const ProductsPage = () => {
                     key={product.id}
                     className="hover:bg-[#FDFBF7] transition-colors group"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="h-12 w-12 rounded-lg overflow-hidden border border-gray-100">
+                    <td className="px-4 lg:px-6 py-3">
+                      <div className="h-10 w-10 lg:h-12 lg:w-12 rounded-lg overflow-hidden border border-gray-100">
                         <img
                           src={product.image}
                           alt={product.name}
@@ -254,26 +276,26 @@ export const ProductsPage = () => {
                         />
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-[#2D2D2D]">
+                    <td className="py-3">
+                      <div className="text-sm font-bold text-[#2D2D2D] truncate max-w-[150px] lg:max-w-none">
                         {product.name}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 lg:px-6 py-3">
                       <div className="text-sm font-medium text-gray-900">
                         C${product.price}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 lg:px-6 py-3">
                       {(() => {
                         const status = getStockStatus(product.stock);
                         return (
                           <div className="flex flex-col items-start gap-1">
                             <span className="text-sm font-bold text-[#2D2D2D]">
-                              {product.stock} und
+                              {product.stock} u.
                             </span>
                             <span
-                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${status.color}`}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border ${status.color}`}
                             >
                               {status.label}
                             </span>
@@ -281,22 +303,31 @@ export const ProductsPage = () => {
                         );
                       })()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#F3EFE0] text-[#593D31]">
+                    <td className="px-4 lg:px-6 py-3">
+                      <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#F3EFE0] text-[#593D31]">
                         {product.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-4 lg:px-6 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
+                          onClick={() => handleStockClick(product)}
+                          className="p-1.5 lg:p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                          title="Inventario"
+                        >
+                          <Boxes size={18} />
+                        </button>
+                        <button
                           onClick={() => handleEditClick(product)}
-                          className="p-2 text-[#E8BC6E] hover:bg-[#F9F1D8] rounded-lg transition-colors border border-transparent hover:border-[#E8BC6E]/30"
+                          className="p-1.5 lg:p-2 text-[#E8BC6E] hover:bg-[#F9F1D8] rounded-lg transition-colors border border-transparent hover:border-[#E8BC6E]/30"
+                          title="Editar"
                         >
                           <Edit size={18} />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(product)}
-                          className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                          className="p-1.5 lg:p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                          title="Eliminar"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -325,7 +356,7 @@ export const ProductsPage = () => {
               return (
                 <div
                   key={product.id}
-                  className="p-4 border-b border-gray-100 last:border-none flex items-center gap-4 hover:bg-gray-50 transition-colors"
+                  className="p-4 border-b border-red-20 border-gray-100 last:border-none flex items-center gap-4 hover:bg-gray-50 transition-colors"
                 >
                   <div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden border border-gray-100">
                     <img
@@ -359,6 +390,12 @@ export const ProductsPage = () => {
 
                   <div className="flex flex-col gap-2">
                     <button
+                      onClick={() => handleStockClick(product)}
+                      className="p-2 text-blue-500 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      <Boxes size={18} />
+                    </button>
+                    <button
                       onClick={() => handleEditClick(product)}
                       className="p-2 text-[#E8BC6E] bg-[#F9F1D8]/50 hover:bg-[#F9F1D8] rounded-lg transition-colors"
                     >
@@ -382,21 +419,20 @@ export const ProductsPage = () => {
         </div>
 
         {filteredProducts.length > 0 && (
-          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-sm text-gray-500">
-              Mostrando{" "}
+          <div className="px-4 md:px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-xs md:text-sm text-gray-500">
               {Math.min(
                 (currentPage - 1) * itemsPerPage + 1,
                 filteredProducts.length,
               )}{" "}
-              a {Math.min(currentPage * itemsPerPage, filteredProducts.length)}{" "}
-              de {filteredProducts.length} productos
+              - {Math.min(currentPage * itemsPerPage, filteredProducts.length)}{" "}
+              de {filteredProducts.length}
             </span>
             <div className="flex gap-2">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 rounded-md border border-gray-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs md:text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Anterior
               </button>
@@ -405,7 +441,7 @@ export const ProductsPage = () => {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 rounded-md border border-gray-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs md:text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Siguiente
               </button>
@@ -421,12 +457,19 @@ export const ProductsPage = () => {
         onSave={handleSaveProduct}
       />
 
+      <StockAdjustmentModal
+        isOpen={isStockModalOpen}
+        onClose={() => setIsStockModalOpen(false)}
+        product={selectedProduct}
+        onSave={handleSaveStock}
+      />
+
       <ConfirmDialog
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Eliminar Producto"
-        message={`¿Estás seguro que deseas eliminar "${selectedProduct?.name}"? Esta acción no se puede deshacer.`}
+        message={`¿Estás seguro que deseas eliminar "${selectedProduct?.name}"?`}
         confirmText="Sí, eliminar"
         variant="danger"
       />

@@ -132,7 +132,7 @@ export const EditProductModal = ({
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Cantidad
+                    Cantidad Minima
                   </label>
                   <input
                     type="number"
