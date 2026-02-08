@@ -4,50 +4,24 @@ import { Save, ArrowLeft } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
+import { useAddProductForm } from "../hooks/useAddProductForm";
 
 export const AddProductPage = () => {
   const navigate = useNavigate();
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    stock: "",
-    category: "Cake",
+  const {
+    formData,
+    setImageFile,
+    isFormValid,
+    handleInputChange,
+    handleBlur,
+    handleSubmit,
+  } = useAddProductForm({
+    onSubmitSuccess: (data) => {
+      console.log("Creando producto:", data);
+      toast.success("Producto creado exitosamente!");
+      navigate("/productos");
+    },
   });
-
-  const isFormValid =
-    formData.name.trim() !== "" &&
-    formData.price.trim() !== "" &&
-    formData.stock.trim() !== "" &&
-    imageFile !== null;
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (!e.target.value) {
-      toast.error(`El campo ${e.target.name} es obligatorio`, {
-        id: e.target.name,
-      });
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!isFormValid) {
-      toast.error("Por favor completa todos los campos requeridos");
-      return;
-    }
-
-    console.log("Creando producto:", { ...formData, imageFile });
-
-    toast.success("Producto creado exitosamente!");
-    navigate("/productos");
-  };
 
   return (
     <div className="p-6 md:p-8 bg-[#FDFBF7] min-h-screen">
@@ -72,11 +46,15 @@ export const AddProductPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 pt-8">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                  <label
+                    htmlFor="name"
+                    className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
+                  >
                     Nombre del Producto <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
+                    id="name"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
@@ -87,7 +65,10 @@ export const AddProductPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                  <label
+                    htmlFor="price"
+                    className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
+                  >
                     Precio <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
@@ -96,6 +77,7 @@ export const AddProductPage = () => {
                     </span>
                     <input
                       type="number"
+                      id="price"
                       name="price"
                       value={formData.price}
                       onChange={handleInputChange}
@@ -107,11 +89,15 @@ export const AddProductPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                  <label
+                    htmlFor="stock"
+                    className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
+                  >
                     Cantidad Inicial <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="number"
+                    id="stock"
                     name="stock"
                     value={formData.stock}
                     onChange={handleInputChange}
@@ -121,8 +107,30 @@ export const AddProductPage = () => {
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                <div>
+                  <label
+                    htmlFor="minStock"
+                    className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
+                  >
+                    Cantidad Mínima <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="minStock"
+                    name="minStock"
+                    value={formData.minStock}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    placeholder="0"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="category"
+                    className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
+                  >
                     Categoría
                   </label>
                   <select

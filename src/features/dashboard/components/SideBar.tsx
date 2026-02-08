@@ -10,13 +10,16 @@ import {
   LogOut,
   Menu,
   X,
+  FileEdit,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import logo from "@/assets/Logotipo.png";
+import { useNavigationBlocker } from "@/shared/context/NavigationBlockerContext";
 
 export const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { blocker } = useNavigationBlocker();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -25,13 +28,18 @@ export const Sidebar = () => {
     { icon: ShoppingBag, label: "Productos", path: "/productos" },
     { icon: PlusCircle, label: "Nuevo Producto", path: "/nuevo-producto" },
     { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },
+    { icon: FileEdit, label: "Realizar Pedido", path: "/realizar-pedido" },
     { icon: Users, label: "Usuarios", path: "/usuarios" },
     { icon: Bell, label: "Reportes", path: "/reportes" },
   ];
 
   const handleNavigation = (path: string) => {
-    navigate(path);
-    setIsMobileMenuOpen(false);
+    if (blocker) {
+      blocker(path);
+    } else {
+      navigate(path);
+      setIsMobileMenuOpen(false);
+    }
   };
 
   const handleLogoutClick = () => {
