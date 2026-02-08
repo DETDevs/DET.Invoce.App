@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import type { CreateOrderFormData, OrderItem, ProductOption } from "../types";
+import type { CreateOrderFormData, OrderItem, ProductOption, PaymentStatus } from "../types";
 
 export const useCreateOrder = () => {
   const [formData, setFormData] = useState<CreateOrderFormData>({
@@ -11,6 +11,31 @@ export const useCreateOrder = () => {
     comments: "",
     status: "Pendiente",
   });
+
+  useEffect(() => {
+    setFormData((prev) => {
+      const total = prev.items.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+      );
+      const deposit = Number(prev.deposit) || 0;
+
+      let newStatus: PaymentStatus = "Pendiente";
+
+      if (total > 0) {
+        if (deposit >= total) {
+          newStatus = "Pagado";
+        } else if (deposit > 0) {
+          newStatus = "Abonado";
+        }
+      }
+
+      if (prev.status !== newStatus) {
+        return { ...prev, status: newStatus };
+      }
+      return prev;
+    });
+  }, [formData.items, formData.deposit]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -57,5 +82,13 @@ export const useCreateOrder = () => {
     toast.success("Pedido creado exitosamente");
   };
 
-  return { formData, handleInputChange, addItem, removeItem, calculateTotal, handleSubmit };
+  return {
+    formData,
+    handleInputChange,
+    addItem,
+    removeItem,
+    calculateTotal,
+    handleSubmit,
+    setFormData,
+  };
 };

@@ -10,6 +10,7 @@ import { ReportsPage } from "./features/reports/pages/ReportsPage";
 import { NewOrderPage } from "./features/orders/pages/NewOrderPage";
 import { CreateCustomOrderPage } from "./features/custom-oders/page/CreateCustomOrderPage";
 import { NavigationBlockerProvider } from "./shared/context/NavigationBlockerContext";
+import { OrdersBoardPage } from "./features/custom-oders/page/OrdersBoardPage";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
 
           <Route path="/" element={<DashboardLayout />}>
             <Route index element={<DashboardPage />} />
+            <Route path="tablero" element={<OrdersBoardPage />} />
             <Route path="productos" element={<ProductsPage />} />
             <Route path="nuevo-producto" element={<AddProductPage />} />
             <Route path="usuarios" element={<UsersPage />} />

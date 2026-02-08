@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   FileEdit,
+  Kanban,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import logo from "@/assets/Logotipo.png";
@@ -25,6 +26,7 @@ export const Sidebar = () => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: Kanban, label: "Tablero Producción", path: "/tablero" },
     { icon: ShoppingBag, label: "Productos", path: "/productos" },
     { icon: PlusCircle, label: "Nuevo Producto", path: "/nuevo-producto" },
     { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },

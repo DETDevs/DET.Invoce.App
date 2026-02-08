@@ -1,4 +1,5 @@
-export type OrderStatus = 'Pendiente' | 'Pagado';
+export type PaymentStatus = 'Pendiente' | 'Abonado' | 'Pagado';
+export type OrderStatus = 'pending' | 'production' | 'ready' | 'delivered';
 
 export interface OrderItem {
   productId: number;
@@ -14,7 +15,19 @@ export interface CreateOrderFormData {
   items: OrderItem[];
   deposit?: number;
   comments?: string;
-  status: OrderStatus;
+  status: PaymentStatus;
 }
 
 export type ProductOption = { id: number; name: string; price: number };
+
+export interface Order {
+  id: string;
+  customer: string;
+  items: string[];
+  total: number;
+  deposit: number;
+  paymentStatus: PaymentStatus;
+  dueDate: string;
+  dueTime: string;
+  status: OrderStatus;
+}
