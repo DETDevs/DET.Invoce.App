@@ -73,10 +73,11 @@ export const useOrderLogic = () => {
     };
 
     const handleRequestCancel = () => {
-        setPendingPath(null);
+    setPendingPath(null); // This is a manual cancel, not a navigation one.
         if (cart.length === 0) {
             setIsCartOpen(false);
         } else {
+      setIsCartOpen(false); // Close the summary panel to show the dialog
             setDialogConfig({
                 title: "Cancelar Orden",
                 message:
