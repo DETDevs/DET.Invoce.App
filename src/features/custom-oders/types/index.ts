@@ -16,6 +16,7 @@ export interface CreateOrderFormData {
   deposit?: number;
   comments?: string;
   status: PaymentStatus;
+  dueDate: string;
 }
 
 export type ProductOption = { id: number; name: string; price: number };
@@ -28,6 +29,5 @@ export interface Order {
   deposit: number;
   paymentStatus: PaymentStatus;
   dueDate: string;
-  dueTime: string;
   status: OrderStatus;
 }

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import {
+  Coins,
   X,
   Printer,
-  CreditCard,
   FileText,
   User,
   Clock,
@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Wallet,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { type Order, type OrderStatus } from "../types";
 
 interface Props {
@@ -47,50 +48,68 @@ export const OrderDetailsModal = ({
 
   const handleConfirmPayment = () => {
     const amount = Number(paymentAmount);
-    if (amount > 0 && amount <= remaining) {
-      onRegisterPayment(order.id, amount);
+    if (amount >= remaining) {
+      onRegisterPayment(order.id, remaining);
       setIsPaymentMode(false);
       setPaymentAmount("");
+      const change = amount - remaining;
+      if (change > 0) {
+        toast.success(`Cambio a entregar: C$ ${change.toFixed(2)}`, {
+          icon: "💰",
+        });
+      }
     }
   };
 
   const renderFooterActions = () => {
     if (isPaymentMode) {
+      const amount = Number(paymentAmount) || 0;
+      const change = amount > remaining ? amount - remaining : 0;
+
       return (
-        <div className="flex gap-3 ml-auto w-full justify-end items-center animate-fade-in">
-          <span className="text-sm font-bold text-gray-500 mr-2">
-            Monto a cobrar:
+        <div className="flex gap-2 md:gap-3 ml-auto w-full justify-end items-center animate-fade-in flex-wrap">
+          {change > 0 && (
+            <div className="flex items-center gap-2 mr-auto rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-green-800 animate-fade-in">
+              <Coins size={20} className="text-green-600" />
+              <div>
+                <span className="text-xs font-bold block leading-tight">Cambio:</span>
+                <span className="text-lg font-extrabold leading-tight">C$ {change.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+          <span className="text-sm font-bold text-gray-500 mr-2 hidden sm:inline shrink-0">
+            Monto Recibido:
           </span>
-          <div className="relative w-32">
+
+          <div className="relative w-24 md:w-32">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
               C$
             </span>
             <input
               type="number"
               autoFocus
-              className="w-full pl-8 pr-3 py-2 border border-[#E8BC6E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E]/50 text-sm font-bold text-[#2D2D2D]"
-              placeholder={remaining.toString()}
-              max={remaining}
+              className="w-full pl-8 pr-2 py-2 border border-[#E8BC6E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E]/50 text-sm font-bold text-[#2D2D2D]"
+              placeholder={remaining.toFixed(2)}
               value={paymentAmount}
               onChange={(e) => setPaymentAmount(e.target.value)}
             />
           </div>
+
           <button
             onClick={() => setIsPaymentMode(false)}
-            className="px-4 py-2 rounded-lg text-gray-500 hover:bg-gray-100 font-bold text-sm"
+            className="px-3 md:px-4 py-2 rounded-lg text-gray-500 hover:bg-gray-100 font-bold text-xs md:text-sm"
           >
             Cancelar
           </button>
+
           <button
             onClick={handleConfirmPayment}
             disabled={
-              !paymentAmount ||
-              Number(paymentAmount) <= 0 ||
-              Number(paymentAmount) > remaining
+              !paymentAmount || Number(paymentAmount) < remaining
             }
-            className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 font-bold text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 md:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 font-bold text-xs md:text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Confirmar
+            Confirmar Pago
           </button>
         </div>
       );
@@ -101,7 +120,7 @@ export const OrderDetailsModal = ({
         return (
           <button
             onClick={() => onMoveStatus(order.id, "production")}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#593D31] text-white font-bold hover:bg-[#4a332a] transition-colors shadow-md ml-auto"
+            className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#593D31] text-white font-bold hover:bg-[#4a332a] transition-colors shadow-md ml-auto text-sm md:text-base w-full md:w-auto justify-center"
           >
             Iniciar Producción <ArrowRight size={18} />
           </button>
@@ -111,7 +130,7 @@ export const OrderDetailsModal = ({
         return (
           <button
             onClick={() => onMoveStatus(order.id, "ready")}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors shadow-md ml-auto"
+            className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors shadow-md ml-auto text-sm md:text-base w-full md:w-auto justify-center"
           >
             <PackageCheck size={18} /> Marcar como Listo
           </button>
@@ -119,19 +138,21 @@ export const OrderDetailsModal = ({
 
       case "ready":
         return (
-          <div className="flex gap-3 ml-auto">
+          <div className="flex flex-col md:flex-row gap-2 md:gap-3 ml-auto w-full md:w-auto">
             {!isPaid && (
               <button
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors border border-gray-300"
+                className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors border border-gray-300 text-sm md:text-base"
                 onClick={() => setIsPaymentMode(true)}
               >
                 <Wallet size={18} />
                 Cobrar Saldo
               </button>
             )}
+
             <button
               onClick={() => onInvoice(order.id)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md"
+              disabled={!isPaid}
+              className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FileText size={18} />
               Facturar y Entregar
@@ -141,7 +162,7 @@ export const OrderDetailsModal = ({
 
       case "delivered":
         return (
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors ml-auto cursor-default">
+          <button className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors ml-auto cursor-default text-sm md:text-base w-full md:w-auto">
             <CheckCircle2 size={18} />
             Pedido Completado
           </button>
@@ -158,17 +179,18 @@ export const OrderDetailsModal = ({
       onClick={handleClose}
     >
       <div
-        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white w-[95%] md:w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-start p-6 border-b border-gray-100 bg-[#FDFBF7]">
+        <div className="flex justify-between items-start p-4 md:p-6 border-b border-gray-100 bg-[#FDFBF7]">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-2xl font-bold text-[#2D2D2D]">
+            <div className="flex items-center gap-2 md:gap-3 mb-1">
+              <h2 className="text-xl md:text-2xl font-bold text-[#2D2D2D]">
                 Orden #{order.id}
               </h2>
+
               <span
-                className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase border ${
+                className={`px-2 py-0.5 rounded-full text-[10px] md:text-xs font-bold uppercase border ${
                   order.paymentStatus === "Pagado"
                     ? "bg-green-100 text-green-700 border-green-200"
                     : order.paymentStatus === "Abonado"
@@ -179,31 +201,39 @@ export const OrderDetailsModal = ({
                 {order.paymentStatus}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs md:text-sm text-gray-500">
               <span className="flex items-center gap-1">
                 <User size={14} /> {order.customer}
               </span>
               <span className="flex items-center gap-1">
-                <Calendar size={14} /> {order.dueDate}
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock size={14} /> {order.dueTime}
+                <Calendar size={14} />{" "}
+                {order.dueDate
+                  ? new Date(
+                      order.dueDate.replace(/-/g, "/"),
+                    ).toLocaleDateString("es-NI", {
+                        weekday: "long", day: "numeric", month: "long",
+                      },
+                    )
+                  : "Sin fecha"}
               </span>
             </div>
           </div>
+
           <button
             onClick={handleClose}
-            className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 md:p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1">
-          <div className="mb-8">
+        <div className="p-4 md:p-6 overflow-y-auto flex-1 min-h-0">
+          <div className="mb-6 md:mb-8">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
               Productos
             </h3>
+
             <div className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-100 text-gray-600 font-medium">
@@ -224,7 +254,7 @@ export const OrderDetailsModal = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <div>
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
                 Notas
@@ -233,17 +263,20 @@ export const OrderDetailsModal = ({
                 Sin notas adicionales para este pedido.
               </p>
             </div>
-            <div className="space-y-3">
+
+            <div className="space-y-3 bg-gray-50/50 p-4 rounded-xl md:bg-transparent md:p-0">
               <div className="flex justify-between text-gray-600">
                 <span>Total Pedido:</span>
                 <span className="font-bold text-[#2D2D2D] text-lg">
                   C$ {order.total.toFixed(2)}
                 </span>
               </div>
+
               <div className="flex justify-between text-green-600">
                 <span>Abonado:</span>
                 <span>- C$ {order.deposit.toFixed(2)}</span>
               </div>
+
               <div className="flex justify-between pt-3 border-t border-gray-200">
                 <span className="font-bold text-gray-900">
                   Pendiente a Pagar:
@@ -258,11 +291,14 @@ export const OrderDetailsModal = ({
           </div>
         </div>
 
-        <div className="p-5 border-t border-gray-100 bg-gray-50 flex items-center gap-4 min-h-[88px]">
-          {!isPaymentMode && (
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
+        <div className="p-4 md:p-5 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row items-center gap-3 md:gap-4 min-h-[80px] md:min-h-[88px]">
+          {!isPaymentMode && order.status === "delivered" && (
+            <button className="w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
               <Printer size={18} />
-              {order.status === "delivered" ? "Reimprimir" : "Comanda"}
+              <span className="md:hidden">Reimprimir</span>
+              <span className="hidden md:inline">
+                Reimprimir Factura
+              </span>
             </button>
           )}
 

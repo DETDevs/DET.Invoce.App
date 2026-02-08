@@ -17,7 +17,7 @@ export const LoginInput: React.FC<LoginInputProps> = ({
   icon,
   alt,
 }) => (
-  <div className="relative group">
+  <div className="relative group w-full">
     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
       <img
         src={icon}

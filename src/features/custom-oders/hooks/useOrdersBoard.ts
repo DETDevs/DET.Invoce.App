@@ -2,6 +2,12 @@ import { useState } from "react";
 import { type DropResult } from "@hello-pangea/dnd";
 import { type Order, type OrderStatus, type PaymentStatus } from "../types";
 
+const getDateString = (offset: number): string => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    return date.toISOString().split("T")[0]; // YYYY-MM-DD
+};
+
 const MOCK_ORDERS: Order[] = [
     {
         id: "ORD-7520",
@@ -10,8 +16,7 @@ const MOCK_ORDERS: Order[] = [
         total: 850,
         deposit: 500,
         paymentStatus: "Abonado",
-        dueDate: "Hoy",
-        dueTime: "14:00",
+        dueDate: getDateString(0),
         status: "pending",
     },
     {
@@ -21,8 +26,7 @@ const MOCK_ORDERS: Order[] = [
         total: 450,
         deposit: 450,
         paymentStatus: "Pagado",
-        dueDate: "Hoy",
-        dueTime: "10:30",
+        dueDate: getDateString(0),
         status: "production",
     },
     {
@@ -32,8 +36,7 @@ const MOCK_ORDERS: Order[] = [
         total: 3500,
         deposit: 0,
         paymentStatus: "Pendiente",
-        dueDate: "Mañana",
-        dueTime: "09:00",
+        dueDate: getDateString(1),
         status: "pending",
     },
     {
@@ -43,8 +46,7 @@ const MOCK_ORDERS: Order[] = [
         total: 600,
         deposit: 600,
         paymentStatus: "Pagado",
-        dueDate: "Ayer",
-        dueTime: "16:00",
+        dueDate: getDateString(-1),
         status: "ready",
     },
     {
@@ -54,8 +56,7 @@ const MOCK_ORDERS: Order[] = [
         total: 600,
         deposit: 300,
         paymentStatus: "Pendiente",
-        dueDate: "Anteayer",
-        dueTime: "16:00",
+        dueDate: getDateString(-2),
         status: "pending",
     },
 ];

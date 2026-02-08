@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import { CartItemRow } from "./CartItemRow";
 import type { CartItem } from "../types";
@@ -24,6 +24,11 @@ export const OrderSummary = ({
 }: OrderSummaryProps) => {
   const [amountPaid, setAmountPaid] = useState("");
 
+  useEffect(() => {
+    if (amountPaid !== "") {
+      setAmountPaid("");
+    }
+  }, [orderNumber])
   const tax = subtotal * 0.15;
   const total = subtotal + tax;
   const paidValue = parseFloat(amountPaid) || 0;

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Save } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
 import { useCreateOrder } from "../hooks/useCreateOrder";
 import { AddProductForm } from "../components/AddProductForm";
@@ -118,6 +118,26 @@ export const CreateCustomOrderPage = () => {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">
+                    Fecha de Entrega *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <Calendar size={16} />
+                    </div>
+                    <input
+                      type="date"
+                      name="dueDate"
+                      value={formData.dueDate}
+                      onChange={handleInputChange}
+                      className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] font-medium"
+                      min={new Date().toISOString().split("T")[0]}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">
                     Adelanto / Abono
                   </label>
                   <div className="relative">
@@ -173,7 +193,11 @@ export const CreateCustomOrderPage = () => {
               <button
                 type="submit"
                 className="w-full flex items-center justify-center gap-2 bg-[#E8BC6E] hover:bg-[#dca34b] text-white py-3.5 rounded-xl font-bold shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={formData.items.length === 0 || !formData.customerName}
+                disabled={
+                  formData.items.length === 0 ||
+                  !formData.customerName ||
+                  !formData.dueDate
+                }
               >
                 <Save size={20} /> Guardar Pedido
               </button>

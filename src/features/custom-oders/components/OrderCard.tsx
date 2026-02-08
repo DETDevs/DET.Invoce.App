@@ -42,6 +42,42 @@ const PaymentBadge = ({
   );
 };
 
+const getDueDateInfo = (dueDate: string): { text: string; color: string } => {
+  if (!dueDate) {
+    return { text: "Sin fecha", color: "bg-gray-100 text-gray-500" };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Parse YYYY-MM-DD as local time to avoid timezone issues
+  const [year, month, day] = dueDate.split("-").map(Number);
+  const due = new Date(year, month - 1, day);
+
+  const diffTime = due.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return {
+      text: `Atrasado por ${Math.abs(diffDays)} día(s)`,
+      color: "bg-red-100 text-red-700 border border-red-200",
+    };
+  }
+  if (diffDays === 0) {
+    return {
+      text: "Entrega Hoy",
+      color: "bg-red-200 text-red-800 font-bold border border-red-300",
+    };
+  }
+  if (diffDays <= 3) {
+    return { text: `Faltan ${diffDays} día(s)`, color: "bg-amber-100 text-amber-700 border border-amber-200" };
+  }
+  return {
+    text: `Faltan ${diffDays} días`,
+    color: "bg-green-100 text-green-700 border border-green-200",
+  };
+};
+
 export const OrderCard = ({ order, index, onClick }: Props) => {
   return (
     <Draggable draggableId={order.id} index={index}>
@@ -81,13 +117,13 @@ export const OrderCard = ({ order, index, onClick }: Props) => {
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-2">
-            <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
-              <div
-                className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md ${order.dueDate === "Hoy" ? "bg-red-50 text-red-600" : "bg-gray-100"}`}
-              >
-                <Clock size={12} />
-                {order.dueDate}, {order.dueTime}
-              </div>
+            <div className="flex items-center gap-2 text-xs font-medium">
+              {(({ text, color }) => (
+                <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${color}`}>
+                  <Clock size={14} />
+                  <span>{text}</span>
+                </div>
+              ))(getDueDateInfo(order.dueDate))}
             </div>
             <div className="font-bold text-[#2D2D2D] text-sm">
               C$ {order.total.toFixed(2)}

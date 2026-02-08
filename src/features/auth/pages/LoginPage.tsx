@@ -3,7 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { LoginImagePanel } from "../components/LoginImagePanel";
 import { LoginHeader } from "../components/LoginHeader";
 import { LoginForm } from "../components/LoginForm";
-import logoImage from "@/assets/Logotipo.png";
+import logoImage from "@/assets/logologindark.png";
 
 export const LoginPage = () => {
   return (

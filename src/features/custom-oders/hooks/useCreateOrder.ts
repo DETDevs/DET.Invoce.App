@@ -10,26 +10,28 @@ export const useCreateOrder = () => {
     deposit: 0,
     comments: "",
     status: "Pendiente",
+    dueDate: "",
   });
 
+  // Efecto para calcular automáticamente el estado del pago
   useEffect(() => {
     setFormData((prev) => {
       const total = prev.items.reduce(
         (acc, item) => acc + item.price * item.quantity,
-        0
+        0,
       );
       const deposit = Number(prev.deposit) || 0;
 
       let newStatus: PaymentStatus = "Pendiente";
-
       if (total > 0) {
         if (deposit >= total) {
           newStatus = "Pagado";
         } else if (deposit > 0) {
-          newStatus = "Abonado";
+          newStatus = "Abonado"; // O "Parcial"
         }
       }
 
+      // Solo actualizamos si el estado ha cambiado para evitar renders infinitos
       if (prev.status !== newStatus) {
         return { ...prev, status: newStatus };
       }
@@ -73,6 +75,10 @@ export const useCreateOrder = () => {
       toast.error("El nombre del cliente es obligatorio");
       return;
     }
+    if (!formData.dueDate) {
+      toast.error("La fecha de entrega es obligatoria");
+      return;
+    }
     if (formData.items.length === 0) {
       toast.error("Debes agregar al menos un producto");
       return;
@@ -89,6 +95,6 @@ export const useCreateOrder = () => {
     removeItem,
     calculateTotal,
     handleSubmit,
-    setFormData,
+    setFormData // Exponemos esto por si necesitas control manual desde fuera
   };
 };

@@ -77,3 +77,29 @@
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+.kanban-scroll-container::-webkit-scrollbar {
+  height: 10px;
+  background-color: transparent;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-track {
+  background-color: #f3efe0; 
+  border-radius: 10px;
+  margin: 0 1rem;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb {
+  background-color: #d1c7b0;
+  border-radius: 10px;
+  border: 2px solid #f3efe0;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: #c1b395;
+}
+
+.kanban-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #d1c7b0 #f3efe0;
+}
