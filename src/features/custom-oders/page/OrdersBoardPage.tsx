@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
 import { Plus, SlidersHorizontal } from "lucide-react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 import { useOrdersBoard } from "../hooks/useOrdersBoard";
 import { KanbanColumn } from "../components/KanbanColumn";
@@ -54,7 +54,58 @@ export const OrdersBoardPage = () => {
 
   const handleDragEnd = (result: DropResult) => {
     try {
+      const { source, destination, draggableId } = result;
+
+      if (!destination || source.droppableId === destination.droppableId) {
+        return;
+      }
+
+      const sourceId = source.droppableId as OrderStatus;
+      const destId = destination.droppableId as OrderStatus;
+
+      if (sourceId === "delivered") {
+        toast.error(
+          `El pedido #${draggableId} ya fue entregado y no puede cambiar de estado.`,
+        );
+        return;
+      }
+
+      if (destId === "delivered") {
+        if (sourceId === "ready") {
+          const orderToMove = orders.find((o) => o.id === draggableId);
+          if (orderToMove) {
+            handleCardClick(orderToMove);
+          }
+        } else {
+          toast.error(
+            "Un pedido solo puede ser entregado desde 'Listo/Empacado'.",
+          );
+        }
+        return;
+      }
+
+      const validTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
+        pending: ["production"],
+        production: ["pending", "ready"],
+        ready: ["production"],
+      };
+
+      if (!validTransitions[sourceId]?.includes(destId)) {
+        toast.error("Movimiento no válido entre estados.");
+        return;
+      }
+
       onDragEnd(result);
+
+      const statusNames: Record<string, string> = {
+        pending: "Por Hacer",
+        production: "En Producción",
+        ready: "Listo / Empacado",
+      };
+
+      toast.success(
+        `Pedido #${draggableId} movido a "${statusNames[destId]}".`,
+      );
     } finally {
       document.body.style.overflowX = "";
     }
@@ -148,6 +199,8 @@ export const OrdersBoardPage = () => {
         onMoveStatus={handleManualMove}
         onRegisterPayment={handlePayment}
       />
+
+      <Toaster position="top-center" />
     </div>
   );
 };

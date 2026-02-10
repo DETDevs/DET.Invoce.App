@@ -1,6 +1,6 @@
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { Clock } from "lucide-react";
+import { Clock, Banknote } from "lucide-react";
 import { type Order } from "../types";
 
 interface Props {
@@ -28,13 +28,14 @@ const PaymentBadge = ({
 
   return (
     <div className="flex flex-col items-end">
-      <span
-        className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${styles[status]}`}
+      <div
+        className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${styles[status]}`}
       >
-        {status}
-      </span>
+        <Banknote size={14} className="opacity-80" />
+        <span className="text-[10px] uppercase font-bold">{status}</span>
+      </div>
       {status !== "Pagado" && (
-        <span className="text-xs text-gray-500 font-medium mt-0.5">
+        <span className="text-xs text-gray-500 font-medium mt-1">
           Restan: C$ {remaining.toFixed(2)}
         </span>
       )}
@@ -50,7 +51,6 @@ const getDueDateInfo = (dueDate: string): { text: string; color: string } => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Parse YYYY-MM-DD as local time to avoid timezone issues
   const [year, month, day] = dueDate.split("-").map(Number);
   const due = new Date(year, month - 1, day);
 
@@ -70,7 +70,10 @@ const getDueDateInfo = (dueDate: string): { text: string; color: string } => {
     };
   }
   if (diffDays <= 3) {
-    return { text: `Faltan ${diffDays} día(s)`, color: "bg-amber-100 text-amber-700 border border-amber-200" };
+    return {
+      text: `Faltan ${diffDays} día(s)`,
+      color: "bg-amber-100 text-amber-700 border border-amber-200",
+    };
   }
   return {
     text: `Faltan ${diffDays} días`,
@@ -119,7 +122,9 @@ export const OrderCard = ({ order, index, onClick }: Props) => {
           <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-2">
             <div className="flex items-center gap-2 text-xs font-medium">
               {(({ text, color }) => (
-                <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${color}`}>
+                <div
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${color}`}
+                >
                   <Clock size={14} />
                   <span>{text}</span>
                 </div>

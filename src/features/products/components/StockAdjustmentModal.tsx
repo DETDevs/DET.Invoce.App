@@ -27,7 +27,7 @@ interface StockAdjustmentModalProps {
 
 const REASONS_IN = [
   { value: "purchase", label: "Compra / Reabastecimiento" },
-  { value: "return", label: "Devolución de Cliente" },
+  // { value: "return", label: "Devolución de Cliente" },
   { value: "adjustment_in", label: "Ajuste de Entrada" },
 ];
 

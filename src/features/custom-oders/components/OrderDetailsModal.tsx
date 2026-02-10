@@ -52,12 +52,6 @@ export const OrderDetailsModal = ({
       onRegisterPayment(order.id, remaining);
       setIsPaymentMode(false);
       setPaymentAmount("");
-      const change = amount - remaining;
-      if (change > 0) {
-        toast.success(`Cambio a entregar: C$ ${change.toFixed(2)}`, {
-          icon: "💰",
-        });
-      }
     }
   };
 
@@ -72,8 +66,12 @@ export const OrderDetailsModal = ({
             <div className="flex items-center gap-2 mr-auto rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-green-800 animate-fade-in">
               <Coins size={20} className="text-green-600" />
               <div>
-                <span className="text-xs font-bold block leading-tight">Cambio:</span>
-                <span className="text-lg font-extrabold leading-tight">C$ {change.toFixed(2)}</span>
+                <span className="text-xs font-bold block leading-tight">
+                  Cambio:
+                </span>
+                <span className="text-lg font-extrabold leading-tight">
+                  C$ {change.toFixed(2)}
+                </span>
               </div>
             </div>
           )}
@@ -104,9 +102,7 @@ export const OrderDetailsModal = ({
 
           <button
             onClick={handleConfirmPayment}
-            disabled={
-              !paymentAmount || Number(paymentAmount) < remaining
-            }
+            disabled={!paymentAmount || Number(paymentAmount) < remaining}
             className="px-3 md:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 font-bold text-xs md:text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Confirmar Pago
@@ -212,9 +208,10 @@ export const OrderDetailsModal = ({
                   ? new Date(
                       order.dueDate.replace(/-/g, "/"),
                     ).toLocaleDateString("es-NI", {
-                        weekday: "long", day: "numeric", month: "long",
-                      },
-                    )
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })
                   : "Sin fecha"}
               </span>
             </div>
@@ -296,9 +293,7 @@ export const OrderDetailsModal = ({
             <button className="w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
               <Printer size={18} />
               <span className="md:hidden">Reimprimir</span>
-              <span className="hidden md:inline">
-                Reimprimir Factura
-              </span>
+              <span className="hidden md:inline">Reimprimir Factura</span>
             </button>
           )}
 
