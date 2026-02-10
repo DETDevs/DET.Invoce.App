@@ -5,7 +5,7 @@ import { type Order, type OrderStatus, type PaymentStatus } from "../types";
 const getDateString = (offset: number): string => {
     const date = new Date();
     date.setDate(date.getDate() + offset);
-    return date.toISOString().split("T")[0]; // YYYY-MM-DD
+    return date.toISOString().split("T")[0];
 };
 
 const MOCK_ORDERS: Order[] = [

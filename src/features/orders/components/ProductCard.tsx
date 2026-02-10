@@ -1,12 +1,15 @@
-import type { Product } from "../types";
+import React from "react";
+import type { Product } from "../types/index";
 
-export const ProductCard = ({
-  product,
-  onClick,
-}: {
+interface ProductCardProps {
   product: Product;
   onClick: (p: Product) => void;
-}) => (
+}
+
+const ProductCardComponent = ({
+  product,
+  onClick,
+}: ProductCardProps) => (
   <div
     onClick={() => onClick(product)}
     className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 cursor-pointer hover:border-[#E8BC6E] transition-all"
@@ -20,3 +23,5 @@ export const ProductCard = ({
     <span className="text-[#E8BC6E] font-bold text-sm">C$ {product.price}</span>
   </div>
 );
+
+export const ProductCard = React.memo(ProductCardComponent);

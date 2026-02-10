@@ -12,6 +12,7 @@ import {
   X,
   FileEdit,
   Kanban,
+  Settings,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import logo from "@/assets/Logotipo.png";
@@ -33,6 +34,7 @@ export const Sidebar = () => {
     { icon: FileEdit, label: "Realizar Pedido", path: "/realizar-pedido" },
     { icon: Users, label: "Usuarios", path: "/usuarios" },
     { icon: Bell, label: "Reportes", path: "/reportes" },
+    { icon: Settings, label: "Configuración", path: "/configuracion" },
   ];
 
   const handleNavigation = (path: string) => {
@@ -79,13 +81,13 @@ export const Sidebar = () => {
       <aside
         className={`
           fixed top-0 left-0 h-screen w-64 bg-[#593D31] text-[#F9F7F0] 
-          flex flex-col py-8 px-5 z-50 shadow-2xl
+          flex flex-col z-50 shadow-2xl
           transform transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} 
           lg:translate-x-0 lg:shadow-none
         `}
       >
-        <div className="mb-8 flex flex-col items-center relative">
+        <div className="flex-shrink-0 p-4 flex flex-col items-center relative">
           <button
             onClick={() => setIsMobileMenuOpen(false)}
             className="lg:hidden absolute top-0 right-0 text-[#E8BC6E] hover:text-white transition-colors"
@@ -93,16 +95,16 @@ export const Sidebar = () => {
             <X size={28} />
           </button>
 
-          <div className="w-full flex justify-center mt-2 lg:mt-0">
+          <div className="w-full flex justify-center mt-4 lg:mt-0">
             <img
               src={logo}
               alt="Dulces Momentos"
-              className="h-32 w-auto object-contain"
+              className="h-28 w-auto object-contain"
             />
           </div>
         </div>
 
-        <nav className="flex-1 space-y-3">
+        <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-5">
           {menuItems.map((item, index) => {
             const isActive =
               location.pathname === item.path ||
@@ -132,7 +134,7 @@ export const Sidebar = () => {
           })}
         </nav>
 
-        <div className="mt-auto">
+        <div className="flex-shrink-0 p-4 mt-auto border-t border-white/10">
           <button
             onClick={handleLogoutClick}
             className="w-full flex items-center justify-center space-x-2 bg-[#E8BC6E] hover:bg-[#dca34b] text-white py-3 rounded-lg transition-colors shadow-md font-medium"

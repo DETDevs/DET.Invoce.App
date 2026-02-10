@@ -13,7 +13,6 @@ export const useCreateOrder = () => {
     dueDate: "",
   });
 
-  // Efecto para calcular automáticamente el estado del pago
   useEffect(() => {
     setFormData((prev) => {
       const total = prev.items.reduce(
@@ -27,11 +26,10 @@ export const useCreateOrder = () => {
         if (deposit >= total) {
           newStatus = "Pagado";
         } else if (deposit > 0) {
-          newStatus = "Abonado"; // O "Parcial"
+          newStatus = "Abonado";
         }
       }
 
-      // Solo actualizamos si el estado ha cambiado para evitar renders infinitos
       if (prev.status !== newStatus) {
         return { ...prev, status: newStatus };
       }
@@ -95,6 +93,6 @@ export const useCreateOrder = () => {
     removeItem,
     calculateTotal,
     handleSubmit,
-    setFormData // Exponemos esto por si necesitas control manual desde fuera
+    setFormData
   };
 };

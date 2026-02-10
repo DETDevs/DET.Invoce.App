@@ -1,6 +1,6 @@
 import React from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import type { CartItem } from "../types";
+import type { CartItem } from "../types/index";
 
 export const CartItemRow = ({
   item,

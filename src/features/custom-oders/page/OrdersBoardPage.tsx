@@ -78,7 +78,7 @@ export const OrdersBoardPage = () => {
           }
         } else {
           toast.error(
-            "Un pedido solo puede ser entregado desde 'Listo/Empacado'.",
+            "Un pedido solo puede ser entregado desde 'Listo'.",
           );
         }
         return;
@@ -99,8 +99,8 @@ export const OrdersBoardPage = () => {
 
       const statusNames: Record<string, string> = {
         pending: "Por Hacer",
-        production: "En Producción",
-        ready: "Listo / Empacado",
+        production: "En Proceso",
+        ready: "Listo",
       };
 
       toast.success(
@@ -115,7 +115,7 @@ export const OrdersBoardPage = () => {
     <div className="h-[calc(100vh-4rem)] lg:h-screen w-full flex flex-col bg-[#FDFBF7] overflow-hidden">
       <div className="px-4 md:px-8 py-3 md:py-4 bg-white border-b border-gray-100 flex items-center justify-between flex-shrink-0">
         <h1 className="text-xl md:text-2xl font-bold text-[#2D2D2D]">
-          Producción
+          Gestion de Pedidos
         </h1>
 
         <div className="flex items-center gap-2">
@@ -165,7 +165,7 @@ export const OrdersBoardPage = () => {
 
               <KanbanColumn
                 id="production"
-                title="En Producción"
+                title="En Proceso"
                 color="bg-blue-50"
                 orders={orders.filter((o) => o.status === "production")}
                 onCardClick={handleCardClick}
@@ -173,7 +173,7 @@ export const OrdersBoardPage = () => {
 
               <KanbanColumn
                 id="ready"
-                title="Listo / Empacado"
+                title="Listo"
                 color="bg-amber-50"
                 orders={orders.filter((o) => o.status === "ready")}
                 onCardClick={handleCardClick}

@@ -118,7 +118,7 @@ export const OrderDetailsModal = ({
             onClick={() => onMoveStatus(order.id, "production")}
             className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#593D31] text-white font-bold hover:bg-[#4a332a] transition-colors shadow-md ml-auto text-sm md:text-base w-full md:w-auto justify-center"
           >
-            Iniciar Producción <ArrowRight size={18} />
+            Iniciar Proceso <ArrowRight size={18} />
           </button>
         );
 

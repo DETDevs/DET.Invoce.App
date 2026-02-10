@@ -1,104 +1,31 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Search } from "lucide-react";
-import { ProductCarousel } from "../components/ProductCarousel";
+import React, { useMemo, useState, useEffect, useTransition } from "react";
+import { Search, X } from "lucide-react";
 import { ProductCard } from "../components/ProductCard";
-import type { Product } from "../types";
 import { OrderSummary } from "../components/OrderSummary";
 import { ConfirmDialog } from "../../../shared/ui/ConfirmDialog";
-import { X } from "lucide-react";
 import { useOrderLogic } from "../hooks/useOrderLogic";
+import { Toaster } from "react-hot-toast";
+import { PRODUCTS, CATEGORIES_DATA } from "../types/product";
+const getOptimizedImageUrl = (url: string) => {
+  if (url.includes("images.unsplash.com")) {
+    return `${url}?auto=format&fit=crop&w=400&q=80`;
+  }
+  return url;
+};
 
-const PRODUCTS: Product[] = [
-  {
-    id: 1,
-    name: "Choco-lava Cake",
-    price: 20,
-    category: "Pasteles",
-    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587",
-  },
-  {
-    id: 4,
-    name: "Red Velvet",
-    price: 18,
-    category: "Pasteles",
-    image: "https://images.unsplash.com/photo-1616541823729-00fe0aacd32c",
-  },
-  {
-    id: 7,
-    name: "Tiramisu",
-    price: 22,
-    category: "Pasteles",
-    image: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9",
-  },
-  {
-    id: 8,
-    name: "Cheesecake",
-    price: 19,
-    category: "Pasteles",
-    image: "https://images.unsplash.com/photo-1524351199678-941a58a3df50",
-  },
-  {
-    id: 9,
-    name: "Carrot Cake",
-    price: 16,
-    category: "Pasteles",
-    image: "https://images.unsplash.com/photo-1621303837174-89787a7d4729",
-  },
-  {
-    id: 14,
-    name: "Pie de Limón",
-    price: 15,
-    category: "Pasteles",
-    image: "https://images.unsplash.com/photo-1519915028121-7d3463d20b13",
-  },
-  {
-    id: 10,
-    name: "Cappuccino",
-    price: 3.5,
-    category: "Cafes",
-    image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d",
-  },
-  {
-    id: 12,
-    name: "Espresso",
-    price: 2.5,
-    category: "Cafes",
-    image: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04",
-  },
-  {
-    id: 13,
-    name: "Mocha",
-    price: 4.5,
-    category: "Cafes",
-    image: "https://images.unsplash.com/photo-1578314675249-a6910f80cc4e",
-  },
-  {
-    id: 2,
-    name: "Garlic Bread",
-    price: 5,
-    category: "Otros",
-    image: "https://images.unsplash.com/photo-1573140247632-f84660f67126",
-  },
-  {
-    id: 5,
-    name: "Croissant",
-    price: 4,
-    category: "Otros",
-    image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a",
-  },
-  {
-    id: 6,
-    name: "Muffin",
-    price: 3,
-    category: "Otros",
-    image: "https://images.unsplash.com/photo-1607958996333-41aef7caefaa",
-  },
-];
-
-const CATEGORIES = ["Pasteles", "Cafes", "Otros"] as const;
+const MemoizedProductCard = React.memo(ProductCard);
 
 export const NewOrderPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    CATEGORIES_DATA[0].name,
+  );
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(
+    CATEGORIES_DATA[0].subcategories[0],
+  );
 
   const {
     cart,
@@ -120,20 +47,60 @@ export const NewOrderPage = () => {
     handleCloseDialog,
   } = useOrderLogic();
 
-  const filteredProducts = useMemo(
-    () =>
-      PRODUCTS.filter((p) =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-    [searchTerm],
-  );
+  const handleCategorySelect = (categoryName: string) => {
+    if (selectedCategory === categoryName) return;
+
+    startTransition(() => {
+      setSelectedCategory(categoryName);
+      const category = CATEGORIES_DATA.find((c) => c.name === categoryName);
+      if (category && category.subcategories.length > 0) {
+        setSelectedSubcategory(category.subcategories[0]);
+      } else {
+        setSelectedSubcategory(null);
+      }
+    });
+  };
+
+  const handleSubcategorySelect = (subcat: string) => {
+    if (selectedSubcategory === subcat) return;
+    startTransition(() => {
+      setSelectedSubcategory(subcat);
+    });
+  };
+
+  const currentSubcategories = useMemo(() => {
+    return (
+      CATEGORIES_DATA.find((c) => c.name === selectedCategory)?.subcategories ||
+      []
+    );
+  }, [selectedCategory]);
 
   useEffect(() => {
-    if (isCartOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+    const timer = setTimeout(() => {
+      startTransition(() => {
+        setDebouncedSearchTerm(searchTerm);
+      });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const filteredProducts = useMemo(() => {
+    let result = PRODUCTS.filter(
+      (p) =>
+        p.category === selectedCategory &&
+        p.subcategory === selectedSubcategory,
+    );
+
+    if (debouncedSearchTerm) {
+      const lowerTerm = debouncedSearchTerm.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(lowerTerm));
     }
+
+    return result;
+  }, [selectedCategory, selectedSubcategory, debouncedSearchTerm]);
+
+  useEffect(() => {
+    document.body.style.overflow = isCartOpen ? "hidden" : "unset";
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -141,6 +108,7 @@ export const NewOrderPage = () => {
 
   return (
     <div className="h-screen w-full bg-[#FDFBF7] grid grid-rows-[1fr] min-[1400px]:grid-cols-[1fr_420px] overflow-hidden">
+      <Toaster position="top-center" />
       <ConfirmDialog
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
@@ -153,52 +121,88 @@ export const NewOrderPage = () => {
       />
 
       <main className="grid grid-rows-[auto_1fr] h-full w-full max-w-[100vw] overflow-hidden min-[1400px]:border-r min-[1400px]:border-gray-200">
-        <div className="p-4 sm:p-6 lg:p-8 pb-4 z-10 bg-[#FDFBF7]">
-          <h1 className="text-2xl lg:text-3xl font-bold text-[#2D2D2D] mb-4 lg:mb-6">
-            Nueva Orden
-          </h1>
-          <div className="relative max-w-md">
-            <Search
-              className="absolute left-4 top-3.5 text-gray-400"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Buscar producto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] shadow-sm"
-            />
+        <div>
+          <div className="p-4 sm:p-6 lg:p-8 pb-4 z-10 bg-[#FDFBF7]">
+            <h1 className="text-2xl lg:text-3xl font-bold text-[#2D2D2D] mb-4 lg:mb-6">
+              Nueva Orden
+            </h1>
+            <div className="relative max-w-md">
+              <Search
+                className="absolute left-4 top-3.5 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Buscar producto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div
+              className="flex gap-2 border-b border-gray-200 pb-2 overflow-x-auto scrollbar-hide overscroll-x-contain scroll-smooth"
+              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+            >
+              {CATEGORIES_DATA.map((cat) => (
+                <button
+                  key={cat.name}
+                  onClick={() => handleCategorySelect(cat.name)}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors whitespace-nowrap ${
+                    selectedCategory === cat.name
+                      ? "bg-[#593D31] text-white"
+                      : "text-gray-500 hover:bg-gray-100"
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+
+            <div
+              className="flex gap-2 pt-3 overflow-x-auto scrollbar-hide overscroll-x-contain scroll-smooth"
+              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+            >
+              {currentSubcategories.map((subcat) => (
+                <button
+                  key={subcat}
+                  onClick={() => handleSubcategorySelect(subcat)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap ${
+                    selectedSubcategory === subcat
+                      ? "bg-[#E8BC6E] text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {subcat}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="overflow-y-auto pt-2 pb-28 lg:pb-8 scrollbar-hide w-full">
-          {searchTerm ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 min-[1400px]:grid-cols-3 min-[1600px]:grid-cols-4 gap-4 px-4 sm:px-6 lg:px-8">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={`${product.id}-${product.name}`}
-                  product={product}
+        <div className="overflow-y-auto pt-6 pb-28 lg:pb-8 scrollbar-hide w-full">
+          <div
+            className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 min-[1400px]:grid-cols-3 min-[1600px]:grid-cols-4 gap-4 px-4 sm:px-6 lg:px-8 transition-opacity duration-200 ${isPending ? "opacity-50" : "opacity-100"}`}
+          >
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
+                <MemoizedProductCard
+                  key={product.id}
+                  product={{
+                    ...product,
+                    image: getOptimizedImageUrl(product.image),
+                  }}
                   onClick={addToCart}
                 />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-8 w-full max-w-full">
-              {CATEGORIES.map((cat) => {
-                const catProducts = PRODUCTS.filter((p) => p.category === cat);
-                if (catProducts.length === 0) return null;
-                return (
-                  <ProductCarousel
-                    key={cat}
-                    title={cat}
-                    products={catProducts}
-                    onAdd={addToCart}
-                  />
-                );
-              })}
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="col-span-full text-center py-16 text-gray-500">
+                <p>No se encontraron productos.</p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
@@ -230,7 +234,9 @@ export const NewOrderPage = () => {
         )}
 
         <div
-          className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${
+            isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
           onClick={() => setIsCartOpen(false)}
         />
 
@@ -256,7 +262,6 @@ export const NewOrderPage = () => {
             onClick={() => setIsCartOpen(false)}
           >
             <div className="w-12 h-1.5 bg-gray-300 rounded-full cursor-pointer opacity-80 md:hidden" />
-
             <button
               onClick={(e) => {
                 e.stopPropagation();

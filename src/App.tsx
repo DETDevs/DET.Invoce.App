@@ -11,6 +11,8 @@ import { NewOrderPage } from "./features/orders/pages/NewOrderPage";
 import { CreateCustomOrderPage } from "./features/custom-oders/page/CreateCustomOrderPage";
 import { NavigationBlockerProvider } from "./shared/context/NavigationBlockerContext";
 import { OrdersBoardPage } from "./features/custom-oders/page/OrdersBoardPage";
+import { SettingsPage } from "./features/settings/pages/SettingsPage";
+import { CashBoxProvider } from "./features/settings/pages/CashBoxContext";
 
 function App() {
   return (
@@ -19,7 +21,14 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
-          <Route path="/" element={<DashboardLayout />}>
+          <Route
+            path="/"
+            element={
+              <CashBoxProvider>
+                <DashboardLayout />
+              </CashBoxProvider>
+            }
+          >
             <Route index element={<DashboardPage />} />
             <Route path="tablero" element={<OrdersBoardPage />} />
             <Route path="productos" element={<ProductsPage />} />
@@ -29,6 +38,7 @@ function App() {
             <Route path="nuevo-usuario" element={<AddUserPage />} />
             <Route path="reportes" element={<ReportsPage />} />
             <Route path="ordenes" element={<NewOrderPage />} />
+            <Route path="configuracion" element={<SettingsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />
