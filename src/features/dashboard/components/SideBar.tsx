@@ -13,6 +13,7 @@ import {
   FileEdit,
   Kanban,
   Settings,
+  ArrowLeftRight,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import logo from "@/assets/Logotipo.png";
@@ -28,12 +29,17 @@ export const Sidebar = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: Kanban, label: "Tablero Producción", path: "/tablero" },
+    { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },
     { icon: ShoppingBag, label: "Productos", path: "/productos" },
     { icon: PlusCircle, label: "Nuevo Producto", path: "/nuevo-producto" },
-    { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },
     { icon: FileEdit, label: "Realizar Pedido", path: "/realizar-pedido" },
-    { icon: Users, label: "Usuarios", path: "/usuarios" },
+    {
+      icon: ArrowLeftRight,
+      label: "Movimientos de Caja",
+      path: "/movimientos-caja",
+    },
     { icon: Bell, label: "Reportes", path: "/reportes" },
+    { icon: Users, label: "Usuarios", path: "/usuarios" },
     { icon: Settings, label: "Configuración", path: "/configuracion" },
   ];
 

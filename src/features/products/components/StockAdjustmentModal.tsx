@@ -27,7 +27,6 @@ interface StockAdjustmentModalProps {
 
 const REASONS_IN = [
   { value: "purchase", label: "Compra / Reabastecimiento" },
-  // { value: "return", label: "Devolución de Cliente" },
   { value: "adjustment_in", label: "Ajuste de Entrada" },
 ];
 
@@ -243,7 +242,6 @@ export const StockAdjustmentModal = ({
             </div>
           </div>
 
-          {/* Formulario Detalles */}
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
