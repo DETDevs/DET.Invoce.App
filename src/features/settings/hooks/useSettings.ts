@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { type Settings } from "../types";
+import { type Settings } from "@/features/settings/types";
 
 const SETTINGS_STORAGE_KEY = "app-settings";
 

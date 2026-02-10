@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Filter, Edit, Trash2, Search, Boxes } from "lucide-react";
-import { FilterPanel } from "../components/FilterPanel";
-import { EditProductModal } from "../components/EditProductModal";
-import { StockAdjustmentModal } from "../components/StockAdjustmentModal";
+import { FilterPanel } from "@/features/products/components/FilterPanel";
+import { EditProductModal } from "@/features/products/components/EditProductModal";
+import { StockAdjustmentModal } from "@/features/products/components/StockAdjustmentModal";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 

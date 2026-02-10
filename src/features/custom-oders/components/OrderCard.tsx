@@ -1,7 +1,7 @@
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Clock, Banknote } from "lucide-react";
-import { type Order } from "../types";
+import { type Order } from "@/features/custom-oders/types";
 
 interface Props {
   order: Order;

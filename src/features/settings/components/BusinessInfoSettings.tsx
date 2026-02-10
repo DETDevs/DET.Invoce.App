@@ -1,5 +1,5 @@
 import React from "react";
-import { type Settings } from "../types";
+import { type Settings } from "@/features/settings/types";
 
 interface Props {
   settings: Settings;

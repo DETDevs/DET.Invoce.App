@@ -1,5 +1,5 @@
 import React from "react";
-import { useLogin } from "../hooks/useLogin";
+import { useLogin } from "@/features/auth/hooks/useLogin";
 import { LoginInput } from "./LoginInput";
 import lockIcon from "@/assets/password.svg";
 
@@ -7,7 +7,10 @@ export const LoginForm = () => {
   const { password, setPassword, handleLogin } = useLogin();
 
   return (
-    <form className="space-y-5 flex flex-col justify-center items-center" onSubmit={handleLogin}>
+    <form
+      className="space-y-5 flex flex-col justify-center items-center"
+      onSubmit={handleLogin}
+    >
       <LoginInput
         type="password"
         placeholder="Clave de seguridad"

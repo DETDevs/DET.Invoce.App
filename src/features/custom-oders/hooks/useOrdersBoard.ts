@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { type DropResult } from "@hello-pangea/dnd";
-import { type Order, type OrderStatus, type PaymentStatus } from "../types";
+import { type Order, type OrderStatus, type PaymentStatus } from "@/features/custom-oders/types";
 
 const getDateString = (offset: number): string => {
     const date = new Date();

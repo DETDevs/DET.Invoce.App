@@ -1,6 +1,5 @@
-import React from "react";
 import { Trash2 } from "lucide-react";
-import type { OrderItem } from "../types";
+import type { OrderItem } from "@/features/custom-oders/types";
 
 interface Props {
   items: OrderItem[];

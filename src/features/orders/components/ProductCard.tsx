@@ -1,15 +1,12 @@
 import React from "react";
-import type { Product } from "../types/index";
+import type { Product } from "@/features/orders/types/index";
 
 interface ProductCardProps {
   product: Product;
   onClick: (p: Product) => void;
 }
 
-const ProductCardComponent = ({
-  product,
-  onClick,
-}: ProductCardProps) => (
+const ProductCardComponent = ({ product, onClick }: ProductCardProps) => (
   <div
     onClick={() => onClick(product)}
     className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 cursor-pointer hover:border-[#E8BC6E] transition-all"

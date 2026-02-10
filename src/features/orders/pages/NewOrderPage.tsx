@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useEffect, useTransition } from "react";
 import { Search, X } from "lucide-react";
-import { ProductCard } from "../components/ProductCard";
-import { OrderSummary } from "../components/OrderSummary";
-import { ConfirmDialog } from "../../../shared/ui/ConfirmDialog";
-import { useOrderLogic } from "../hooks/useOrderLogic";
+import { ProductCard } from "@/features/orders/components/ProductCard";
+import { OrderSummary } from "@/features/orders/components/OrderSummary";
+import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
+import { useOrderLogic } from "@/features/orders/hooks/useOrderLogic";
 import { Toaster } from "react-hot-toast";
-import { PRODUCTS, CATEGORIES_DATA } from "../types/product";
+import { PRODUCTS, CATEGORIES_DATA } from "@/features/orders/types/product";
 const getOptimizedImageUrl = (url: string) => {
   if (url.includes("images.unsplash.com")) {
     return `${url}?auto=format&fit=crop&w=400&q=80`;

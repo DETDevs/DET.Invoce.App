@@ -5,9 +5,9 @@ import React, {
   useContext,
   type ReactNode,
 } from "react";
-import { OpenCashBoxModal } from "../components/OpenCashBoxModal";
-import { useSettings } from "../../settings/hooks/useSettings";
-import type { CashBoxSession } from "../types";
+import { OpenCashBoxModal } from "@/features/settings/components/OpenCashBoxModal";
+import { useSettings } from "@/features/settings/hooks/useSettings";
+import type { CashBoxSession } from "@/features/settings/types";
 
 interface CashBoxContextType {
   session: CashBoxSession | null;

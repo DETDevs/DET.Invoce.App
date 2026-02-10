@@ -13,7 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { type Order, type OrderStatus } from "../types";
+import { type Order, type OrderStatus } from "@/features/custom-oders/types";
 
 interface Props {
   isOpen: boolean;

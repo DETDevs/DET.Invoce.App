@@ -1,10 +1,10 @@
 import { Building, Coins, Landmark, Save } from "lucide-react";
 import { Toaster } from "react-hot-toast";
-import { useSettings } from "../hooks/useSettings";
-import { SettingsCard } from "../components/SettingsCard";
-import { BusinessInfoSettings } from "../components/BusinessInfoSettings";
-import { CurrencySettings } from "../components/CurrencySettings";
-import { CashBoxSettings } from "../components/CashBoxSettings";
+import { useSettings } from "@/features/settings/hooks/useSettings";
+import { SettingsCard } from "@/features/settings/components/SettingsCard";
+import { BusinessInfoSettings } from "@/features/settings/components/BusinessInfoSettings";
+import { CurrencySettings } from "@/features/settings/components/CurrencySettings";
+import { CashBoxSettings } from "@/features/settings/components/CashBoxSettings";
 
 export const SettingsPage = () => {
   const { settings, isLoading, isDirty, updateSetting, handleSaveSettings } =

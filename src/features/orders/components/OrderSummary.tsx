@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ShoppingBag, Trash2, Wallet, CreditCard } from "lucide-react";
-import { CartItemRow } from "./CartItemRow";
-import type { CartItem } from "../types/index";
+import { CartItemRow } from "@/features/orders/components/CartItemRow";
+import type { CartItem } from "@/features/orders/types/index";
 
 type OrderSummaryProps = {
   cart: CartItem[];

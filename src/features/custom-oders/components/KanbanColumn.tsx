@@ -2,8 +2,8 @@ import React from "react";
 import { Droppable } from "@hello-pangea/dnd";
 import { MoreHorizontal } from "lucide-react";
 
-import { OrderCard } from "./OrderCard";
-import { type Order } from "../types";
+import { OrderCard } from "@/features/custom-oders/components/OrderCard";
+import { type Order } from "@/features/custom-oders/types";
 
 interface Props {
   id: string;

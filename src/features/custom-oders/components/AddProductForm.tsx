@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Search } from "lucide-react";
-import type { ProductOption } from "../types";
-import { useAddOrderItem } from "../hooks/useAddOrderItem";
+import type { ProductOption } from "@/features/custom-oders/types";
+import { useAddOrderItem } from "@/features/custom-oders/hooks/useAddOrderItem";
 
 const AVAILABLE_PRODUCTS: ProductOption[] = [
   { id: 1, name: "Pastel de Chocolate", price: 350 },
@@ -91,12 +91,17 @@ export const AddProductForm = ({ onAdd }: Props) => {
                         onMouseDown={() => handleSelectProduct(p)}
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
                       >
-                        {p.name} - <span className="text-gray-500">C$ {p.price.toFixed(2)}</span>
+                        {p.name} -{" "}
+                        <span className="text-gray-500">
+                          C$ {p.price.toFixed(2)}
+                        </span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <div className="p-4 text-center text-sm text-gray-500">No se encontraron productos.</div>
+                  <div className="p-4 text-center text-sm text-gray-500">
+                    No se encontraron productos.
+                  </div>
                 )}
               </div>
             )}

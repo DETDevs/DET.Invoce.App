@@ -4,7 +4,7 @@ import { Save, ArrowLeft } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
-import { useAddProductForm } from "../hooks/useAddProductForm";
+import { useAddProductForm } from "@/features/products/hooks/useAddProductForm";
 
 export const AddProductPage = () => {
   const navigate = useNavigate();

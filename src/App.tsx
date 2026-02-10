@@ -2,17 +2,17 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { DashboardLayout } from "@/features/dashboard/layout/DashBoardLayout";
 import { DashboardPage } from "@/features/dashboard/page/DashBoardPage";
-import { ProductsPage } from "./features/products/pages/ProductsPage";
-import { AddProductPage } from "./features/products/pages/AddProductPage";
-import { AddUserPage } from "./features/users/pages/AddUserPage";
-import { UsersPage } from "./features/users/pages/UsersPage";
-import { ReportsPage } from "./features/reports/pages/ReportsPage";
-import { NewOrderPage } from "./features/orders/pages/NewOrderPage";
-import { CreateCustomOrderPage } from "./features/custom-oders/page/CreateCustomOrderPage";
-import { NavigationBlockerProvider } from "./shared/context/NavigationBlockerContext";
-import { OrdersBoardPage } from "./features/custom-oders/page/OrdersBoardPage";
-import { SettingsPage } from "./features/settings/pages/SettingsPage";
-import { CashBoxProvider } from "./features/settings/pages/CashBoxContext";
+import { ProductsPage } from "@/features/products/pages/ProductsPage";
+import { AddProductPage } from "@/features/products/pages/AddProductPage";
+import { AddUserPage } from "@/features/users/pages/AddUserPage";
+import { UsersPage } from "@/features/users/pages/UsersPage";
+import { ReportsPage } from "@/features/reports/pages/ReportsPage";
+import { NewOrderPage } from "@/features/orders/pages/NewOrderPage";
+import { CreateCustomOrderPage } from "@/features/custom-oders/page/CreateCustomOrderPage";
+import { NavigationBlockerProvider } from "@/shared/context/NavigationBlockerContext";
+import { OrdersBoardPage } from "@/features/custom-oders/page/OrdersBoardPage";
+import { SettingsPage } from "@/features/settings/pages/SettingsPage";
+import { CashBoxProvider } from "@/features/settings/pages/CashBoxContext";
 
 function App() {
   return (

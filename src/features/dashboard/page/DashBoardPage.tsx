@@ -21,8 +21,8 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { TopSellerCarousel } from "../components/TopSellerCarousel";
-import { LowStockProductsModal } from "../components/LowStockProductsModal";
+import { TopSellerCarousel } from "@/features/dashboard/components/TopSellerCarousel";
+import { LowStockProductsModal } from "@/features/dashboard/components/LowStockProductsModal";
 
 const salesData = [
   { name: "Lun", value: 4000 },

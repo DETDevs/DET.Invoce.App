@@ -2,9 +2,9 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, Clock, Save } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
-import { useCreateOrder } from "../hooks/useCreateOrder";
-import { AddProductForm } from "../components/AddProductForm";
-import { OrderItemsList } from "../components/OrderItemsList";
+import { useCreateOrder } from "@/features/custom-oders/hooks/useCreateOrder";
+import { AddProductForm } from "@/features/custom-oders/components/AddProductForm";
+import { OrderItemsList } from "@/features/custom-oders/components/OrderItemsList";
 
 export const CreateCustomOrderPage = () => {
   const navigate = useNavigate();

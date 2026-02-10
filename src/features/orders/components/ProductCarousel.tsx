@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import type { Product } from "../types/index";
+import type { Product } from "@/features/orders/types/index";
 
 type Props = {
   title: string;
