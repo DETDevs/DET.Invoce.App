@@ -10,7 +10,6 @@ import {
   ArrowRight,
   PackageCheck,
   CheckCircle2,
-  Wallet,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { type Order, type OrderStatus } from "@/features/custom-oders/types";
@@ -32,7 +31,7 @@ export const OrderDetailsModal = ({
   onMoveStatus,
   onRegisterPayment,
 }: Props) => {
-  const [isPaymentMode, setIsPaymentMode] = useState(false);
+  // Estado local para el monto a pagar (si lo hubiera)
   const [paymentAmount, setPaymentAmount] = useState("");
 
   if (!isOpen || !order) return null;
@@ -41,75 +40,61 @@ export const OrderDetailsModal = ({
   const isPaid = remaining <= 0;
 
   const handleClose = () => {
-    setIsPaymentMode(false);
     setPaymentAmount("");
     onClose();
   };
 
   const handleConfirmPayment = () => {
     const amount = Number(paymentAmount);
-    if (amount >= remaining) {
-      onRegisterPayment(order.id, remaining);
-      setIsPaymentMode(false);
+    if (amount > 0 && amount <= remaining + 0.1) {
+      // Margen pequeño por decimales
+      onRegisterPayment(order.id, amount);
       setPaymentAmount("");
+      // No cerramos el modal, solo actualizamos el estado visualmente (que lo hará el padre)
     }
   };
 
   const renderFooterActions = () => {
-    if (isPaymentMode) {
-      const amount = Number(paymentAmount) || 0;
-      const change = amount > remaining ? amount - remaining : 0;
-
+    // 1. Si el pedido está marcado como ENTREGADO, solo mostrar opción de reimprimir si se desea, o nada.
+    if (order.status === "delivered") {
       return (
-        <div className="flex gap-2 md:gap-3 ml-auto w-full justify-end items-center animate-fade-in flex-wrap">
-          {change > 0 && (
-            <div className="flex items-center gap-2 mr-auto rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-green-800 animate-fade-in">
-              <Coins size={20} className="text-green-600" />
-              <div>
-                <span className="text-xs font-bold block leading-tight">
-                  Cambio:
-                </span>
-                <span className="text-lg font-extrabold leading-tight">
-                  C$ {change.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          )}
-          <span className="text-sm font-bold text-gray-500 mr-2 hidden sm:inline shrink-0">
-            Monto Recibido:
-          </span>
-
-          <div className="relative w-24 md:w-32">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-              C$
-            </span>
-            <input
-              type="number"
-              autoFocus
-              className="w-full pl-8 pr-2 py-2 border border-[#E8BC6E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E]/50 text-sm font-bold text-[#2D2D2D]"
-              placeholder={remaining.toFixed(2)}
-              value={paymentAmount}
-              onChange={(e) => setPaymentAmount(e.target.value)}
-            />
-          </div>
-
-          <button
-            onClick={() => setIsPaymentMode(false)}
-            className="px-3 md:px-4 py-2 rounded-lg text-gray-500 hover:bg-gray-100 font-bold text-xs md:text-sm"
-          >
-            Cancelar
-          </button>
-
-          <button
-            onClick={handleConfirmPayment}
-            disabled={!paymentAmount || Number(paymentAmount) < remaining}
-            className="px-3 md:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 font-bold text-xs md:text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Confirmar Pago
-          </button>
-        </div>
+        <button className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors ml-auto cursor-default text-sm md:text-base w-full md:w-auto">
+          <CheckCircle2 size={18} />
+          Pedido Completado
+        </button>
       );
     }
+
+    // 2. Si hay SALDO PENDIENTE (y no está cancelado/entregado), mostrar controles de pago DIRECTAMENTE.
+    //    Independientemente de si está en 'pending', 'production' o 'ready', si debe plata, se le puede cobrar.
+    //    Aunque por flujo, usualmente se cobra al final, el usuario pidió agilidad.
+    //    Pero mantengamos la lógica de estados para los botones de movimiento.
+
+    const paymentControls = !isPaid && (
+      <div className="flex gap-2 items-center w-full md:w-auto mt-3 md:mt-0 border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
+        <div className="relative w-full md:w-32">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">
+            C$
+          </span>
+          <input
+            type="number"
+            className="w-full pl-8 pr-2 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] focus:border-transparent text-sm font-bold text-[#2D2D2D]"
+            placeholder={remaining.toFixed(2)}
+            value={paymentAmount}
+            onChange={(e) => setPaymentAmount(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleConfirmPayment()}
+          />
+        </div>
+        <button
+          onClick={handleConfirmPayment}
+          disabled={!paymentAmount || Number(paymentAmount) <= 0}
+          className="px-4 py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 font-bold text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          <Coins size={16} />
+          <span className="hidden sm:inline">Cobrar</span>
+        </button>
+      </div>
+    );
 
     switch (order.status) {
       case "pending":
@@ -134,34 +119,21 @@ export const OrderDetailsModal = ({
 
       case "ready":
         return (
-          <div className="flex flex-col md:flex-row gap-2 md:gap-3 ml-auto w-full md:w-auto">
-            {!isPaid && (
-              <button
-                className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors border border-gray-300 text-sm md:text-base"
-                onClick={() => setIsPaymentMode(true)}
-              >
-                <Wallet size={18} />
-                Cobrar Saldo
-              </button>
-            )}
+          <div className="flex flex-col md:flex-row gap-3 w-full items-center justify-end">
+            {/* Controles de Pago (si debe) */}
+            {paymentControls}
 
+            {/* Boton Facturar (Desactivado si debe) */}
             <button
               onClick={() => onInvoice(order.id)}
               disabled={!isPaid}
-              className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+              title={!isPaid ? "Debe saldar la cuenta antes de facturar" : ""}
             >
               <FileText size={18} />
               Facturar y Entregar
             </button>
           </div>
-        );
-
-      case "delivered":
-        return (
-          <button className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors ml-auto cursor-default text-sm md:text-base w-full md:w-auto">
-            <CheckCircle2 size={18} />
-            Pedido Completado
-          </button>
         );
 
       default:
@@ -202,18 +174,24 @@ export const OrderDetailsModal = ({
               <span className="flex items-center gap-1">
                 <User size={14} /> {order.customer}
               </span>
-              <span className="flex items-center gap-1">
-                <Calendar size={14} />{" "}
-                {order.dueDate
-                  ? new Date(
-                      order.dueDate.replace(/-/g, "/"),
-                    ).toLocaleDateString("es-NI", {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                    })
-                  : "Sin fecha"}
-              </span>
+              {order.status !== "delivered" ? (
+                <span className="flex items-center gap-1">
+                  <Calendar size={14} />{" "}
+                  {order.dueDate
+                    ? new Date(
+                        order.dueDate.replace(/-/g, "/"),
+                      ).toLocaleDateString("es-NI", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                      })
+                    : "Sin fecha"}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-green-600 font-medium">
+                  <CheckCircle2 size={14} /> Entregado
+                </span>
+              )}
             </div>
           </div>
 
@@ -289,7 +267,7 @@ export const OrderDetailsModal = ({
         </div>
 
         <div className="p-4 md:p-5 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row items-center gap-3 md:gap-4 min-h-[80px] md:min-h-[88px]">
-          {!isPaymentMode && order.status === "delivered" && (
+          {order.status === "delivered" && (
             <button className="w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
               <Printer size={18} />
               <span className="md:hidden">Reimprimir</span>

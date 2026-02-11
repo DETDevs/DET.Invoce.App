@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -14,6 +14,8 @@ import {
   Kanban,
   Settings,
   ArrowLeftRight,
+  ChevronDown,
+  Receipt,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import logo from "@/assets/Logotipo.png";
@@ -25,22 +27,42 @@ export const Sidebar = () => {
   const { blocker } = useNavigationBlocker();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
+    { 0: true, 1: true, 2: true }, // Todos los grupos expandidos por defecto
+  );
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-    { icon: Kanban, label: "Tablero Producción", path: "/tablero" },
-    { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },
-    { icon: ShoppingBag, label: "Productos", path: "/productos" },
-    { icon: PlusCircle, label: "Nuevo Producto", path: "/nuevo-producto" },
-    { icon: FileEdit, label: "Realizar Pedido", path: "/realizar-pedido" },
+  // Grupos de menú organizados por categoría
+  const menuGroups = [
     {
-      icon: ArrowLeftRight,
-      label: "Movimientos de Caja",
-      path: "/movimientos-caja",
+      title: "Operaciones",
+      items: [
+        { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+        { icon: Kanban, label: "Tablero Producción", path: "/tablero" },
+        { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },
+        { icon: FileEdit, label: "Realizar Pedido", path: "/realizar-pedido" },
+        {
+          icon: ArrowLeftRight,
+          label: "Movimientos de Caja",
+          path: "/movimientos-caja",
+        },
+      ],
     },
-    { icon: Bell, label: "Reportes", path: "/reportes" },
-    { icon: Users, label: "Usuarios", path: "/usuarios" },
-    { icon: Settings, label: "Configuración", path: "/configuracion" },
+    {
+      title: "Gestión",
+      items: [
+        { icon: Receipt, label: "Facturas", path: "/facturas" },
+        { icon: ShoppingBag, label: "Productos", path: "/productos" },
+        { icon: PlusCircle, label: "Nuevo Producto", path: "/nuevo-producto" },
+        { icon: Bell, label: "Reportes", path: "/reportes" },
+        { icon: Users, label: "Usuarios", path: "/usuarios" },
+      ],
+    },
+    {
+      title: "Sistema",
+      items: [
+        { icon: Settings, label: "Configuración", path: "/configuracion" },
+      ],
+    },
   ];
 
   const handleNavigation = (path: string) => {
@@ -59,6 +81,13 @@ export const Sidebar = () => {
   const handleConfirmLogout = () => {
     setIsLogoutDialogOpen(false);
     navigate("/login");
+  };
+
+  const toggleGroup = (groupIndex: number) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupIndex]: !prev[groupIndex],
+    }));
   };
 
   return (
@@ -93,7 +122,7 @@ export const Sidebar = () => {
           lg:translate-x-0 lg:shadow-none
         `}
       >
-        <div className="flex-shrink-0 p-4 flex flex-col items-center relative">
+        <div className="shrink-0 p-4 flex flex-col items-center relative">
           <button
             onClick={() => setIsMobileMenuOpen(false)}
             className="lg:hidden absolute top-0 right-0 text-[#E8BC6E] hover:text-white transition-colors"
@@ -110,37 +139,70 @@ export const Sidebar = () => {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-5">
-          {menuItems.map((item, index) => {
-            const isActive =
-              location.pathname === item.path ||
-              (item.path !== "/" && location.pathname.startsWith(item.path));
-
-            return (
+        <nav className="flex-1 overflow-y-auto px-4 py-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#E8BC6E]/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#E8BC6E]/50 transition-colors">
+          {menuGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className="mb-4">
+              {/* Header del grupo con dropdown */}
               <button
-                key={index}
-                onClick={() => handleNavigation(item.path)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-                  isActive
-                    ? "bg-[#E8BC6E] text-white shadow-lg translate-x-1"
-                    : "text-gray-300 hover:bg-white/5 hover:text-white"
+                onClick={() => toggleGroup(groupIndex)}
+                className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-[#E8BC6E] uppercase tracking-wider hover:bg-white/5 rounded-lg transition-colors mb-2"
+              >
+                <span>{group.title}</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-200 ${
+                    expandedGroups[groupIndex] ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Items del grupo con animación de colapso */}
+              <div
+                className={`space-y-1 overflow-hidden transition-all duration-300 ${
+                  expandedGroups[groupIndex]
+                    ? "max-h-[500px] opacity-100"
+                    : "max-h-0 opacity-0"
                 }`}
               >
-                <item.icon
-                  size={20}
-                  className={
-                    isActive
-                      ? "text-white"
-                      : "text-[#E8BC6E] group-hover:text-white"
-                  }
-                />
-                <span className="font-medium text-sm">{item.label}</span>
-              </button>
-            );
-          })}
+                {group.items.map((item, itemIndex) => {
+                  const isActive =
+                    location.pathname === item.path ||
+                    (item.path !== "/" &&
+                      location.pathname.startsWith(item.path));
+
+                  return (
+                    <button
+                      key={itemIndex}
+                      onClick={() => handleNavigation(item.path)}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+                        isActive
+                          ? "bg-[#E8BC6E] text-white shadow-lg translate-x-1"
+                          : "text-gray-300 hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      <item.icon
+                        size={20}
+                        className={
+                          isActive
+                            ? "text-white"
+                            : "text-[#E8BC6E] group-hover:text-white"
+                        }
+                      />
+                      <span className="font-medium text-sm">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Separador entre grupos (excepto el último) */}
+              {groupIndex < menuGroups.length - 1 && (
+                <div className="h-px bg-white/10 mt-4" />
+              )}
+            </div>
+          ))}
         </nav>
 
-        <div className="flex-shrink-0 p-4 mt-auto border-t border-white/10">
+        <div className="shrink-0 p-4 mt-auto border-t border-white/10">
           <button
             onClick={handleLogoutClick}
             className="w-full flex items-center justify-center space-x-2 bg-[#E8BC6E] hover:bg-[#dca34b] text-white py-3 rounded-lg transition-colors shadow-md font-medium"

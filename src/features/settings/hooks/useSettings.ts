@@ -5,7 +5,7 @@ import { type Settings } from "@/features/settings/types";
 const SETTINGS_STORAGE_KEY = "app-settings";
 
 const defaultSettings: Settings = {
-  businessName: "Pastelería Delicias",
+  businessName: "Dulces Momentos",
   businessAddress: "Managua, Nicaragua",
   businessPhone: "versiesncesario",
   taxId: "versiesnecesario",

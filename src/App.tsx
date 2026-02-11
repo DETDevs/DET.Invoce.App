@@ -14,6 +14,7 @@ import { OrdersBoardPage } from "@/features/custom-oders/page/OrdersBoardPage";
 import { SettingsPage } from "@/features/settings/pages/SettingsPage";
 import { CashBoxProvider } from "@/features/settings/pages/CashBoxContext";
 import { CashMovementsPage } from "@/features/cash-movements";
+import { InvoicesPage } from "@/features/invoices/pages/InvoicesPage";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
             <Route path="nuevo-usuario" element={<AddUserPage />} />
             <Route path="reportes" element={<ReportsPage />} />
             <Route path="ordenes" element={<NewOrderPage />} />
+            <Route path="facturas" element={<InvoicesPage />} />
             <Route path="movimientos-caja" element={<CashMovementsPage />} />
             <Route path="configuracion" element={<SettingsPage />} />
           </Route>

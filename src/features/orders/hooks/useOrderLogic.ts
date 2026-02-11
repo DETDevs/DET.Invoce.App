@@ -66,18 +66,47 @@ export const useOrderLogic = () => {
 
     const handleCheckout = () => {
         if (cart.length > 0) {
-            toast.success("Facturado correctamente");
+            // Crear factura
+            const invoice = {
+                id: `FAC-${orderNumber}`,
+                orderNumber,
+                items: cart.map(item => ({
+                    productId: item.id,
+                    productName: item.name,
+                    quantity: item.quantity,
+                    unitPrice: item.price,
+                    subtotal: item.price * item.quantity
+                })),
+                subtotal: total,
+                tax: 0,
+                total: total,
+                status: 'completed' as const,
+                createdAt: new Date().toISOString(),
+                createdBy: 'Usuario Actual'
+            };
+
+            // Guardar factura en localStorage
+            try {
+                const stored = localStorage.getItem('invoices');
+                const invoices = stored ? JSON.parse(stored) : [];
+                invoices.unshift(invoice);
+                localStorage.setItem('invoices', JSON.stringify(invoices));
+            } catch (error) {
+                console.error('Error al guardar factura:', error);
+            }
+
+            toast.success("Factura generada correctamente");
             refreshOrder();
             setIsCartOpen(false);
         }
     };
 
     const handleRequestCancel = () => {
-    setPendingPath(null); // This is a manual cancel, not a navigation one.
+        setPendingPath(null); // This is a manual cancel, not a navigation one.
         if (cart.length === 0) {
             setIsCartOpen(false);
         } else {
-      setIsCartOpen(false); // Close the summary panel to show the dialog
+            setIsCartOpen(false); // Close the summary panel to show the dialog
             setDialogConfig({
                 title: "Cancelar Orden",
                 message:

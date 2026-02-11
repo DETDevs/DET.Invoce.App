@@ -55,8 +55,8 @@ const MOCK_ORDERS: Order[] = [
         items: ["1x Cheesecake de fresa"],
         total: 600,
         deposit: 300,
-        paymentStatus: "Pendiente",
-        dueDate: getDateString(-2),
+        paymentStatus: "Abonado",
+        dueDate: getDateString(5),
         status: "pending",
     },
 ];

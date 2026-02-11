@@ -1,6 +1,5 @@
-import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { Clock, Banknote } from "lucide-react";
+import { Clock, User, CheckCircle2 } from "lucide-react";
 import { type Order } from "@/features/custom-oders/types";
 
 interface Props {
@@ -9,7 +8,7 @@ interface Props {
   onClick: (order: Order) => void;
 }
 
-const PaymentBadge = ({
+const PaymentProgress = ({
   status,
   total,
   deposit,
@@ -18,34 +17,50 @@ const PaymentBadge = ({
   total: number;
   deposit: number;
 }) => {
-  const styles: Record<string, string> = {
-    Pendiente: "bg-red-100 text-red-700 border-red-200",
-    Abonado: "bg-amber-100 text-amber-700 border-amber-200",
-    Pagado: "bg-green-100 text-green-700 border-green-200",
-  };
+  const progress = Math.min((deposit / total) * 100, 100);
 
-  const remaining = total - deposit;
+  // Colores para la barra
+  const colorClass =
+    status === "Pagado"
+      ? "bg-green-500"
+      : status === "Abonado"
+        ? "bg-amber-500"
+        : "bg-gray-200"; // Pendiente en gris suave
 
   return (
-    <div className="flex flex-col items-end">
-      <div
-        className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${styles[status]}`}
-      >
-        <Banknote size={14} className="opacity-80" />
-        <span className="text-[10px] uppercase font-bold">{status}</span>
-      </div>
-      {status !== "Pagado" && (
-        <span className="text-xs text-gray-500 font-medium mt-1">
-          Restan: C$ {remaining.toFixed(2)}
+    <div className="w-full">
+      <div className="flex justify-between items-center mb-1">
+        <span
+          className={`text-[10px] uppercase font-bold ${
+            status === "Pagado"
+              ? "text-green-700"
+              : status === "Abonado"
+                ? "text-amber-700"
+                : "text-gray-400" // Pendiente en gris discreto
+          }`}
+        >
+          {status === "Pendiente" ? "Sin Pago" : status}
         </span>
-      )}
+        <span className="text-[10px] font-medium text-gray-400">
+          {Math.round(progress)}%
+        </span>
+      </div>
+      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full ${colorClass} transition-all duration-500`}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      {/* Si el progreso es 0, la barra de fondo gris (bg-gray-100) ya sirve como indicador de total pendiente */}
     </div>
   );
 };
 
-const getDueDateInfo = (dueDate: string): { text: string; color: string } => {
+const getDueDateInfo = (
+  dueDate: string,
+): { text: string; color: string; urgent: boolean } => {
   if (!dueDate) {
-    return { text: "Sin fecha", color: "bg-gray-100 text-gray-500" };
+    return { text: "Sin fecha", color: "text-gray-400", urgent: false };
   }
 
   const today = new Date();
@@ -59,29 +74,42 @@ const getDueDateInfo = (dueDate: string): { text: string; color: string } => {
 
   if (diffDays < 0) {
     return {
-      text: `Atrasado por ${Math.abs(diffDays)} día(s)`,
-      color: "bg-red-100 text-red-700 border border-red-200",
+      text: `${Math.abs(diffDays)}d atrasado`,
+      color: "text-red-600 font-bold",
+      urgent: true,
     };
   }
   if (diffDays === 0) {
     return {
-      text: "Entrega Hoy",
-      color: "bg-red-200 text-red-800 font-bold border border-red-300",
+      text: "¡Hoy!",
+      color: "text-red-600 font-bold",
+      urgent: true,
+    };
+  }
+  if (diffDays === 1) {
+    return {
+      text: "Mañana",
+      color: "text-amber-600 font-medium",
+      urgent: true,
     };
   }
   if (diffDays <= 3) {
     return {
-      text: `Faltan ${diffDays} día(s)`,
-      color: "bg-amber-100 text-amber-700 border border-amber-200",
+      text: `En ${diffDays} días`,
+      color: "text-amber-600",
+      urgent: false,
     };
   }
   return {
-    text: `Faltan ${diffDays} días`,
-    color: "bg-green-100 text-green-700 border border-green-200",
+    text: `En ${diffDays} días`,
+    color: "text-green-600",
+    urgent: false,
   };
 };
 
 export const OrderCard = ({ order, index, onClick }: Props) => {
+  const dueDateInfo = getDueDateInfo(order.dueDate);
+
   return (
     <Draggable draggableId={order.id} index={index}>
       {(provided, snapshot) => (
@@ -90,48 +118,70 @@ export const OrderCard = ({ order, index, onClick }: Props) => {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           onClick={() => onClick(order)}
-          className={`bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all cursor-pointer group mb-3 ${snapshot.isDragging ? "shadow-lg rotate-2" : ""}`}
+          className={`bg-white p-3.5 rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-[#E8BC6E]/30 transition-all cursor-pointer group mb-3 relative overflow-hidden ${snapshot.isDragging ? "shadow-xl rotate-2 ring-2 ring-[#E8BC6E]" : ""}`}
           style={provided.draggableProps.style}
         >
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <span className="text-xs font-bold text-gray-400">
-                #{order.id}
-              </span>
-              <h4 className="font-bold text-[#2D2D2D] text-sm">
+          {/* Indicador lateral de urgencia si aplica */}
+          {dueDateInfo.urgent && (
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-400" />
+          )}
+
+          {/* Cabecera: Cliente + ID */}
+          <div className="flex justify-between items-start mb-2.5 pl-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
+                <User size={12} />
+              </div>
+              <h4 className="font-bold text-[#2D2D2D] text-sm truncate leading-snug">
                 {order.customer}
               </h4>
             </div>
-            <PaymentBadge
+            <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded ml-2 shrink-0">
+              #{order.id}
+            </span>
+          </div>
+
+          {/* Resumen de Items (1 + N más) */}
+          <div className="mb-3 pl-1.5">
+            <p className="text-xs text-gray-600 font-medium truncate">
+              {order.items[0]}
+            </p>
+            {order.items.length > 1 && (
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                + {order.items.length - 1} producto(s) más
+              </p>
+            )}
+          </div>
+
+          {/* Estado de Pago Visual */}
+          <div className="mb-3 pl-1.5 pr-0.5">
+            <PaymentProgress
               status={order.paymentStatus}
               total={order.total}
               deposit={order.deposit}
             />
           </div>
 
-          <div className="mb-3">
-            <ul className="text-xs text-gray-600 space-y-1">
-              {order.items.map((item, idx) => (
-                <li key={idx} className="line-clamp-1">
-                  • {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Footer: Fecha y Total */}
+          <div className="flex items-end justify-between pt-2.5 border-t border-gray-50 pl-1.5">
+            {order.status !== "delivered" ? (
+              <div
+                className={`flex items-center gap-1.5 text-xs ${dueDateInfo.color}`}
+              >
+                <Clock size={13} />
+                <span>{dueDateInfo.text}</span>
+              </div>
+            ) : (
+              <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                <CheckCircle2 size={13} /> Entregado
+              </span>
+            )}
 
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-2">
-            <div className="flex items-center gap-2 text-xs font-medium">
-              {(({ text, color }) => (
-                <div
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${color}`}
-                >
-                  <Clock size={14} />
-                  <span>{text}</span>
-                </div>
-              ))(getDueDateInfo(order.dueDate))}
-            </div>
-            <div className="font-bold text-[#2D2D2D] text-sm">
-              C$ {order.total.toFixed(2)}
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-gray-400">Total</span>
+              <span className="font-bold text-[#2D2D2D] text-sm leading-none">
+                C$ {order.total.toFixed(2)}
+              </span>
             </div>
           </div>
         </div>
