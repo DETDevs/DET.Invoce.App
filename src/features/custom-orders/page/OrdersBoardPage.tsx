@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { Plus, SlidersHorizontal } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
-import { useOrdersBoard } from "@/features/custom-oders/hooks/useOrdersBoard";
-import { KanbanColumn } from "@/features/custom-oders/components/KanbanColumn";
-import { OrderDetailsModal } from "@/features/custom-oders/components/OrderDetailsModal";
-import { type Order, type OrderStatus } from "@/features/custom-oders/types";
+import { useOrdersBoard } from "@/features/custom-orders/hooks/useOrdersBoard";
+import { KanbanColumn } from "@/features/custom-orders/components/KanbanColumn";
+import { OrderDetailsModal } from "@/features/custom-orders/components/OrderDetailsModal";
+import { type Order, type OrderStatus } from "@/features/custom-orders/types";
 
 export const OrdersBoardPage = () => {
   const { orders, onDragEnd, moveOrder, registerPayment } = useOrdersBoard();

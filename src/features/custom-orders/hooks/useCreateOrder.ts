@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import type { CreateOrderFormData, OrderItem, ProductOption, PaymentStatus } from "@/features/custom-oders/types";
+import { useNavigate } from "react-router-dom";
+import type { CreateOrderFormData, OrderItem, ProductOption, PaymentStatus, Order } from "@/features/custom-orders/types";
+import { useOrdersStore } from "@/features/custom-orders/store/useOrdersStore";
 
 export const useCreateOrder = () => {
+  const navigate = useNavigate();
+  const { addOrder } = useOrdersStore();
+
   const [formData, setFormData] = useState<CreateOrderFormData>({
     customerName: "",
     customerId: "",
@@ -82,8 +87,29 @@ export const useCreateOrder = () => {
       return;
     }
 
-    console.log("Enviando pedido:", formData);
+    const total = calculateTotal();
+    const deposit = Number(formData.deposit) || 0;
+
+    // Transform items to string array for Order type compatibility
+    const formattedItems = formData.items.map(item =>
+      `${item.quantity}x ${item.name}${item.description ? ` (${item.description})` : ''}`
+    );
+
+    const newOrder: Order = {
+      id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+      customer: formData.customerName,
+      items: formattedItems,
+      total: total,
+      deposit: deposit,
+      paymentStatus: formData.status,
+      dueDate: formData.dueDate,
+      status: "pending",
+    };
+
+    console.log("Creando pedido:", newOrder);
+    addOrder(newOrder);
     toast.success("Pedido creado exitosamente");
+    navigate("/tablero");
   };
 
   return {

@@ -1,6 +1,6 @@
 import { Draggable } from "@hello-pangea/dnd";
 import { Clock, User, CheckCircle2 } from "lucide-react";
-import { type Order } from "@/features/custom-oders/types";
+import { type Order } from "@/features/custom-orders/types";
 
 interface Props {
   order: Order;

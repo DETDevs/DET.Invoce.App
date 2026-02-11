@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { ProductOption } from "@/features/custom-oders/types";
+import type { ProductOption } from "@/features/custom-orders/types";
 
 export const useAddOrderItem = (products: ProductOption[]) => {
   const [selectedProductId, setSelectedProductId] = useState<string>("");

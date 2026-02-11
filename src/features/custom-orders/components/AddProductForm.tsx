@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Search } from "lucide-react";
-import type { ProductOption } from "@/features/custom-oders/types";
-import { useAddOrderItem } from "@/features/custom-oders/hooks/useAddOrderItem";
+import type { ProductOption } from "@/features/custom-orders/types";
+import { useAddOrderItem } from "@/features/custom-orders/hooks/useAddOrderItem";
 
 const AVAILABLE_PRODUCTS: ProductOption[] = [
   { id: 1, name: "Pastel de Chocolate", price: 350 },

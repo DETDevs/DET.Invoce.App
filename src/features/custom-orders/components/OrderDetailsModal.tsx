@@ -12,7 +12,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { type Order, type OrderStatus } from "@/features/custom-oders/types";
+import { type Order, type OrderStatus } from "@/features/custom-orders/types";
 
 interface Props {
   isOpen: boolean;
