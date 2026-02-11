@@ -1,18 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Coins,
   X,
   Printer,
   FileText,
   User,
-  Clock,
   Calendar,
   ArrowRight,
   PackageCheck,
   CheckCircle2,
 } from "lucide-react";
-import toast from "react-hot-toast";
-import { type Order, type OrderStatus } from "@/features/custom-orders/types";
+
+import type { Order, OrderStatus } from "@/shared/types";
 
 interface Props {
   isOpen: boolean;

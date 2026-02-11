@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Search } from "lucide-react";
-import type { ProductOption } from "@/features/custom-orders/types";
+import type { ProductOption } from "@/shared/types";
 import { useAddOrderItem } from "@/features/custom-orders/hooks/useAddOrderItem";
 
 const AVAILABLE_PRODUCTS: ProductOption[] = [
@@ -25,7 +25,6 @@ export const AddProductForm = ({ onAdd }: Props) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const {
-    selectedProductId,
     setSelectedProductId,
     quantity,
     setQuantity,

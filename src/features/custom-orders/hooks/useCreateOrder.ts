@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import type { CreateOrderFormData, OrderItem, ProductOption, PaymentStatus, Order } from "@/features/custom-orders/types";
+import type { CreateOrderFormData } from "@/features/custom-orders/types";
+import type { Order, OrderItem, ProductOption, PaymentStatus } from "@/shared/types";
 import { useOrdersStore } from "@/features/custom-orders/store/useOrdersStore";
 
 export const useCreateOrder = () => {

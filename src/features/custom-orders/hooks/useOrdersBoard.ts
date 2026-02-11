@@ -1,5 +1,5 @@
 import { type DropResult } from "@hello-pangea/dnd";
-import { type Order, type OrderStatus } from "@/features/custom-orders/types";
+import type { OrderStatus } from "@/shared/types";
 import { useOrdersStore } from "@/features/custom-orders/store/useOrdersStore";
 
 export const useOrdersBoard = () => {

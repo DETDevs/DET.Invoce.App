@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Order, OrderStatus, PaymentStatus } from '../types';
+import type { Order, OrderStatus, PaymentStatus } from '@/shared/types';
 
 interface OrdersState {
     orders: Order[];

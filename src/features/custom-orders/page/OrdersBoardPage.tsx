@@ -7,7 +7,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useOrdersBoard } from "@/features/custom-orders/hooks/useOrdersBoard";
 import { KanbanColumn } from "@/features/custom-orders/components/KanbanColumn";
 import { OrderDetailsModal } from "@/features/custom-orders/components/OrderDetailsModal";
-import { type Order, type OrderStatus } from "@/features/custom-orders/types";
+import { type Order, type OrderStatus } from "@/shared/types";
 
 export const OrdersBoardPage = () => {
   const { orders, onDragEnd, moveOrder, registerPayment } = useOrdersBoard();

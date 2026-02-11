@@ -1,13 +1,4 @@
-export type PaymentStatus = 'Pendiente' | 'Abonado' | 'Pagado';
-export type OrderStatus = 'pending' | 'production' | 'ready' | 'delivered';
-
-export interface OrderItem {
-  productId: number;
-  name: string;
-  price: number;
-  quantity: number;
-  description?: string;
-}
+import type { OrderItem, PaymentStatus } from "@/shared/types";
 
 export interface CreateOrderFormData {
   customerName: string;
@@ -17,17 +8,4 @@ export interface CreateOrderFormData {
   comments?: string;
   status: PaymentStatus;
   dueDate: string;
-}
-
-export type ProductOption = { id: number; name: string; price: number };
-
-export interface Order {
-  id: string;
-  customer: string;
-  items: string[];
-  total: number;
-  deposit: number;
-  paymentStatus: PaymentStatus;
-  dueDate: string;
-  status: OrderStatus;
 }
