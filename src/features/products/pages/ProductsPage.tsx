@@ -5,69 +5,14 @@ import { EditProductModal } from "@/features/products/components/EditProductModa
 import { StockAdjustmentModal } from "@/features/products/components/StockAdjustmentModal";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
-
-const INITIAL_PRODUCTS = [
-  {
-    id: 1,
-    name: "Choco-lava Cake",
-    price: 20,
-    stock: 25,
-    category: "Cake",
-    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587",
-  },
-  {
-    id: 2,
-    name: "Garlic Bread",
-    price: 5,
-    stock: 25,
-    category: "Panes",
-    image: "https://images.unsplash.com/photo-1573140247632-f84660f67126",
-  },
-  {
-    id: 3,
-    name: "Choco-lava Pastry",
-    price: 15,
-    stock: 12,
-    category: "Pastry",
-    image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476d",
-  },
-  {
-    id: 4,
-    name: "Red Velvet Slice",
-    price: 18,
-    stock: 3,
-    category: "Cake",
-    image: "https://images.unsplash.com/photo-1616541823729-00fe0aacd32c",
-  },
-  {
-    id: 5,
-    name: "Croissant",
-    price: 4,
-    stock: 30,
-    category: "Panes",
-    image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a",
-  },
-  {
-    id: 6,
-    name: "Blueberry Muffin",
-    price: 3,
-    stock: 15,
-    category: "Pastry",
-    image: "https://images.unsplash.com/photo-1607958996333-41aef7caefaa",
-  },
-  {
-    id: 7,
-    name: "Tiramisu",
-    price: 22,
-    stock: 5,
-    category: "Cake",
-    image: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9",
-  },
-];
+import { productAPI } from "@/api/products";
+import type { Product } from "@/api/products/types";
 
 export const ProductsPage = () => {
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
-  const [filteredProducts, setFilteredProducts] = useState(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -85,6 +30,27 @@ export const ProductsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await productAPI.getAll();
+        setProducts(data);
+        setFilteredProducts(data);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Error al cargar productos",
+        );
+        console.error("Error fetching products:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
 
   const getStockStatus = (stock: number) => {
     if (stock <= 5) {
@@ -116,7 +82,7 @@ export const ProductsPage = () => {
 
     if (filters.category) {
       result = result.filter(
-        (product) => product.category === filters.category,
+        (product) => product.categoryName === filters.category,
       );
     }
 
@@ -158,7 +124,9 @@ export const ProductsPage = () => {
 
   const handleSaveProduct = (updatedProduct: any) => {
     setProducts(
-      products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)),
+      products.map((p) =>
+        p.productId === updatedProduct.productId ? updatedProduct : p,
+      ),
     );
   };
 
@@ -168,7 +136,9 @@ export const ProductsPage = () => {
     reason: string,
   ) => {
     setProducts(
-      products.map((p) => (p.id === productId ? { ...p, stock: newStock } : p)),
+      products.map((p) =>
+        p.productId === productId ? { ...p, quantity: newStock } : p,
+      ),
     );
     console.log(
       `Stock ajustado para producto ${productId}. Nuevo stock: ${newStock}. Razón: ${reason}`,
@@ -176,9 +146,46 @@ export const ProductsPage = () => {
   };
 
   const handleConfirmDelete = () => {
-    setProducts(products.filter((p) => p.id !== selectedProduct.id));
+    setProducts(
+      products.filter((p) => p.productId !== selectedProduct.productId),
+    );
     setIsDeleteModalOpen(false);
   };
+
+  // UI loading
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#FDFBF7]">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#E8BC6E] border-r-transparent"></div>
+          <p className="mt-4 text-gray-600 font-medium">
+            Cargando productos...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // UI error
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#FDFBF7]">
+        <div className="text-center max-w-md">
+          <div className="text-red-600 text-5xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Error al cargar productos
+          </h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-[#E8BC6E] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#dca34b] transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-6 xl:p-8 bg-[#FDFBF7] min-h-screen">
@@ -264,13 +271,16 @@ export const ProductsPage = () => {
               {paginatedProducts.length > 0 ? (
                 paginatedProducts.map((product) => (
                   <tr
-                    key={product.id}
+                    key={product.productId}
                     className="hover:bg-[#FDFBF7] transition-colors group"
                   >
                     <td className="px-4 lg:px-6 py-3">
                       <div className="h-10 w-10 lg:h-12 lg:w-12 rounded-lg overflow-hidden border border-gray-100">
                         <img
-                          src={product.image}
+                          src={
+                            product.imageUrl ||
+                            "https://via.placeholder.com/150"
+                          }
                           alt={product.name}
                           className="h-full w-full object-cover"
                         />
@@ -288,11 +298,11 @@ export const ProductsPage = () => {
                     </td>
                     <td className="px-4 lg:px-6 py-3">
                       {(() => {
-                        const status = getStockStatus(product.stock);
+                        const status = getStockStatus(product.quantity);
                         return (
                           <div className="flex flex-col items-start gap-1">
                             <span className="text-sm font-bold text-[#2D2D2D]">
-                              {product.stock} u.
+                              {product.quantity} u.
                             </span>
                             <span
                               className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border ${status.color}`}
@@ -305,7 +315,7 @@ export const ProductsPage = () => {
                     </td>
                     <td className="px-4 lg:px-6 py-3">
                       <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#F3EFE0] text-[#593D31]">
-                        {product.category}
+                        {product.categoryName}
                       </span>
                     </td>
                     <td className="px-4 lg:px-6 py-3 text-right">
@@ -352,15 +362,17 @@ export const ProductsPage = () => {
         <div className="md:hidden">
           {paginatedProducts.length > 0 ? (
             paginatedProducts.map((product) => {
-              const status = getStockStatus(product.stock);
+              const status = getStockStatus(product.quantity);
               return (
                 <div
-                  key={product.id}
+                  key={product.productId}
                   className="p-4 border-b border-red-20 border-gray-100 last:border-none flex items-center gap-4 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden border border-gray-100">
+                  <div className="h-16 w-16 shrink-0 rounded-xl overflow-hidden border border-gray-100">
                     <img
-                      src={product.image}
+                      src={
+                        product.imageUrl || "https://via.placeholder.com/150"
+                      }
                       alt={product.name}
                       className="h-full w-full object-cover"
                     />
@@ -372,7 +384,7 @@ export const ProductsPage = () => {
                     </h3>
                     <div className="flex flex-wrap gap-2 mt-1">
                       <span className="text-xs bg-[#F3EFE0] text-[#593D31] px-2 py-0.5 rounded-full font-medium">
-                        {product.category}
+                        {product.categoryName}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 mt-2 text-sm">
@@ -383,7 +395,7 @@ export const ProductsPage = () => {
                       <span
                         className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${status.color}`}
                       >
-                        {product.stock} u.
+                        {product.quantity} u.
                       </span>
                     </div>
                   </div>
