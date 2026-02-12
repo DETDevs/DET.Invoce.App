@@ -152,7 +152,6 @@ export const ProductsPage = () => {
     setIsDeleteModalOpen(false);
   };
 
-  // UI loading
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FDFBF7]">
@@ -166,19 +165,21 @@ export const ProductsPage = () => {
     );
   }
 
-  // UI error
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FDFBF7]">
-        <div className="text-center max-w-md">
+        <div className="text-center max-w-md px-4">
           <div className="text-red-600 text-5xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Error al cargar productos
+            No pudimos cargar los productos
           </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <p className="text-gray-600 mb-6">
+            Parece que hubo un problema al conectar con el sistema. Por favor,
+            verifica tu conexión a internet o contacta al soporte técnico.
+          </p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-[#E8BC6E] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#dca34b] transition-colors"
+            className="px-6 py-3 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95"
           >
             Reintentar
           </button>

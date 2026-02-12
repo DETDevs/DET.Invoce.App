@@ -9,14 +9,7 @@ import {
   Plus,
   Minus,
 } from "lucide-react";
-
-interface Product {
-  id: number;
-  name: string;
-  stock: number;
-  image: string;
-  category: string;
-}
+import type { Product } from "@/api/products/types";
 
 interface StockAdjustmentModalProps {
   isOpen: boolean;
@@ -97,13 +90,13 @@ export const StockAdjustmentModal = ({
   const numAdjustment = typeof adjustment === "string" ? 0 : adjustment;
   const finalStock = product
     ? type === "in"
-      ? product.stock + numAdjustment
-      : product.stock - numAdjustment
+      ? product.quantity + numAdjustment
+      : product.quantity - numAdjustment
     : 0;
 
   const handleSubmit = () => {
     if (product) {
-      onSave(product.id, finalStock, reason);
+      onSave(product.productId, finalStock, reason);
       onClose();
     }
   };
@@ -129,7 +122,7 @@ export const StockAdjustmentModal = ({
         <div className="p-6 overflow-y-auto">
           <div className="flex items-center gap-4 mb-6 bg-gray-50 p-3 rounded-xl border border-gray-100">
             <img
-              src={product.image}
+              src={product.imageUrl || "https://via.placeholder.com/150"}
               alt={product.name}
               className="w-14 h-14 rounded-lg object-cover border border-gray-200"
             />
@@ -138,7 +131,7 @@ export const StockAdjustmentModal = ({
               <p className="text-sm text-gray-500">
                 Stock Actual:{" "}
                 <span className="font-bold text-[#2D2D2D]">
-                  {product.stock}
+                  {product.quantity}
                 </span>
               </p>
             </div>
@@ -226,7 +219,7 @@ export const StockAdjustmentModal = ({
                 Antes
               </span>
               <span className="text-lg font-bold text-gray-400">
-                {product.stock}
+                {product.quantity}
               </span>
             </div>
             <ArrowRight className="text-[#E8BC6E]" />

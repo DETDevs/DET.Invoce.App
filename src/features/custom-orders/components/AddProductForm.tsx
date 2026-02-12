@@ -1,16 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Search } from "lucide-react";
 import type { ProductOption } from "@/shared/types";
 import { useAddOrderItem } from "@/features/custom-orders/hooks/useAddOrderItem";
-
-const AVAILABLE_PRODUCTS: ProductOption[] = [
-  { id: 1, name: "Pastel de Chocolate", price: 350 },
-  { id: 2, name: "Tres Leches", price: 400 },
-  { id: 3, name: "Cheesecake de Fresa", price: 450 },
-  { id: 4, name: "Cupcakes (Docena)", price: 180 },
-  { id: 5, name: "Galletas Decoradas", price: 25 },
-  { id: 6, name: "Pie de Limón", price: 320 },
-];
+import { productAPI } from "@/api/products";
+import type { Product } from "@/api/products/types";
 
 interface Props {
   onAdd: (
@@ -23,6 +16,34 @@ interface Props {
 export const AddProductForm = ({ onAdd }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        setError(false);
+        const data = await productAPI.getAll();
+        setProducts(data.filter((p) => p.isActive));
+      } catch (err) {
+        console.error("Error loading products:", err);
+        setError(true);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
+
+  const AVAILABLE_PRODUCTS: ProductOption[] = products.map((p) => ({
+    id: p.productId,
+    name: p.name,
+    price: p.price,
+  }));
 
   const {
     setSelectedProductId,
@@ -62,6 +83,16 @@ export const AddProductForm = ({ onAdd }: Props) => {
       <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
         Agregar Producto
       </h3>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+          <span className="text-red-600 text-sm">
+            No pudimos cargar los productos. Por favor, verifica tu conexión o
+            contacta al administrador.
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
         <div className="md:col-span-4">
           <label className="block text-xs text-gray-500 mb-1">Producto</label>
@@ -77,8 +108,15 @@ export const AddProductForm = ({ onAdd }: Props) => {
                 if (searchTerm) setIsDropdownOpen(true);
               }}
               onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
-              placeholder="Buscar producto..."
-              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm"
+              placeholder={
+                loading
+                  ? "Cargando productos..."
+                  : error
+                    ? "No disponible"
+                    : "Buscar producto..."
+              }
+              disabled={loading || error}
+              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm disabled:opacity-50 disabled:cursor-wait"
             />
             {isDropdownOpen && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -99,7 +137,9 @@ export const AddProductForm = ({ onAdd }: Props) => {
                   </ul>
                 ) : (
                   <div className="p-4 text-center text-sm text-gray-500">
-                    No se encontraron productos.
+                    {searchTerm
+                      ? `No encontramos productos con "${searchTerm}"`
+                      : "Escribe para buscar productos"}
                   </div>
                 )}
               </div>
