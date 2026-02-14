@@ -7,8 +7,6 @@ import type {
     OrdersReportData
 } from "@/features/reports/types";
 
-// --- SALES CALCULATIONS ---
-
 export const calculateSalesReport = (invoices: Invoice[], movements: CashMovement[] = []): SalesReportData => {
     const completedInvoices = invoices.filter(
         (inv) => inv.status === "completed" || inv.status === "partially_returned"
@@ -17,11 +15,6 @@ export const calculateSalesReport = (invoices: Invoice[], movements: CashMovemen
     const totalSales = completedInvoices.reduce((sum, inv) => sum + inv.total, 0);
     const totalOrders = completedInvoices.length;
     const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
-
-    // Calcular efectivo teórico usando movimientos de caja
-    // 1. Obtener Fondo Inicial (movimientos con categoría 'fondo_caja' o similar, tipo 'cash-in')
-    // Nota: Dependiendo de cómo se categoricen, ajustamos. Asumamos que hay una categoría estándar o se identifican por ser los primeros del día.
-    // Por simplicidad sumamos todo lo que sea 'cash-in' como entradas y 'cash-out' como salidas.
 
     const cashIn = movements
         .filter(m => m.type === 'cash-in' && m.category === 'fondo_caja')
@@ -35,16 +28,13 @@ export const calculateSalesReport = (invoices: Invoice[], movements: CashMovemen
         .filter(m => m.type === 'cash-out')
         .reduce((sum, m) => sum + m.amount, 0);
 
-    // Efectivo Teórico = (Ventas Efecorivo + Fondo Inicial + Otras Entradas) - Salidas
-    // Asumimos que todas las ventas son en efectivo por ahora.
     const theoreticalCash = totalSales + cashIn + otherIn - totalOut;
     const initialCash = cashIn;
 
-    // Agrupar por fecha
     const salesByDateMap = new Map<string, { amount: number; orders: number }>();
 
     completedInvoices.forEach((inv) => {
-        const date = new Date(inv.createdAt).toLocaleDateString("es-NI"); // Formato local simple
+        const date = new Date(inv.createdAt).toLocaleDateString("es-NI");
         const current = salesByDateMap.get(date) || { amount: 0, orders: 0 };
         salesByDateMap.set(date, {
             amount: current.amount + inv.total,
@@ -58,8 +48,6 @@ export const calculateSalesReport = (invoices: Invoice[], movements: CashMovemen
         orders: data.orders,
     }));
 
-    // Agrupar por método de pago (si existiera en la factura, por ahora mockeamos "Efectivo")
-    // En una implementación real, Invoice debería tener paymentMethod
     const salesByPaymentMethod = [
         { method: "Efectivo", amount: totalSales },
     ];
@@ -75,8 +63,6 @@ export const calculateSalesReport = (invoices: Invoice[], movements: CashMovemen
     };
 };
 
-// --- PRODUCTS CALCULATIONS ---
-
 export const calculateProductsReport = (invoices: Invoice[]): ProductsReportData => {
     const completedInvoices = invoices.filter(inv => inv.status === 'completed' || inv.status === 'partially_returned');
 
@@ -84,7 +70,6 @@ export const calculateProductsReport = (invoices: Invoice[]): ProductsReportData
 
     completedInvoices.forEach(inv => {
         inv.items.forEach(item => {
-            // Productos
             const currentProd = productSales.get(item.productId) || { name: item.productName, quantity: 0, total: 0 };
             productSales.set(item.productId, {
                 name: item.productName,
@@ -92,26 +77,20 @@ export const calculateProductsReport = (invoices: Invoice[]): ProductsReportData
                 total: currentProd.total + item.subtotal
             });
 
-            // Categorías (Nota: InvoiceItem no tiene categoría por defecto, habría que buscarla o agregarla al item)
-            // Como workaround, asumiremos que no podemos calcular categorías si no están en el item
-            // O podemos intentar inferir o dejar vacio por ahora
-            // TODO: Agregar category a InvoiceItem para reportes más precisos
         });
     });
 
     const topProducts = Array.from(productSales.entries())
         .map(([id, data]) => ({ id, ...data }))
         .sort((a, b) => b.total - a.total)
-        .slice(0, 5); // Top 5
+        .slice(0, 5);
 
     return {
         topProducts,
-        salesByCategory: [], // Pendiente: requeriría enriquecer InvoiceItem
+        salesByCategory: [],
         lowStockProducts: []
     };
 };
-
-// --- CASH FLOW CALCULATIONS ---
 
 export const calculateCashFlowReport = (movements: CashMovement[]): CashFlowReportData => {
     const totalIn = movements
@@ -132,7 +111,6 @@ export const calculateCashFlowReport = (movements: CashMovement[]): CashFlowRepo
         return acc;
     }, [] as { category: string; amount: number; type: "in" | "out" }[]);
 
-    // Agrupar por fecha
     const cashFlowMap = new Map<string, { in: number; out: number }>();
     movements.forEach(m => {
         const date = new Date(m.createdAt).toLocaleDateString("es-NI");
@@ -160,8 +138,6 @@ export const calculateCashFlowReport = (movements: CashMovement[]): CashFlowRepo
         cashFlowByDate
     };
 };
-
-// --- ORDERS CALCULATIONS ---
 
 export const calculateOrdersReport = (invoices: Invoice[]): OrdersReportData => {
     const totalOrders = invoices.length;

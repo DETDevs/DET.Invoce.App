@@ -1,10 +1,11 @@
-import { Building, Coins, Landmark, Save } from "lucide-react";
+import { Building, Coins, Landmark, Save, UtensilsCrossed } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { useSettings } from "@/features/settings/hooks/useSettings";
 import { SettingsCard } from "@/features/settings/components/SettingsCard";
 import { BusinessInfoSettings } from "@/features/settings/components/BusinessInfoSettings";
 import { CurrencySettings } from "@/features/settings/components/CurrencySettings";
 import { CashBoxSettings } from "@/features/settings/components/CashBoxSettings";
+import { TableSettings } from "@/features/settings/components/TableSettings";
 
 export const SettingsPage = () => {
   const { settings, isLoading, isDirty, updateSetting, handleSaveSettings } =
@@ -56,6 +57,14 @@ export const SettingsPage = () => {
               icon={<Coins size={24} />}
             >
               <CashBoxSettings settings={settings} onUpdate={updateSetting} />
+            </SettingsCard>
+
+            <SettingsCard
+              title="Mesas"
+              description="Configura el número de mesas del local."
+              icon={<UtensilsCrossed size={24} />}
+            >
+              <TableSettings settings={settings} onUpdate={updateSetting} />
             </SettingsCard>
           </div>
         </div>

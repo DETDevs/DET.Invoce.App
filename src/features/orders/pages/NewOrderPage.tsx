@@ -1,11 +1,27 @@
 import React, { useMemo, useState, useEffect, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { ProductCard } from "@/features/orders/components/ProductCard";
-import { OrderSummary } from "@/features/orders/components/OrderSummary";
+import { TakeoutCartPanel } from "@/features/orders/components/TakeoutCartPanel";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useOrderLogic } from "@/features/orders/hooks/useOrderLogic";
 import { Toaster } from "react-hot-toast";
 import { PRODUCTS, CATEGORIES_DATA } from "@/features/orders/types/product";
+
+const SETTINGS_STORAGE_KEY = "app-settings";
+
+const getTableCount = (): number => {
+  try {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (stored) {
+      const settings = JSON.parse(stored);
+      return settings.tableCount || 6;
+    }
+  } catch {
+    /* empty */
+  }
+  return 6;
+};
+
 const getOptimizedImageUrl = (url: string) => {
   if (url.includes("images.unsplash.com")) {
     return `${url}?auto=format&fit=crop&w=400&q=80`;
@@ -19,6 +35,7 @@ export const NewOrderPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [isPending, startTransition] = useTransition();
+  const tableCount = getTableCount();
 
   const [selectedCategory, setSelectedCategory] = useState<string>(
     CATEGORIES_DATA[0].name,
@@ -29,7 +46,6 @@ export const NewOrderPage = () => {
 
   const {
     cart,
-    total,
     orderNumber,
     isCartOpen,
     setIsCartOpen,
@@ -195,6 +211,7 @@ export const NewOrderPage = () => {
                     image: getOptimizedImageUrl(product.image),
                   }}
                   onClick={addToCart}
+                  hidePrice
                 />
               ))
             ) : (
@@ -207,14 +224,14 @@ export const NewOrderPage = () => {
       </main>
 
       <div className="hidden min-[1400px]:block h-full shadow-lg overflow-hidden">
-        <OrderSummary
+        <TakeoutCartPanel
           cart={cart}
-          subtotal={total}
           orderNumber={orderNumber}
           onUpdateQuantity={updateQuantity}
           onRemoveFromCart={removeFromCart}
-          onCheckout={handleCheckout}
+          onOrderSent={handleCheckout}
           onCancel={handleRequestCancel}
+          tableCount={tableCount}
         />
       </div>
 
@@ -228,7 +245,7 @@ export const NewOrderPage = () => {
               <span className="text-sm font-bold">
                 {cart.reduce((acc, item) => acc + item.quantity, 0)} items
               </span>
-              <span className="text-lg font-bold">C$ {total.toFixed(2)}</span>
+              <span className="text-lg font-bold">Ver Orden</span>
             </div>
           </button>
         )}
@@ -274,14 +291,14 @@ export const NewOrderPage = () => {
           </div>
 
           <div className="flex-1 overflow-hidden bg-white">
-            <OrderSummary
+            <TakeoutCartPanel
               cart={cart}
-              subtotal={total}
               orderNumber={orderNumber}
               onUpdateQuantity={updateQuantity}
               onRemoveFromCart={removeFromCart}
-              onCheckout={handleCheckout}
+              onOrderSent={handleCheckout}
               onCancel={handleRequestCancel}
+              tableCount={tableCount}
             />
           </div>
         </div>

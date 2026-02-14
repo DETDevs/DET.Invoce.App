@@ -83,7 +83,6 @@ export const ReturnInvoiceModal = ({
       items: itemsToReturn,
     });
 
-    // Reset form
     setSelectedItems(new Set());
     setReason("");
     setNotes("");
@@ -105,7 +104,6 @@ export const ReturnInvoiceModal = ({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
           <div className="flex items-start justify-between">
             <div>
@@ -125,9 +123,7 @@ export const ReturnInvoiceModal = ({
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Alerta informativa */}
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex gap-3">
             <AlertCircle
               size={20}
@@ -143,7 +139,6 @@ export const ReturnInvoiceModal = ({
             </div>
           </div>
 
-          {/* Selección de items */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-bold text-gray-900">
@@ -196,7 +191,6 @@ export const ReturnInvoiceModal = ({
             )}
           </div>
 
-          {/* Motivo */}
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               Motivo de la devolución <span className="text-red-500">*</span>
@@ -220,7 +214,6 @@ export const ReturnInvoiceModal = ({
             )}
           </div>
 
-          {/* Notas opcionales */}
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               Notas adicionales (opcional)
@@ -234,7 +227,6 @@ export const ReturnInvoiceModal = ({
             />
           </div>
 
-          {/* Total a devolver */}
           {selectedItems.size > 0 && (
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex justify-between items-center">
@@ -249,7 +241,6 @@ export const ReturnInvoiceModal = ({
           )}
         </div>
 
-        {/* Footer */}
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 rounded-b-2xl">
           <div className="flex gap-3">
             <button

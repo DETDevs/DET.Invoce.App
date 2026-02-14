@@ -67,7 +67,6 @@ export const InvoiceDetailsModal = ({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
           <div className="flex items-start justify-between">
             <div>
@@ -88,9 +87,7 @@ export const InvoiceDetailsModal = ({
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Info General */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
               <Calendar size={20} className="text-gray-600" />
@@ -125,7 +122,6 @@ export const InvoiceDetailsModal = ({
             )}
           </div>
 
-          {/* Items */}
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-3">Productos</h3>
             <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -168,7 +164,6 @@ export const InvoiceDetailsModal = ({
             </div>
           </div>
 
-          {/* Totales */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Subtotal:</span>
@@ -192,7 +187,6 @@ export const InvoiceDetailsModal = ({
             </div>
           </div>
 
-          {/* Historial de Devoluciones */}
           {invoice.returns && invoice.returns.length > 0 && (
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-3">
@@ -241,7 +235,6 @@ export const InvoiceDetailsModal = ({
           )}
         </div>
 
-        {/* Footer con acciones */}
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 rounded-b-2xl">
           <div className="flex flex-col sm:flex-row gap-3">
             <button

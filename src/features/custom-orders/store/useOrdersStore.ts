@@ -60,10 +60,10 @@ export const useOrdersStore = create<OrdersState>()(
                     orders: state.orders.map((order) => {
                         if (order.id !== orderId) return order;
 
-                        const newDeposit = order.deposit + amount;
+                        const newDeposit = Number(order.deposit) + Number(amount);
                         let newPaymentStatus: PaymentStatus = order.paymentStatus;
 
-                        if (newDeposit >= order.total) {
+                        if (newDeposit >= Number(order.total)) {
                             newPaymentStatus = 'Pagado';
                         } else if (newDeposit > 0) {
                             newPaymentStatus = 'Abonado';

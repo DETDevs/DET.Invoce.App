@@ -71,7 +71,6 @@ export const MovementDetailsModal = ({
         className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div
           className={`p-6 ${
             isCashIn

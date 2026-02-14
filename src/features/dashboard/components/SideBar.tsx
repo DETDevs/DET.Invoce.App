@@ -16,6 +16,7 @@ import {
   ArrowLeftRight,
   ChevronDown,
   Receipt,
+  UtensilsCrossed,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import logo from "@/assets/Logotipo.png";
@@ -28,10 +29,9 @@ export const Sidebar = () => {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
-    { 0: true, 1: true, 2: true }, // Todos los grupos expandidos por defecto
+    { 0: true, 1: true, 2: true },
   );
 
-  // Grupos de menú organizados por categoría
   const menuGroups = [
     {
       title: "Operaciones",
@@ -39,6 +39,7 @@ export const Sidebar = () => {
         { icon: LayoutDashboard, label: "Dashboard", path: "/" },
         { icon: Kanban, label: "Tablero Producción", path: "/tablero" },
         { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },
+        { icon: UtensilsCrossed, label: "Takeout", path: "/takeout" },
         { icon: FileEdit, label: "Realizar Pedido", path: "/realizar-pedido" },
         {
           icon: ArrowLeftRight,
@@ -142,7 +143,6 @@ export const Sidebar = () => {
         <nav className="flex-1 overflow-y-auto px-4 py-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#E8BC6E]/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#E8BC6E]/50 transition-colors">
           {menuGroups.map((group, groupIndex) => (
             <div key={groupIndex} className="mb-4">
-              {/* Header del grupo con dropdown */}
               <button
                 onClick={() => toggleGroup(groupIndex)}
                 className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-[#E8BC6E] uppercase tracking-wider hover:bg-white/5 rounded-lg transition-colors mb-2"
@@ -156,7 +156,6 @@ export const Sidebar = () => {
                 />
               </button>
 
-              {/* Items del grupo con animación de colapso */}
               <div
                 className={`space-y-1 overflow-hidden transition-all duration-300 ${
                   expandedGroups[groupIndex]
@@ -194,7 +193,6 @@ export const Sidebar = () => {
                 })}
               </div>
 
-              {/* Separador entre grupos (excepto el último) */}
               {groupIndex < menuGroups.length - 1 && (
                 <div className="h-px bg-white/10 mt-4" />
               )}

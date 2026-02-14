@@ -21,3 +21,24 @@ export interface Order {
     dueDate: string;
     status: OrderStatus;
 }
+
+export type TakeoutStatus = 'active' | 'completed' | 'cancelled';
+
+export interface TakeoutItem {
+    productId: number;
+    name: string;
+    price: number;
+    quantity: number;
+    addedAt: string;
+}
+
+export interface TakeoutOrder {
+    id: string;
+    tableNumber: number;
+    cuentaNumber: number;
+    items: TakeoutItem[];
+    createdAt: string;
+    updatedAt: string;
+    status: TakeoutStatus;
+    createdBy: string;
+}

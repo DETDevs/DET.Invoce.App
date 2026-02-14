@@ -19,13 +19,12 @@ const PaymentProgress = ({
 }) => {
   const progress = Math.min((deposit / total) * 100, 100);
 
-  // Colores para la barra
   const colorClass =
     status === "Pagado"
       ? "bg-green-500"
       : status === "Abonado"
         ? "bg-amber-500"
-        : "bg-gray-200"; // Pendiente en gris suave
+        : "bg-gray-200";
 
   return (
     <div className="w-full">
@@ -36,7 +35,7 @@ const PaymentProgress = ({
               ? "text-green-700"
               : status === "Abonado"
                 ? "text-amber-700"
-                : "text-gray-400" // Pendiente en gris discreto
+                : "text-gray-400"
           }`}
         >
           {status === "Pendiente" ? "Sin Pago" : status}
@@ -51,7 +50,6 @@ const PaymentProgress = ({
           style={{ width: `${progress}%` }}
         />
       </div>
-      {/* Si el progreso es 0, la barra de fondo gris (bg-gray-100) ya sirve como indicador de total pendiente */}
     </div>
   );
 };
@@ -121,12 +119,10 @@ export const OrderCard = ({ order, index, onClick }: Props) => {
           className={`bg-white p-3.5 rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-[#E8BC6E]/30 transition-all cursor-pointer group mb-3 relative overflow-hidden ${snapshot.isDragging ? "shadow-xl rotate-2 ring-2 ring-[#E8BC6E]" : ""}`}
           style={provided.draggableProps.style}
         >
-          {/* Indicador lateral de urgencia si aplica */}
           {dueDateInfo.urgent && (
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-400" />
           )}
 
-          {/* Cabecera: Cliente + ID */}
           <div className="flex justify-between items-start mb-2.5 pl-1.5">
             <div className="flex items-center gap-2 min-w-0">
               <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
@@ -141,7 +137,6 @@ export const OrderCard = ({ order, index, onClick }: Props) => {
             </span>
           </div>
 
-          {/* Resumen de Items (1 + N más) */}
           <div className="mb-3 pl-1.5">
             <p className="text-xs text-gray-600 font-medium truncate">
               {order.items[0]}
@@ -153,7 +148,6 @@ export const OrderCard = ({ order, index, onClick }: Props) => {
             )}
           </div>
 
-          {/* Estado de Pago Visual */}
           <div className="mb-3 pl-1.5 pr-0.5">
             <PaymentProgress
               status={order.paymentStatus}
@@ -162,7 +156,6 @@ export const OrderCard = ({ order, index, onClick }: Props) => {
             />
           </div>
 
-          {/* Footer: Fecha y Total */}
           <div className="flex items-end justify-between pt-2.5 border-t border-gray-50 pl-1.5">
             {order.status !== "delivered" ? (
               <div

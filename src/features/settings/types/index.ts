@@ -6,6 +6,7 @@ export interface Settings {
   initialCashBox: number;
   mainCurrency: 'NIO' | 'USD';
   dollarExchangeRate: number;
+  tableCount: number;
 }
 
 export interface CashBoxSession {

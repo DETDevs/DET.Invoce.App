@@ -33,7 +33,7 @@ export const useInvoices = () => {
         const newReturn: InvoiceReturn = {
             id: `RET-${Date.now()}`,
             returnedAt: new Date().toISOString(),
-            returnedBy: "Usuario Actual", // TODO: obtener del contexto
+            returnedBy: "Usuario Actual",
             reason: returnData.reason,
             notes: returnData.notes,
             items: returnData.items,

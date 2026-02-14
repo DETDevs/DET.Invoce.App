@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import {
   Coins,
   X,
@@ -30,7 +31,6 @@ export const OrderDetailsModal = ({
   onMoveStatus,
   onRegisterPayment,
 }: Props) => {
-  // Estado local para el monto a pagar (si lo hubiera)
   const [paymentAmount, setPaymentAmount] = useState("");
 
   if (!isOpen || !order) return null;
@@ -46,15 +46,22 @@ export const OrderDetailsModal = ({
   const handleConfirmPayment = () => {
     const amount = Number(paymentAmount);
     if (amount > 0 && amount <= remaining + 0.1) {
-      // Margen pequeño por decimales
       onRegisterPayment(order.id, amount);
       setPaymentAmount("");
-      // No cerramos el modal, solo actualizamos el estado visualmente (que lo hará el padre)
+    } else if (amount > remaining) {
+      onRegisterPayment(order.id, remaining);
+      setPaymentAmount("");
+    } else {
+      if (amount <= 0) {
+        toast.error("El monto debe ser mayor a 0");
+      }
     }
   };
 
+  const inputValue = Number(paymentAmount) || 0;
+  const change = inputValue > remaining ? inputValue - remaining : 0;
+
   const renderFooterActions = () => {
-    // 1. Si el pedido está marcado como ENTREGADO, solo mostrar opción de reimprimir si se desea, o nada.
     if (order.status === "delivered") {
       return (
         <button className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors ml-auto cursor-default text-sm md:text-base w-full md:w-auto">
@@ -64,34 +71,31 @@ export const OrderDetailsModal = ({
       );
     }
 
-    // 2. Si hay SALDO PENDIENTE (y no está cancelado/entregado), mostrar controles de pago DIRECTAMENTE.
-    //    Independientemente de si está en 'pending', 'production' o 'ready', si debe plata, se le puede cobrar.
-    //    Aunque por flujo, usualmente se cobra al final, el usuario pidió agilidad.
-    //    Pero mantengamos la lógica de estados para los botones de movimiento.
-
     const paymentControls = !isPaid && (
-      <div className="flex gap-2 items-center w-full md:w-auto mt-3 md:mt-0 border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
-        <div className="relative w-full md:w-32">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">
-            C$
-          </span>
-          <input
-            type="number"
-            className="w-full pl-8 pr-2 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] focus:border-transparent text-sm font-bold text-[#2D2D2D]"
-            placeholder={remaining.toFixed(2)}
-            value={paymentAmount}
-            onChange={(e) => setPaymentAmount(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleConfirmPayment()}
-          />
+      <div className="flex flex-col items-end gap-2 w-full md:w-auto mt-3 md:mt-0 border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
+        <div className="flex gap-2 items-center w-full md:w-auto">
+          <div className="relative w-full md:w-32">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">
+              C$
+            </span>
+            <input
+              type="number"
+              className="w-full pl-8 pr-2 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] focus:border-transparent text-sm font-bold text-[#2D2D2D]"
+              placeholder={remaining.toFixed(2)}
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleConfirmPayment()}
+            />
+          </div>
+          <button
+            onClick={handleConfirmPayment}
+            disabled={!paymentAmount || Number(paymentAmount) <= 0}
+            className="px-4 py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 font-bold text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <Coins size={16} />
+            <span className="hidden sm:inline">Cobrar</span>
+          </button>
         </div>
-        <button
-          onClick={handleConfirmPayment}
-          disabled={!paymentAmount || Number(paymentAmount) <= 0}
-          className="px-4 py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 font-bold text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <Coins size={16} />
-          <span className="hidden sm:inline">Cobrar</span>
-        </button>
       </div>
     );
 
@@ -119,10 +123,8 @@ export const OrderDetailsModal = ({
       case "ready":
         return (
           <div className="flex flex-col md:flex-row gap-3 w-full items-center justify-end">
-            {/* Controles de Pago (si debe) */}
             {paymentControls}
 
-            {/* Boton Facturar (Desactivado si debe) */}
             <button
               onClick={() => onInvoice(order.id)}
               disabled={!isPaid}
@@ -261,6 +263,14 @@ export const OrderDetailsModal = ({
                   C$ {remaining.toFixed(2)}
                 </span>
               </div>
+              {change > 0 && (
+                <div className="flex justify-between pt-2 border-t border-dashed border-gray-200 animate-pulse">
+                  <span className="font-bold text-blue-600">Su Cambio:</span>
+                  <span className="font-bold text-xl text-blue-600">
+                    C$ {change.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

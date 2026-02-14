@@ -23,7 +23,7 @@ export const saveInvoices = (invoices: Invoice[]): void => {
 
 export const addInvoice = (invoice: Invoice): void => {
     const invoices = loadInvoices();
-    invoices.unshift(invoice); // Add to beginning
+    invoices.unshift(invoice);
     saveInvoices(invoices);
 };
 

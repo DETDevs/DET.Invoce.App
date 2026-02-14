@@ -66,7 +66,6 @@ export const MovementCard = ({ movement, onClick }: Props) => {
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start gap-3 flex-1">
-          {/* Icon */}
           <div
             className={`p-3 rounded-xl ${
               isCashIn

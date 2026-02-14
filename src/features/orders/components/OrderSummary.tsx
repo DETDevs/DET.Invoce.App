@@ -164,7 +164,7 @@ export const OrderSummary = ({
             disabled={cart.length === 0 || !isPaymentSufficient}
             className="w-full py-3.5 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
           >
-            Facturar
+            Tomar orden
           </button>
 
           <button

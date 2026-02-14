@@ -27,7 +27,6 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Products Chart */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold text-[#2D2D2D] mb-6">
             Top 5 Productos Vendidos
@@ -82,7 +81,6 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
           </div>
         </div>
 
-        {/* Detailed List */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-100">
             <h3 className="text-lg font-bold text-[#2D2D2D]">

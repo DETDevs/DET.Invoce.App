@@ -138,7 +138,6 @@ export const UsersPage = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -220,7 +219,6 @@ export const UsersPage = () => {
           </table>
         </div>
 
-        {/* Mobile Cards */}
         <div className="md:hidden">
           {filteredUsers.map((user) => (
             <div

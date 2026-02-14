@@ -11,19 +11,16 @@ import {
 
 export const useReports = () => {
     const [activeReport, setActiveReport] = useState<ReportType>("sales");
-    const [dateRange, setDateRange] = useState<DateRangeType>("week"); // Default to week
+    const [dateRange, setDateRange] = useState<DateRangeType>("week");
     const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | null>(null);
 
-    // Cargar datos
-    const allInvoices = useMemo(() => loadInvoices(), []); // Recarga simple al montar
-    const { allMovements } = useCashMovements(); // Usamos el hook existente que ya tiene carga
+    const allInvoices = useMemo(() => loadInvoices(), []);
+    const { allMovements } = useCashMovements();
 
-    // Filtrar datos por rango de fecha
     const filterByDate = <T extends { createdAt: string }>(items: T[]) => {
         const now = new Date();
         let startDate = new Date();
 
-        // Reset hours for comparison
         now.setHours(23, 59, 59, 999);
 
         switch (dateRange) {
@@ -59,7 +56,6 @@ export const useReports = () => {
     const filteredInvoices = useMemo(() => filterByDate(allInvoices), [allInvoices, dateRange, customRange]);
     const filteredMovements = useMemo(() => filterByDate(allMovements), [allMovements, dateRange, customRange]);
 
-    // Calcular reportes basados en datos filtrados
     const salesReport = useMemo(() => calculateSalesReport(filteredInvoices, filteredMovements), [filteredInvoices, filteredMovements]);
     const productsReport = useMemo(() => calculateProductsReport(filteredInvoices), [filteredInvoices]);
     const cashFlowReport = useMemo(() => calculateCashFlowReport(filteredMovements), [filteredMovements]);

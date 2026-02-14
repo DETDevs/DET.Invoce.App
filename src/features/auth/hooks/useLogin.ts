@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import {
-  isValidPassword,
-  getPasswordError,
-} from "@/core/utils/validations";
+import { findUserByPassword } from "@/features/auth/data/mockUsers";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 export const useLogin = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
+  const { login } = useAuthStore();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,10 +19,10 @@ export const useLogin = () => {
       return;
     }
 
-    if (!isValidPassword(password)) {
-      const errorMsg =
-        getPasswordError(password) || "La clave de seguridad no es válida.";
-      toast.error(errorMsg, {
+    const user = findUserByPassword(password);
+
+    if (!user) {
+      toast.error("Clave de seguridad incorrecta.", {
         duration: 4000,
         style: {
           background: "#593D31",
@@ -34,7 +33,9 @@ export const useLogin = () => {
       return;
     }
 
-    toast.success("¡Bienvenido! Entrando al sistema...", {
+    login({ id: user.id, name: user.name, role: user.role });
+
+    toast.success(`¡Bienvenido, ${user.name}!`, {
       style: { background: "#E8BC6E", color: "#fff", fontWeight: "bold" },
       iconTheme: { primary: "#fff", secondary: "#E8BC6E" },
     });

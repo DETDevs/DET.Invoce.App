@@ -91,7 +91,6 @@ export const useCreateOrder = () => {
     const total = calculateTotal();
     const deposit = Number(formData.deposit) || 0;
 
-    // Transform items to string array for Order type compatibility
     const formattedItems = formData.items.map(item =>
       `${item.quantity}x ${item.name}${item.description ? ` (${item.description})` : ''}`
     );

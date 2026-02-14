@@ -32,11 +32,11 @@ export const InvoiceCard = ({ invoice, onClick }: InvoiceCardProps) => {
         className: "bg-green-100 text-green-700",
       },
       returned: {
-        label: "Devuelta",
+        label: "Devolucion",
         className: "bg-red-100 text-red-700",
       },
       partially_returned: {
-        label: "Parcialmente Devuelta",
+        label: "Parcialmente en devolucion",
         className: "bg-orange-100 text-orange-700",
       },
     };

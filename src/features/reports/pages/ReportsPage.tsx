@@ -22,7 +22,6 @@ export const ReportsPage = () => {
 
   const handleExport = (type: string) => {
     toast.success(`Exportando reporte de ${activeReport} en ${type}...`);
-    // TODO: Implementar lógica de exportación real
   };
 
   const renderActiveReport = () => {

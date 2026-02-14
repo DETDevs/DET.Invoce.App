@@ -135,7 +135,7 @@ export const useCashMovements = () => {
             ...movement,
             id: `CM-${String(movements.length + 1).padStart(3, "0")}`,
             createdAt: new Date().toISOString(),
-            createdBy: "Usuario Actual", // TODO: Obtener del contexto de autenticación
+            createdBy: "Usuario Actual",
         };
 
         setMovements((prev) => [newMovement, ...prev]);

@@ -12,6 +12,7 @@ const defaultSettings: Settings = {
   initialCashBox: 500,
   mainCurrency: "NIO",
   dollarExchangeRate: 36.62,
+  tableCount: 6,
 };
 
 const loadSettingsFromStorage = (): Settings => {

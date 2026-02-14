@@ -1,4 +1,3 @@
-// Types para los endpoints de productos
 export interface Product {
     productId: number;
     code: string;

@@ -66,7 +66,6 @@ export const useOrderLogic = () => {
 
     const handleCheckout = () => {
         if (cart.length > 0) {
-            // Crear factura
             const invoice = {
                 id: `FAC-${orderNumber}`,
                 orderNumber,
@@ -85,7 +84,6 @@ export const useOrderLogic = () => {
                 createdBy: 'Usuario Actual'
             };
 
-            // Guardar factura en localStorage
             try {
                 const stored = localStorage.getItem('invoices');
                 const invoices = stored ? JSON.parse(stored) : [];
@@ -95,18 +93,18 @@ export const useOrderLogic = () => {
                 console.error('Error al guardar factura:', error);
             }
 
-            toast.success("Factura generada correctamente");
+            toast.success("Orden Tomada correctamente");
             refreshOrder();
             setIsCartOpen(false);
         }
     };
 
     const handleRequestCancel = () => {
-        setPendingPath(null); // This is a manual cancel, not a navigation one.
+        setPendingPath(null);
         if (cart.length === 0) {
             setIsCartOpen(false);
         } else {
-            setIsCartOpen(false); // Close the summary panel to show the dialog
+            setIsCartOpen(false);
             setDialogConfig({
                 title: "Cancelar Orden",
                 message:
