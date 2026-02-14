@@ -2,10 +2,45 @@ import { useState, useMemo, useEffect } from "react";
 import type { Invoice, InvoiceStatus, InvoiceReturn } from "@/features/invoices/types";
 import { loadInvoices, saveInvoices } from "@/features/invoices/utils/invoiceStorage";
 
+export type DateFilterPreset = "all" | "today" | "week" | "month" | "custom";
+
+const getDateRange = (
+    preset: DateFilterPreset,
+    customFrom?: string,
+    customTo?: string
+): { from: Date | null; to: Date | null } => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    switch (preset) {
+        case "today":
+            return { from: startOfDay, to: now };
+        case "week": {
+            const startOfWeek = new Date(startOfDay);
+            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+            return { from: startOfWeek, to: now };
+        }
+        case "month": {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            return { from: startOfMonth, to: now };
+        }
+        case "custom": {
+            const from = customFrom ? new Date(customFrom + "T00:00:00") : null;
+            const to = customTo ? new Date(customTo + "T23:59:59") : null;
+            return { from, to };
+        }
+        default:
+            return { from: null, to: null };
+    }
+};
+
 export const useInvoices = () => {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<InvoiceStatus | "all">("all");
+    const [dateFilter, setDateFilter] = useState<DateFilterPreset>("all");
+    const [customDateFrom, setCustomDateFrom] = useState("");
+    const [customDateTo, setCustomDateTo] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -54,6 +89,8 @@ export const useInvoices = () => {
     };
 
     const filteredInvoices = useMemo(() => {
+        const { from, to } = getDateRange(dateFilter, customDateFrom, customDateTo);
+
         return invoices.filter((invoice) => {
             const matchesSearch =
                 invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -62,9 +99,16 @@ export const useInvoices = () => {
             const matchesStatus =
                 filterStatus === "all" || invoice.status === filterStatus;
 
-            return matchesSearch && matchesStatus;
+            let matchesDate = true;
+            if (from || to) {
+                const invoiceDate = new Date(invoice.createdAt);
+                if (from && invoiceDate < from) matchesDate = false;
+                if (to && invoiceDate > to) matchesDate = false;
+            }
+
+            return matchesSearch && matchesStatus && matchesDate;
         });
-    }, [invoices, searchQuery, filterStatus]);
+    }, [invoices, searchQuery, filterStatus, dateFilter, customDateFrom, customDateTo]);
 
     const paginatedInvoices = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -75,8 +119,9 @@ export const useInvoices = () => {
     const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
 
     const summary = useMemo(() => {
-        const totalSales = invoices.reduce((sum, inv) => sum + inv.total, 0);
-        const totalReturned = invoices.reduce((sum, inv) => {
+        const source = filteredInvoices;
+        const totalSales = source.reduce((sum, inv) => sum + inv.total, 0);
+        const totalReturned = source.reduce((sum, inv) => {
             const returnedAmount = inv.returns?.reduce(
                 (retSum, ret) => retSum + ret.totalReturned,
                 0
@@ -85,12 +130,12 @@ export const useInvoices = () => {
         }, 0);
 
         return {
-            totalInvoices: invoices.length,
+            totalInvoices: source.length,
             totalSales,
             totalReturned,
             netBalance: totalSales - totalReturned,
         };
-    }, [invoices]);
+    }, [filteredInvoices]);
 
     const handleFilterChange = (
         type: "search" | "status",
@@ -111,6 +156,19 @@ export const useInvoices = () => {
         filterStatus,
         setFilterStatus: (status: InvoiceStatus | "all") =>
             handleFilterChange("status", status),
+        dateFilter,
+        setDateFilter: (preset: DateFilterPreset) => {
+            setCurrentPage(1);
+            setDateFilter(preset);
+            if (preset !== "custom") {
+                setCustomDateFrom("");
+                setCustomDateTo("");
+            }
+        },
+        customDateFrom,
+        setCustomDateFrom: (val: string) => { setCurrentPage(1); setCustomDateFrom(val); },
+        customDateTo,
+        setCustomDateTo: (val: string) => { setCurrentPage(1); setCustomDateTo(val); },
         addReturn,
         currentPage,
         setCurrentPage,

@@ -67,8 +67,8 @@ export const useOrderLogic = () => {
     const handleCheckout = () => {
         if (cart.length > 0) {
             const invoice = {
-                id: `FAC-${orderNumber}`,
-                orderNumber,
+                id: `FAC-VD-${orderNumber}`,
+                orderNumber: `VD-${orderNumber}`,
                 items: cart.map(item => ({
                     productId: item.id,
                     productName: item.name,

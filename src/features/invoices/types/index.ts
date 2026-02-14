@@ -20,7 +20,7 @@ export type InvoiceStatus = "completed" | "returned";
 
 export interface Invoice {
     id: string;
-    orderNumber: number;
+    orderNumber: string | number;
     items: InvoiceItem[];
     subtotal: number;
     tax: number;

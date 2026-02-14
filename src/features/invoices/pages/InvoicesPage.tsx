@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Receipt, Search, Filter } from "lucide-react";
+import { Receipt, Search, Filter, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import { useInvoices } from "@/features/invoices/hooks/useInvoices";
+import type { DateFilterPreset } from "@/features/invoices/hooks/useInvoices";
 import { InvoiceSummary } from "@/features/invoices/components/InvoiceSummary";
 import { InvoiceCard } from "@/features/invoices/components/InvoiceCard";
 import { Pagination } from "@/features/invoices/components/Pagination";
@@ -23,6 +24,12 @@ export const InvoicesPage = () => {
     setSearchQuery,
     filterStatus,
     setFilterStatus,
+    dateFilter,
+    setDateFilter,
+    customDateFrom,
+    setCustomDateFrom,
+    customDateTo,
+    setCustomDateTo,
     addReturn,
     currentPage,
     setCurrentPage,
@@ -112,7 +119,7 @@ export const InvoicesPage = () => {
           <h3 className="font-bold text-gray-900">Filtros</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
             <Search
               size={18}
@@ -122,7 +129,7 @@ export const InvoicesPage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por número de factura o cliente..."
+              placeholder="Buscar por factura o cliente..."
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm"
             />
           </div>
@@ -138,7 +145,40 @@ export const InvoicesPage = () => {
             <option value="completed">Completadas</option>
             <option value="returned">Devueltas</option>
           </select>
+
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value as DateFilterPreset)}
+            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm text-gray-900"
+          >
+            <option value="all">Todas las fechas</option>
+            <option value="today">Hoy</option>
+            <option value="week">Esta Semana</option>
+            <option value="month">Este Mes</option>
+            <option value="custom">Rango personalizado</option>
+          </select>
         </div>
+
+        {dateFilter === "custom" && (
+          <div className="mt-4 flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <Calendar size={16} className="text-gray-500 shrink-0" />
+            <div className="flex items-center gap-2 flex-1">
+              <input
+                type="date"
+                value={customDateFrom}
+                onChange={(e) => setCustomDateFrom(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm"
+              />
+              <span className="text-gray-400 text-sm font-medium">a</span>
+              <input
+                type="date"
+                value={customDateTo}
+                onChange={(e) => setCustomDateTo(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

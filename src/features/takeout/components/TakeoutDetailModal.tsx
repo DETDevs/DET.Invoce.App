@@ -89,9 +89,13 @@ export const TakeoutDetailModal = ({
     }
     setIsProcessing(true);
 
+    const invoicePrefix = isParaLlevar
+      ? `PL-${selectedCuenta.cuentaNumber}`
+      : `M${tableNumber}C${selectedCuenta.cuentaNumber}`;
+
     const invoice = {
-      id: `FAC-${selectedCuenta.id}`,
-      orderNumber: selectedCuenta.id,
+      id: `FAC-${invoicePrefix}`,
+      orderNumber: invoicePrefix,
       items: selectedCuenta.items.map((item) => ({
         productId: item.productId,
         productName: item.name,

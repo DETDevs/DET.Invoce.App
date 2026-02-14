@@ -149,10 +149,9 @@ export const TakeoutCartPanel = ({
       return;
     }
 
-    const orderId = `LL-${orderNumber}`;
     const invoice = {
-      id: `FAC-${orderId}`,
-      orderNumber: orderId,
+      id: `FAC-LL-${orderNumber}`,
+      orderNumber: `LL-${orderNumber}`,
       items: cart.map((item) => ({
         productId: item.id,
         productName: item.name,
