@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { TakeoutOrder } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -34,6 +35,8 @@ export const TakeoutDetailModal = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { completeOrder } = useTakeoutStore();
+  const { user } = useAuthStore();
+  const canInvoice = user?.role === "cajero" || user?.role === "admin";
 
   useEffect(() => {
     if (isOpen && cuentas.length > 0) {
@@ -282,79 +285,90 @@ export const TakeoutDetailModal = ({
             </div>
           </div>
 
-          <div className="px-5 py-4 space-y-3">
-            <div className="flex items-center gap-3">
-              <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
-                Pago
-              </label>
-              <div className="flex gap-2 flex-1">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("efectivo")}
-                  className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 font-bold text-sm transition-all ${
-                    paymentMethod === "efectivo"
-                      ? "bg-emerald-50 border-emerald-400 text-emerald-800"
-                      : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
-                  }`}
-                >
-                  <Wallet size={14} /> Efectivo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPaymentMethod("tarjeta");
-                    setAmountPaid(total.toFixed(2));
-                  }}
-                  className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 font-bold text-sm transition-all ${
-                    paymentMethod === "tarjeta"
-                      ? "bg-sky-50 border-sky-400 text-sky-800"
-                      : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
-                  }`}
-                >
-                  <CreditCard size={14} /> Tarjeta
-                </button>
-              </div>
-            </div>
-
-            {paymentMethod === "efectivo" && (
+          {canInvoice ? (
+            <div className="px-5 py-4 space-y-3">
               <div className="flex items-center gap-3">
                 <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
-                  Recibido
+                  Pago
                 </label>
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                    C$
-                  </span>
-                  <input
-                    type="number"
-                    value={amountPaid}
-                    onChange={(e) => setAmountPaid(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleInvoice()}
-                    className="w-full pl-8 pr-4 h-9 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm font-bold"
-                    placeholder={total.toFixed(2)}
-                    min="0"
-                  />
-                </div>
-                {amountPaid !== "" && (
-                  <div
-                    className={`h-9 px-3 flex items-center rounded-lg font-bold text-sm whitespace-nowrap ${change >= 0 ? "bg-green-100 text-green-800" : "bg-red-50 text-red-700"}`}
+                <div className="flex gap-2 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("efectivo")}
+                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 font-bold text-sm transition-all ${
+                      paymentMethod === "efectivo"
+                        ? "bg-emerald-50 border-emerald-400 text-emerald-800"
+                        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                    }`}
                   >
-                    {change >= 0 ? "Cambio" : "Falta"}: C${" "}
-                    {Math.abs(change).toFixed(2)}
-                  </div>
-                )}
+                    <Wallet size={14} /> Efectivo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod("tarjeta");
+                      setAmountPaid(total.toFixed(2));
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 font-bold text-sm transition-all ${
+                      paymentMethod === "tarjeta"
+                        ? "bg-sky-50 border-sky-400 text-sky-800"
+                        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                    }`}
+                  >
+                    <CreditCard size={14} /> Tarjeta
+                  </button>
+                </div>
               </div>
-            )}
 
-            <button
-              onClick={handleInvoice}
-              disabled={!isPaymentSufficient || isProcessing}
-              className="w-full h-11 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
-            >
-              <FileText size={18} />
-              {isProcessing ? "Procesando..." : "Facturar"}
-            </button>
-          </div>
+              {paymentMethod === "efectivo" && (
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
+                    Recibido
+                  </label>
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                      C$
+                    </span>
+                    <input
+                      type="number"
+                      value={amountPaid}
+                      onChange={(e) => setAmountPaid(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleInvoice()}
+                      className="w-full pl-8 pr-4 h-9 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm font-bold"
+                      placeholder={total.toFixed(2)}
+                      min="0"
+                    />
+                  </div>
+                  {amountPaid !== "" && (
+                    <div
+                      className={`h-9 px-3 flex items-center rounded-lg font-bold text-sm whitespace-nowrap ${change >= 0 ? "bg-green-100 text-green-800" : "bg-red-50 text-red-700"}`}
+                    >
+                      {change >= 0 ? "Cambio" : "Falta"}: C${" "}
+                      {Math.abs(change).toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={handleInvoice}
+                disabled={!isPaymentSufficient || isProcessing}
+                className="w-full h-11 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+              >
+                <FileText size={18} />
+                {isProcessing ? "Procesando..." : "Facturar"}
+              </button>
+            </div>
+          ) : (
+            <div className="px-5 py-4">
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <Package size={20} className="text-amber-600 flex-shrink-0" />
+                <p className="text-sm text-amber-800">
+                  Solo un <strong>Cajero</strong> puede facturar esta orden.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

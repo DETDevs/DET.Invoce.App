@@ -10,9 +10,11 @@ import {
   ArrowRight,
   PackageCheck,
   CheckCircle2,
+  Package,
 } from "lucide-react";
 
 import type { Order, OrderStatus } from "@/shared/types";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 interface Props {
   isOpen: boolean;
@@ -32,6 +34,8 @@ export const OrderDetailsModal = ({
   onRegisterPayment,
 }: Props) => {
   const [paymentAmount, setPaymentAmount] = useState("");
+  const { user } = useAuthStore();
+  const canInvoice = user?.role === "cajero" || user?.role === "admin";
 
   if (!isOpen || !order) return null;
 
@@ -123,17 +127,30 @@ export const OrderDetailsModal = ({
       case "ready":
         return (
           <div className="flex flex-col md:flex-row gap-3 w-full items-center justify-end">
-            {paymentControls}
+            {canInvoice ? (
+              <>
+                {paymentControls}
 
-            <button
-              onClick={() => onInvoice(order.id)}
-              disabled={!isPaid}
-              className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
-              title={!isPaid ? "Debe saldar la cuenta antes de facturar" : ""}
-            >
-              <FileText size={18} />
-              Facturar y Entregar
-            </button>
+                <button
+                  onClick={() => onInvoice(order.id)}
+                  disabled={!isPaid}
+                  className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+                  title={
+                    !isPaid ? "Debe saldar la cuenta antes de facturar" : ""
+                  }
+                >
+                  <FileText size={18} />
+                  Facturar y Entregar
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 w-full">
+                <Package size={20} className="text-amber-600 shrink-0" />
+                <p className="text-sm text-amber-800">
+                  Solo un <strong>Cajero</strong> puede facturar este pedido.
+                </p>
+              </div>
+            )}
           </div>
         );
 
