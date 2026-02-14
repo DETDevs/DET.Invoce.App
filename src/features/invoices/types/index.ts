@@ -16,7 +16,7 @@ export interface InvoiceReturn {
     totalReturned: number;
 }
 
-export type InvoiceStatus = "completed" | "returned" | "partially_returned";
+export type InvoiceStatus = "completed" | "returned";
 
 export interface Invoice {
     id: string;

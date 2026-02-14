@@ -35,10 +35,6 @@ export const InvoiceCard = ({ invoice, onClick }: InvoiceCardProps) => {
         label: "Devolucion",
         className: "bg-red-100 text-red-700",
       },
-      partially_returned: {
-        label: "Parcialmente en devolucion",
-        className: "bg-orange-100 text-orange-700",
-      },
     };
 
     const badge = badges[status];

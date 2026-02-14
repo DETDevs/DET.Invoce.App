@@ -36,5 +36,7 @@ export const useCart = () => {
   );
   const clearCart = () => setCart([]);
 
-  return { cart, addToCart, updateQuantity, removeFromCart, total, clearCart };
+  const initializeCart = (items: CartItem[]) => setCart(items);
+
+  return { cart, addToCart, updateQuantity, removeFromCart, total, clearCart, initializeCart };
 };

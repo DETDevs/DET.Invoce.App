@@ -1,4 +1,12 @@
-import { X, Printer, RotateCcw, Calendar, User, Clock } from "lucide-react";
+import {
+  X,
+  Printer,
+  RotateCcw,
+  Calendar,
+  User,
+  Clock,
+  RefreshCw,
+} from "lucide-react";
 import type { Invoice } from "@/features/invoices/types";
 
 interface InvoiceDetailsModalProps {
@@ -7,6 +15,7 @@ interface InvoiceDetailsModalProps {
   invoice: Invoice | null;
   onPrint: (invoiceId: string) => void;
   onReturn: (invoice: Invoice) => void;
+  onReprocess: (invoice: Invoice) => void;
 }
 
 export const InvoiceDetailsModal = ({
@@ -15,6 +24,7 @@ export const InvoiceDetailsModal = ({
   invoice,
   onPrint,
   onReturn,
+  onReprocess,
 }: InvoiceDetailsModalProps) => {
   if (!isOpen || !invoice) return null;
 
@@ -46,10 +56,6 @@ export const InvoiceDetailsModal = ({
         label: "Devuelta",
         className: "bg-red-100 text-red-700",
       },
-      partially_returned: {
-        label: "Parcialmente Devuelta",
-        className: "bg-orange-100 text-orange-700",
-      },
     };
 
     const badge = badges[status];
@@ -62,7 +68,7 @@ export const InvoiceDetailsModal = ({
     );
   };
 
-  const canReturn = invoice.status !== "returned";
+  const isReturned = invoice.status === "returned";
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -237,21 +243,32 @@ export const InvoiceDetailsModal = ({
 
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 rounded-b-2xl">
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => onPrint(invoice.id)}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[#593D31] text-white rounded-xl font-bold hover:bg-[#4a332a] transition-colors"
-            >
-              <Printer size={20} />
-              Reimprimir Factura
-            </button>
-            <button
-              onClick={() => onReturn(invoice)}
-              disabled={!canReturn}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RotateCcw size={20} />
-              Hacer Devolución
-            </button>
+            {isReturned ? (
+              <button
+                onClick={() => onReprocess(invoice)}
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors"
+              >
+                <RefreshCw size={20} />
+                Re Procesar Factura
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onPrint(invoice.id)}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[#593D31] text-white rounded-xl font-bold hover:bg-[#4a332a] transition-colors"
+                >
+                  <Printer size={20} />
+                  Reimprimir Factura
+                </button>
+                <button
+                  onClick={() => onReturn(invoice)}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition-colors"
+                >
+                  <RotateCcw size={20} />
+                  Hacer Devolución
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

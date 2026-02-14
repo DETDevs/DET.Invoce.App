@@ -7,7 +7,7 @@ import { useCart } from "./useCart";
 export const useOrderLogic = () => {
     const navigate = useNavigate();
     const { setBlocker } = useNavigationBlocker();
-    const { cart, addToCart, updateQuantity, removeFromCart, total, clearCart } =
+    const { cart, addToCart, updateQuantity, removeFromCart, total, clearCart, initializeCart } =
         useCart();
     const [orderNumber, setOrderNumber] = useState(
         Math.floor(Math.random() * 9000) + 1000,
@@ -135,7 +135,7 @@ export const useOrderLogic = () => {
     };
 
     return {
-        cart, total, orderNumber, isCartOpen, setIsCartOpen, addToCart, updateQuantity, removeFromCart,
+        cart, total, orderNumber, isCartOpen, setIsCartOpen, addToCart, updateQuantity, removeFromCart, initializeCart,
         handleCheckout, handleRequestCancel, isDialogOpen: isManualCancelOpen,
         dialogTitle: dialogConfig.title, dialogMessage: dialogConfig.message,
         confirmText: dialogConfig.confirmText, cancelText: dialogConfig.cancelText,

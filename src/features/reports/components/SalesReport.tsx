@@ -7,7 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { DollarSign, ShoppingBag, TrendingUp, CreditCard } from "lucide-react";
+import { DollarSign, ShoppingBag, CreditCard } from "lucide-react";
 import { KPICard } from "./KPICard";
 import type { SalesReportData } from "@/features/reports/types";
 
@@ -25,31 +25,27 @@ export const SalesReport = ({ data }: SalesReportProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard
           title="Ventas Totales"
           value={formatCurrency(data.totalSales)}
           icon={DollarSign}
           color="brown"
+          tooltip="Suma total de todas las facturas completadas en el período seleccionado."
         />
         <KPICard
           title="Órdenes"
           value={data.totalOrders}
           icon={ShoppingBag}
           color="blue"
+          tooltip="Cantidad total de órdenes facturadas en el período seleccionado."
         />
         <KPICard
           title="Ticket Promedio"
           value={formatCurrency(data.averageTicket)}
           icon={CreditCard}
           color="purple"
-        />
-        <KPICard
-          title="Efectivo en Caja (Est.)"
-          value={formatCurrency(data.theoreticalCash)}
-          subValue={`Fondo: ${formatCurrency(data.initialCash)}`}
-          icon={TrendingUp}
-          color="green"
+          tooltip="Monto promedio por factura. Se calcula dividiendo ventas totales entre la cantidad de órdenes."
         />
       </div>
 

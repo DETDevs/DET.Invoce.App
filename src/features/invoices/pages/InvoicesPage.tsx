@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Receipt, Search, Filter } from "lucide-react";
 import toast from "react-hot-toast";
 import { useInvoices } from "@/features/invoices/hooks/useInvoices";
@@ -10,6 +11,7 @@ import { ReturnInvoiceModal } from "@/features/invoices/components/ReturnInvoice
 import type { Invoice, InvoiceStatus } from "@/features/invoices/types";
 
 export const InvoicesPage = () => {
+  const navigate = useNavigate();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceToReturn, setInvoiceToReturn] = useState<Invoice | null>(null);
 
@@ -34,21 +36,54 @@ export const InvoicesPage = () => {
     toast.success("Solicitud de impresión enviada");
   };
 
+  const handlePrintReturnInvoice = (
+    invoice: Invoice,
+    returnData: { reason: string; notes?: string },
+  ) => {
+    console.log("=== FACTURA DE DEVOLUCIÓN ===");
+    console.log("Factura original:", invoice.id);
+    console.log("Orden:", invoice.orderNumber);
+    console.log("Motivo:", returnData.reason);
+    if (returnData.notes) console.log("Notas:", returnData.notes);
+    console.log("Items devueltos:");
+    invoice.items.forEach((item) => {
+      console.log(
+        `  - ${item.productName} x${item.quantity} = C$${item.subtotal.toFixed(2)}`,
+      );
+    });
+    console.log("Total devuelto: C$" + invoice.total.toFixed(2));
+    console.log("============================");
+    toast.success("Factura de devolución impresa");
+  };
+
   const handleOpenReturn = (invoice: Invoice) => {
     setSelectedInvoice(null);
     setInvoiceToReturn(invoice);
   };
 
-  const handleConfirmReturn = (data: {
-    reason: string;
-    notes?: string;
-    items: Invoice["items"];
-  }) => {
+  const handleConfirmReturn = (data: { reason: string; notes?: string }) => {
     if (!invoiceToReturn) return;
 
     addReturn(invoiceToReturn.id, data);
+    handlePrintReturnInvoice(invoiceToReturn, data);
     toast.success("Devolución procesada correctamente");
     setInvoiceToReturn(null);
+  };
+
+  const handleReprocessInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(null);
+    navigate("/ordenes", {
+      state: {
+        reprocessFrom: invoice.id,
+        items: invoice.items.map((item) => ({
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        })),
+      },
+    });
+    toast.success("Redirigiendo a crear nueva orden...");
   };
 
   return (
@@ -101,7 +136,6 @@ export const InvoicesPage = () => {
           >
             <option value="all">Todos los estados</option>
             <option value="completed">Completadas</option>
-            <option value="partially_returned">Parcialmente Devueltas</option>
             <option value="returned">Devueltas</option>
           </select>
         </div>
@@ -158,6 +192,7 @@ export const InvoicesPage = () => {
         invoice={selectedInvoice}
         onPrint={handlePrintInvoice}
         onReturn={handleOpenReturn}
+        onReprocess={handleReprocessInvoice}
       />
 
       <ReturnInvoiceModal

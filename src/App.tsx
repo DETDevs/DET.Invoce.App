@@ -16,6 +16,7 @@ import { CashBoxProvider } from "@/features/settings/pages/CashBoxContext";
 import { CashMovementsPage } from "@/features/cash-movements";
 import { InvoicesPage } from "@/features/invoices/pages/InvoicesPage";
 import { TakeoutDashboardPage } from "@/features/takeout/pages/TakeoutDashboardPage";
+import { RoleGuard } from "@/shared/ui/RoleGuard";
 
 function App() {
   return (
@@ -32,19 +33,112 @@ function App() {
               </CashBoxProvider>
             }
           >
-            <Route index element={<DashboardPage />} />
-            <Route path="tablero" element={<OrdersBoardPage />} />
-            <Route path="productos" element={<ProductsPage />} />
-            <Route path="nuevo-producto" element={<AddProductPage />} />
-            <Route path="usuarios" element={<UsersPage />} />
-            <Route path="realizar-pedido" element={<CreateCustomOrderPage />} />
-            <Route path="nuevo-usuario" element={<AddUserPage />} />
-            <Route path="reportes" element={<ReportsPage />} />
-            <Route path="ordenes" element={<NewOrderPage />} />
-            <Route path="takeout" element={<TakeoutDashboardPage />} />
-            <Route path="facturas" element={<InvoicesPage />} />
-            <Route path="movimientos-caja" element={<CashMovementsPage />} />
-            <Route path="configuracion" element={<SettingsPage />} />
+            <Route
+              index
+              element={
+                <RoleGuard allowedRoles={["admin"]}>
+                  <DashboardPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="tablero"
+              element={
+                <RoleGuard allowedRoles={["admin"]}>
+                  <OrdersBoardPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="productos"
+              element={
+                <RoleGuard allowedRoles={["admin"]}>
+                  <ProductsPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="nuevo-producto"
+              element={
+                <RoleGuard allowedRoles={["admin"]}>
+                  <AddProductPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="usuarios"
+              element={
+                <RoleGuard allowedRoles={["admin"]}>
+                  <UsersPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="nuevo-usuario"
+              element={
+                <RoleGuard allowedRoles={["admin"]}>
+                  <AddUserPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="reportes"
+              element={
+                <RoleGuard allowedRoles={["admin"]}>
+                  <ReportsPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="configuracion"
+              element={
+                <RoleGuard allowedRoles={["admin"]}>
+                  <SettingsPage />
+                </RoleGuard>
+              }
+            />
+
+            <Route
+              path="facturas"
+              element={
+                <RoleGuard allowedRoles={["cajero", "admin"]}>
+                  <InvoicesPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="movimientos-caja"
+              element={
+                <RoleGuard allowedRoles={["cajero", "admin"]}>
+                  <CashMovementsPage />
+                </RoleGuard>
+              }
+            />
+
+            <Route
+              path="ordenes"
+              element={
+                <RoleGuard allowedRoles={["mesero", "cajero", "admin"]}>
+                  <NewOrderPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="takeout"
+              element={
+                <RoleGuard allowedRoles={["mesero", "cajero", "admin"]}>
+                  <TakeoutDashboardPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="realizar-pedido"
+              element={
+                <RoleGuard allowedRoles={["mesero", "cajero", "admin"]}>
+                  <CreateCustomOrderPage />
+                </RoleGuard>
+              }
+            />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

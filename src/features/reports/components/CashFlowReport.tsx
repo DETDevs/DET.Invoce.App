@@ -26,24 +26,34 @@ export const CashFlowReport = ({ data }: CashFlowReportProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Entradas Totales"
           value={formatCurrency(data.totalIn)}
           icon={ArrowUpRight}
           color="green"
+          tooltip="Suma de todos los movimientos de entrada de efectivo: fondo de caja, aportes, devoluciones, etc."
         />
         <KPICard
           title="Salidas Totales"
           value={formatCurrency(data.totalOut)}
           icon={ArrowDownRight}
           color="red"
+          tooltip="Suma de todos los movimientos de salida de efectivo: pagos a proveedores, gastos, retiros, etc."
         />
         <KPICard
           title="Balance Neto"
           value={formatCurrency(data.netCash)}
           icon={Wallet}
           color={data.netCash >= 0 ? "blue" : "red"}
+          tooltip="Diferencia entre entradas y salidas. Indica el flujo neto de efectivo en el período."
+        />
+        <KPICard
+          title="Efectivo en Caja (Est.)"
+          value={formatCurrency(data.totalIn - data.totalOut)}
+          icon={Wallet}
+          color="amber"
+          tooltip="Estimación del efectivo disponible en caja basado en entradas menos salidas del período."
         />
       </div>
 

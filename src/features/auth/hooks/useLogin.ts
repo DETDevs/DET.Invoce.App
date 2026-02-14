@@ -40,8 +40,14 @@ export const useLogin = () => {
       iconTheme: { primary: "#fff", secondary: "#E8BC6E" },
     });
 
+    const defaultRoutes: Record<string, string> = {
+      mesero: "/ordenes",
+      cajero: "/ordenes",
+      admin: "/",
+    };
+
     setTimeout(() => {
-      navigate("/");
+      navigate(defaultRoutes[user.role] || "/");
     }, 1500);
   };
 

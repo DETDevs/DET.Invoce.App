@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Info } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface KPICardProps {
@@ -7,6 +9,7 @@ interface KPICardProps {
   icon: LucideIcon;
   trend?: "up" | "down" | "neutral";
   color?: "blue" | "green" | "amber" | "red" | "purple" | "brown";
+  tooltip?: string;
 }
 
 export const KPICard = ({
@@ -16,7 +19,10 @@ export const KPICard = ({
   icon: Icon,
   trend,
   color = "blue",
+  tooltip,
 }: KPICardProps) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   const colorClasses = {
     blue: "bg-blue-50 text-blue-600",
     green: "bg-green-50 text-green-600",
@@ -27,11 +33,33 @@ export const KPICard = ({
   };
 
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between relative">
       <div>
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-          {title}
-        </p>
+        <div className="flex items-center gap-1.5 mb-1">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            {title}
+          </p>
+          {tooltip && (
+            <div
+              className="relative"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+            >
+              <Info
+                size={14}
+                className="text-gray-300 hover:text-gray-500 cursor-help transition-colors"
+              />
+              {showTooltip && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-56 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg pointer-events-none">
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
+                    <div className="w-2 h-2 bg-gray-800 rotate-45" />
+                  </div>
+                  {tooltip}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <h3 className="text-2xl font-bold text-[#2D2D2D]">{value}</h3>
         {subValue && (
           <span

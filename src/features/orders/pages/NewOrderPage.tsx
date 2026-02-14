@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useTransition } from "react";
+import { useLocation } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { ProductCard } from "@/features/orders/components/ProductCard";
 import { TakeoutCartPanel } from "@/features/orders/components/TakeoutCartPanel";
@@ -52,6 +53,7 @@ export const NewOrderPage = () => {
     addToCart,
     updateQuantity,
     removeFromCart,
+    initializeCart,
     handleCheckout,
     handleRequestCancel,
     isDialogOpen,
@@ -62,6 +64,45 @@ export const NewOrderPage = () => {
     handleConfirmDialog,
     handleCloseDialog,
   } = useOrderLogic();
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const state = location.state as {
+      reprocessFrom?: string;
+      items?: {
+        productId: number;
+        productName: string;
+        quantity: number;
+        unitPrice: number;
+      }[];
+    } | null;
+
+    if (state?.reprocessFrom && state.items) {
+      const cartItems = state.items.map((item) => {
+        const product = PRODUCTS.find((p) => p.id === item.productId);
+        if (product) {
+          return { ...product, quantity: item.quantity };
+        }
+        return {
+          id: item.productId,
+          name: item.productName,
+          price: item.unitPrice,
+          category: "Panadería y Repostería" as const,
+          subcategory: "General",
+          image: "",
+          quantity: item.quantity,
+        };
+      });
+
+      if (cartItems.length > 0) {
+        initializeCart(cartItems);
+        setIsCartOpen(true);
+      }
+
+      window.history.replaceState({}, document.title);
+    }
+  }, []);
 
   const handleCategorySelect = (categoryName: string) => {
     if (selectedCategory === categoryName) return;

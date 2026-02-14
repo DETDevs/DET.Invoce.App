@@ -6,11 +6,7 @@ interface ReturnInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   invoice: Invoice | null;
-  onConfirm: (data: {
-    reason: string;
-    notes?: string;
-    items: Invoice["items"];
-  }) => void;
+  onConfirm: (data: { reason: string; notes?: string }) => void;
 }
 
 export const ReturnInvoiceModal = ({
@@ -19,10 +15,9 @@ export const ReturnInvoiceModal = ({
   invoice,
   onConfirm,
 }: ReturnInvoiceModalProps) => {
-  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
-  const [errors, setErrors] = useState<{ reason?: string; items?: string }>({});
+  const [errors, setErrors] = useState<{ reason?: string }>({});
 
   if (!isOpen || !invoice) return null;
 
@@ -33,39 +28,11 @@ export const ReturnInvoiceModal = ({
     }).format(amount);
   };
 
-  const handleToggleItem = (index: number) => {
-    const newSelected = new Set(selectedItems);
-    if (newSelected.has(index)) {
-      newSelected.delete(index);
-    } else {
-      newSelected.add(index);
-    }
-    setSelectedItems(newSelected);
-    if (errors.items) {
-      setErrors({ ...errors, items: undefined });
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedItems.size === invoice.items.length) {
-      setSelectedItems(new Set());
-    } else {
-      setSelectedItems(new Set(invoice.items.map((_, index) => index)));
-    }
-    if (errors.items) {
-      setErrors({ ...errors, items: undefined });
-    }
-  };
-
   const handleSubmit = () => {
-    const newErrors: { reason?: string; items?: string } = {};
+    const newErrors: { reason?: string } = {};
 
     if (!reason.trim()) {
       newErrors.reason = "El motivo es requerido";
-    }
-
-    if (selectedItems.size === 0) {
-      newErrors.items = "Debes seleccionar al menos un item para devolver";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -73,33 +40,27 @@ export const ReturnInvoiceModal = ({
       return;
     }
 
-    const itemsToReturn = invoice.items.filter((_, index) =>
-      selectedItems.has(index),
-    );
-
     onConfirm({
       reason: reason.trim(),
       notes: notes.trim() || undefined,
-      items: itemsToReturn,
     });
 
-    setSelectedItems(new Set());
     setReason("");
     setNotes("");
     setErrors({});
   };
 
   const handleClose = () => {
-    setSelectedItems(new Set());
     setReason("");
     setNotes("");
     setErrors({});
     onClose();
   };
 
-  const totalToReturn = invoice.items
-    .filter((_, index) => selectedItems.has(index))
-    .reduce((sum, item) => sum + item.subtotal, 0);
+  const totalToReturn = invoice.items.reduce(
+    (sum, item) => sum + item.subtotal,
+    0,
+  );
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -130,46 +91,37 @@ export const ReturnInvoiceModal = ({
               className="text-orange-600 shrink-0 mt-0.5"
             />
             <div className="text-sm text-orange-800">
-              <p className="font-semibold mb-1">Información importante</p>
+              <p className="font-semibold mb-1">Devolución completa</p>
               <p>
-                Selecciona los items que deseas devolver y proporciona un motivo
-                para la devolución. Esta acción quedará registrada en el
-                historial de la factura.
+                Se procesará la devolución de <strong>todos los items</strong>{" "}
+                de esta factura. Esta acción quedará registrada en el historial
+                y se imprimirá la factura de devolución.
               </p>
             </div>
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-gray-900">
-                Items a Devolver
-              </h3>
-              <button
-                onClick={handleSelectAll}
-                className="text-sm text-[#593D31] font-semibold hover:underline"
-              >
-                {selectedItems.size === invoice.items.length
-                  ? "Deseleccionar todos"
-                  : "Seleccionar todos"}
-              </button>
-            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-3">
+              Items a Devolver
+            </h3>
 
             <div className="space-y-2">
               {invoice.items.map((item, index) => (
-                <label
+                <div
                   key={index}
-                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedItems.has(index)
-                      ? "border-[#E8BC6E] bg-[#E8BC6E]/5"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
+                  className="flex items-center gap-3 p-4 border border-[#E8BC6E] bg-[#E8BC6E]/5 rounded-lg"
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedItems.has(index)}
-                    onChange={() => handleToggleItem(index)}
-                    className="w-5 h-5 text-[#E8BC6E] rounded focus:ring-[#E8BC6E]"
-                  />
+                  <div className="w-5 h-5 bg-[#E8BC6E] rounded flex items-center justify-center shrink-0">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path
+                        d="M2 6L5 9L10 3"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">
                       {item.productName}
@@ -182,13 +134,9 @@ export const ReturnInvoiceModal = ({
                   <span className="font-bold text-gray-900">
                     {formatCurrency(item.subtotal)}
                   </span>
-                </label>
+                </div>
               ))}
             </div>
-
-            {errors.items && (
-              <p className="text-sm text-red-600 mt-2">{errors.items}</p>
-            )}
           </div>
 
           <div>
@@ -227,18 +175,16 @@ export const ReturnInvoiceModal = ({
             />
           </div>
 
-          {selectedItems.size > 0 && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold text-gray-900">
-                  Total a devolver:
-                </span>
-                <span className="text-2xl font-bold text-red-600">
-                  {formatCurrency(totalToReturn)}
-                </span>
-              </div>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-bold text-gray-900">
+                Total a devolver:
+              </span>
+              <span className="text-2xl font-bold text-red-600">
+                {formatCurrency(totalToReturn)}
+              </span>
             </div>
-          )}
+          </div>
         </div>
 
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 rounded-b-2xl">

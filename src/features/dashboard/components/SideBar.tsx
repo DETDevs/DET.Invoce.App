@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   ShoppingBag,
-  PlusCircle,
   ClipboardList,
   Users,
   Bell,
@@ -17,30 +16,44 @@ import {
   ChevronDown,
   Receipt,
   UtensilsCrossed,
+  User,
 } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import logo from "@/assets/Logotipo.png";
 import { useNavigationBlocker } from "@/shared/context/NavigationBlockerContext";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import type { UserRole } from "@/features/auth/data/mockUsers";
 
 export const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { blocker } = useNavigationBlocker();
+  const { user, logout } = useAuthStore();
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
-    { 0: true, 1: true, 2: true },
+    { 0: true, 1: true, 2: true, 3: true, 4: true },
   );
 
-  const menuGroups = [
+  const allMenuGroups: {
+    title: string;
+    allowedRoles: UserRole[];
+    items: { icon: typeof LayoutDashboard; label: string; path: string }[];
+  }[] = [
     {
-      title: "Operaciones",
+      title: "Ventas",
+      allowedRoles: ["mesero", "cajero", "admin"],
       items: [
-        { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-        { icon: Kanban, label: "Tablero Producción", path: "/tablero" },
         { icon: ClipboardList, label: "Nueva Orden", path: "/ordenes" },
         { icon: UtensilsCrossed, label: "Takeout", path: "/takeout" },
         { icon: FileEdit, label: "Realizar Pedido", path: "/realizar-pedido" },
+      ],
+    },
+    {
+      title: "Caja",
+      allowedRoles: ["cajero", "admin"],
+      items: [
+        { icon: Receipt, label: "Facturas", path: "/facturas" },
         {
           icon: ArrowLeftRight,
           label: "Movimientos de Caja",
@@ -49,22 +62,40 @@ export const Sidebar = () => {
       ],
     },
     {
-      title: "Gestión",
+      title: "Producción",
+      allowedRoles: ["admin"],
+      items: [{ icon: Kanban, label: "Tablero Producción", path: "/tablero" }],
+    },
+    {
+      title: "Administración",
+      allowedRoles: ["admin"],
       items: [
-        { icon: Receipt, label: "Facturas", path: "/facturas" },
+        { icon: LayoutDashboard, label: "Dashboard", path: "/" },
         { icon: ShoppingBag, label: "Productos", path: "/productos" },
-        { icon: PlusCircle, label: "Nuevo Producto", path: "/nuevo-producto" },
         { icon: Bell, label: "Reportes", path: "/reportes" },
         { icon: Users, label: "Usuarios", path: "/usuarios" },
       ],
     },
     {
       title: "Sistema",
+      allowedRoles: ["admin"],
       items: [
         { icon: Settings, label: "Configuración", path: "/configuracion" },
       ],
     },
   ];
+
+  const menuGroups = useMemo(() => {
+    const role = user?.role;
+    if (!role) return allMenuGroups;
+    return allMenuGroups.filter((group) => group.allowedRoles.includes(role));
+  }, [user?.role]);
+
+  const roleLabels: Record<UserRole, string> = {
+    admin: "Administrador",
+    cajero: "Cajero",
+    mesero: "Mesero",
+  };
 
   const handleNavigation = (path: string) => {
     if (blocker) {
@@ -81,6 +112,7 @@ export const Sidebar = () => {
 
   const handleConfirmLogout = () => {
     setIsLogoutDialogOpen(false);
+    logout();
     navigate("/login");
   };
 
@@ -201,6 +233,21 @@ export const Sidebar = () => {
         </nav>
 
         <div className="shrink-0 p-4 mt-auto border-t border-white/10">
+          {user && (
+            <div className="flex items-center gap-3 mb-3 px-2">
+              <div className="w-9 h-9 rounded-full bg-[#E8BC6E]/20 flex items-center justify-center">
+                <User size={18} className="text-[#E8BC6E]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {user.name}
+                </p>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#E8BC6E]/80">
+                  {roleLabels[user.role]}
+                </span>
+              </div>
+            </div>
+          )}
           <button
             onClick={handleLogoutClick}
             className="w-full flex items-center justify-center space-x-2 bg-[#E8BC6E] hover:bg-[#dca34b] text-white py-3 rounded-lg transition-colors shadow-md font-medium"

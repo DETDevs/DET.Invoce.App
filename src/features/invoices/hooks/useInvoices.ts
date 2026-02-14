@@ -19,13 +19,12 @@ export const useInvoices = () => {
         returnData: {
             reason: string;
             notes?: string;
-            items: Invoice["items"];
         }
     ) => {
         const invoice = invoices.find((inv) => inv.id === invoiceId);
         if (!invoice) return;
 
-        const totalReturned = returnData.items.reduce(
+        const totalReturned = invoice.items.reduce(
             (sum, item) => sum + item.subtotal,
             0
         );
@@ -36,25 +35,14 @@ export const useInvoices = () => {
             returnedBy: "Usuario Actual",
             reason: returnData.reason,
             notes: returnData.notes,
-            items: returnData.items,
+            items: invoice.items,
             totalReturned,
         };
 
-        const allReturns = [...(invoice.returns || []), newReturn];
-        const totalReturnedAmount = allReturns.reduce(
-            (sum, ret) => sum + ret.totalReturned,
-            0
-        );
-
-        const newStatus: InvoiceStatus =
-            totalReturnedAmount >= invoice.total
-                ? "returned"
-                : "partially_returned";
-
         const updatedInvoice: Invoice = {
             ...invoice,
-            status: newStatus,
-            returns: allReturns,
+            status: "returned" as InvoiceStatus,
+            returns: [...(invoice.returns || []), newReturn],
         };
 
         const updatedInvoices = invoices.map((inv) =>
