@@ -63,7 +63,7 @@ export const Sidebar = () => {
     },
     {
       title: "Producción",
-      allowedRoles: ["admin"],
+      allowedRoles: ["admin", "cajero", "mesero"],
       items: [{ icon: Kanban, label: "Tablero Producción", path: "/tablero" }],
     },
     {

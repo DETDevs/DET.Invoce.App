@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
-import { Plus, SlidersHorizontal } from "lucide-react";
+import { Plus } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useOrdersBoard } from "@/features/custom-orders/hooks/useOrdersBoard";
 import { KanbanColumn } from "@/features/custom-orders/components/KanbanColumn";
 import { OrderDetailsModal } from "@/features/custom-orders/components/OrderDetailsModal";
@@ -16,18 +17,23 @@ export const OrdersBoardPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { user } = useAuthStore();
+  const readOnly = !["admin", "cajero"].includes(user?.role || "");
+
   const handleCardClick = (order: Order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
 
   const handleManualMove = (orderId: string, newStatus: OrderStatus) => {
+    if (readOnly) return;
     moveOrder(orderId, newStatus);
     setIsModalOpen(false);
     toast.success("Estado del pedido actualizado");
   };
 
   const handlePayment = (orderId: string, amount: number) => {
+    if (readOnly) return;
     registerPayment(orderId, amount);
     toast.success(`Pago de C$ ${amount} registrado`);
 
@@ -43,6 +49,7 @@ export const OrdersBoardPage = () => {
   };
 
   const handleInvoice = (orderId: string) => {
+    if (readOnly) return;
     toast.success("Factura generada correctamente");
     moveOrder(orderId, "delivered");
     setIsModalOpen(false);
@@ -53,6 +60,7 @@ export const OrdersBoardPage = () => {
   };
 
   const handleDragEnd = (result: DropResult) => {
+    if (readOnly) return;
     try {
       const { source, destination, draggableId } = result;
 
@@ -118,21 +126,6 @@ export const OrdersBoardPage = () => {
 
         <div className="flex items-center gap-2">
           <button
-            type="button"
-            className="hidden sm:inline-flex px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Filtros
-          </button>
-
-          <button
-            type="button"
-            className="sm:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl border border-gray-200 bg-white text-gray-700 active:scale-95"
-            aria-label="Filtros"
-          >
-            <SlidersHorizontal size={18} />
-          </button>
-
-          <button
             onClick={() => navigate("/realizar-pedido")}
             className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-[#E8BC6E] text-white text-sm font-bold shadow-md hover:bg-[#dca34b] transition-colors active:scale-95"
           >
@@ -152,13 +145,14 @@ export const OrdersBoardPage = () => {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex min-w-full w-max gap-4 md:gap-6 items-stretch">
+            <div className="flex h-full min-w-full w-max gap-4 md:gap-6 items-stretch">
               <KanbanColumn
                 id="pending"
                 title="Por Hacer"
                 color="bg-gray-100"
                 orders={orders.filter((o) => o.status === "pending")}
                 onCardClick={handleCardClick}
+                readOnly={readOnly}
               />
 
               <KanbanColumn
@@ -167,6 +161,7 @@ export const OrdersBoardPage = () => {
                 color="bg-blue-50"
                 orders={orders.filter((o) => o.status === "production")}
                 onCardClick={handleCardClick}
+                readOnly={readOnly}
               />
 
               <KanbanColumn
@@ -175,6 +170,7 @@ export const OrdersBoardPage = () => {
                 color="bg-amber-50"
                 orders={orders.filter((o) => o.status === "ready")}
                 onCardClick={handleCardClick}
+                readOnly={readOnly}
               />
 
               <KanbanColumn
@@ -183,6 +179,7 @@ export const OrdersBoardPage = () => {
                 color="bg-green-50"
                 orders={orders.filter((o) => o.status === "delivered")}
                 onCardClick={handleCardClick}
+                readOnly={readOnly}
               />
             </div>
           </DragDropContext>
@@ -196,6 +193,7 @@ export const OrdersBoardPage = () => {
         onInvoice={handleInvoice}
         onMoveStatus={handleManualMove}
         onRegisterPayment={handlePayment}
+        readOnly={readOnly}
       />
 
       <Toaster position="top-center" />

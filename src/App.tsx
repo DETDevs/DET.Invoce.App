@@ -44,7 +44,7 @@ function App() {
             <Route
               path="tablero"
               element={
-                <RoleGuard allowedRoles={["admin"]}>
+                <RoleGuard allowedRoles={["admin", "cajero", "mesero"]}>
                   <OrdersBoardPage />
                 </RoleGuard>
               }

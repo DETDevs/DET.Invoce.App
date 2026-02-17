@@ -6,6 +6,7 @@ interface Props {
   order: Order;
   index: number;
   onClick: (order: Order) => void;
+  readOnly?: boolean;
 }
 
 const PaymentProgress = ({
@@ -105,11 +106,16 @@ const getDueDateInfo = (
   };
 };
 
-export const OrderCard = ({ order, index, onClick }: Props) => {
+export const OrderCard = ({
+  order,
+  index,
+  onClick,
+  readOnly = false,
+}: Props) => {
   const dueDateInfo = getDueDateInfo(order.dueDate);
 
   return (
-    <Draggable draggableId={order.id} index={index}>
+    <Draggable draggableId={order.id} index={index} isDragDisabled={readOnly}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}

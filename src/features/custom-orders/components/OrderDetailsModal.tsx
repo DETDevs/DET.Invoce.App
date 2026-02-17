@@ -23,6 +23,7 @@ interface Props {
   onInvoice: (orderId: string) => void;
   onMoveStatus: (orderId: string, newStatus: OrderStatus) => void;
   onRegisterPayment: (orderId: string, amount: number) => void;
+  readOnly?: boolean;
 }
 
 export const OrderDetailsModal = ({
@@ -32,6 +33,7 @@ export const OrderDetailsModal = ({
   onInvoice,
   onMoveStatus,
   onRegisterPayment,
+  readOnly = false,
 }: Props) => {
   const [paymentAmount, setPaymentAmount] = useState("");
   const { user } = useAuthStore();
@@ -66,6 +68,8 @@ export const OrderDetailsModal = ({
   const change = inputValue > remaining ? inputValue - remaining : 0;
 
   const renderFooterActions = () => {
+    if (readOnly) return null;
+
     if (order.status === "delivered") {
       return (
         <button className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors ml-auto cursor-default text-sm md:text-base w-full md:w-auto">

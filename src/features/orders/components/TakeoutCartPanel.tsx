@@ -27,6 +27,9 @@ type TakeoutCartPanelProps = {
   onOrderSent: () => void;
   onCancel: () => void;
   tableCount: number;
+  preselectedTable?: number;
+  preselectedCuentaId?: string;
+  preselectedCuentaNumber?: number;
 };
 
 const PARA_LLEVAR_TABLE = 0;
@@ -39,14 +42,23 @@ export const TakeoutCartPanel = ({
   onOrderSent,
   onCancel,
   tableCount,
+  preselectedTable,
+  preselectedCuentaId,
+  preselectedCuentaNumber,
 }: TakeoutCartPanelProps) => {
-  const [mode, setMode] = useState<OrderMode>("mesa");
-  const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const isPreselected =
+    preselectedTable !== undefined && preselectedTable !== null;
+  const [mode, setMode] = useState<OrderMode>(isPreselected ? "mesa" : "mesa");
+  const [selectedTable, setSelectedTable] = useState<number | null>(
+    isPreselected ? preselectedTable : null,
+  );
   const [isTableDropdownOpen, setIsTableDropdownOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<"new" | "add-to-cuenta">(
-    "new",
+    isPreselected ? "add-to-cuenta" : "new",
   );
-  const [selectedCuentaId, setSelectedCuentaId] = useState<string | null>(null);
+  const [selectedCuentaId, setSelectedCuentaId] = useState<string | null>(
+    isPreselected && preselectedCuentaId ? preselectedCuentaId : null,
+  );
 
   const [paymentMethod, setPaymentMethod] = useState<"efectivo" | "tarjeta">(
     "efectivo",
@@ -69,6 +81,7 @@ export const TakeoutCartPanel = ({
     : [];
 
   useEffect(() => {
+    if (isPreselected) return;
     if (selectedTable && activeCuentas.length > 0) {
       setSelectedAction("add-to-cuenta");
       setSelectedCuentaId(activeCuentas[0].id);
@@ -199,46 +212,59 @@ export const TakeoutCartPanel = ({
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-bold text-[#2D2D2D]">
-            Orden #{orderNumber}
+            {isPreselected
+              ? `Mesa ${preselectedTable} — Cuenta ${preselectedCuentaNumber}`
+              : `Orden #${orderNumber}`}
           </h2>
           <span className="bg-[#F9F1D8] text-[#593D31] text-xs font-bold px-2 py-1 rounded-lg">
             {totalItems} Items
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1">
-          <button
-            type="button"
-            onClick={() => {
-              setMode("mesa");
-              setSelectedTable(null);
-            }}
-            className={`flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
-              mode === "mesa"
-                ? "bg-white text-[#593D31] shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <UtensilsCrossed size={14} />
-            En Mesa
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("llevar");
-              setSelectedTable(null);
-              setIsTableDropdownOpen(false);
-            }}
-            className={`flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
-              mode === "llevar"
-                ? "bg-white text-[#593D31] shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <Package size={14} />
-            Para Llevar
-          </button>
-        </div>
+        {isPreselected && (
+          <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 mb-3">
+            <UtensilsCrossed size={14} className="text-blue-600" />
+            <p className="text-xs text-blue-800 font-medium">
+              Agregando productos a la cuenta existente
+            </p>
+          </div>
+        )}
+
+        {!isPreselected && (
+          <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setMode("mesa");
+                setSelectedTable(null);
+              }}
+              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
+                mode === "mesa"
+                  ? "bg-white text-[#593D31] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <UtensilsCrossed size={14} />
+              En Mesa
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("llevar");
+                setSelectedTable(null);
+                setIsTableDropdownOpen(false);
+              }}
+              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
+                mode === "llevar"
+                  ? "bg-white text-[#593D31] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Package size={14} />
+              Para Llevar
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="overflow-y-auto p-4 space-y-3 min-h-0 scrollbar-hide">
@@ -262,7 +288,7 @@ export const TakeoutCartPanel = ({
       </div>
 
       <div className="p-6 bg-gray-50 border-t border-gray-100 space-y-4">
-        {mode === "mesa" && (
+        {mode === "mesa" && !isPreselected && (
           <>
             <div className="space-y-2">
               <label className="block text-xs font-bold text-gray-500 uppercase">
@@ -336,20 +362,6 @@ export const TakeoutCartPanel = ({
                       {cuenta.items.length} items)
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedAction("new");
-                      setSelectedCuentaId(null);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${
-                      selectedAction === "new"
-                        ? "bg-emerald-50 border-emerald-400 text-emerald-800"
-                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
-                    }`}
-                  >
-                    Nueva Cuenta (dividir)
-                  </button>
                 </div>
               </div>
             )}
@@ -475,7 +487,11 @@ export const TakeoutCartPanel = ({
               className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
             >
               <Send size={18} />
-              {mode === "llevar" ? "Enviar a Caja" : "Tomar Orden"}
+              {isPreselected
+                ? "Agregar Productos"
+                : mode === "llevar"
+                  ? "Enviar a Caja"
+                  : "Tomar Orden"}
             </button>
           )}
           <button

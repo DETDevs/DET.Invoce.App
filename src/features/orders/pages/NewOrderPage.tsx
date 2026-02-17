@@ -17,9 +17,7 @@ const getTableCount = (): number => {
       const settings = JSON.parse(stored);
       return settings.tableCount || 6;
     }
-  } catch {
-    /* empty */
-  }
+  } catch {}
   return 6;
 };
 
@@ -37,6 +35,8 @@ export const NewOrderPage = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [isPending, startTransition] = useTransition();
   const tableCount = getTableCount();
+  const location = useLocation();
+  const isAddingToExisting = !!(location.state as any)?.addToTable;
 
   const [selectedCategory, setSelectedCategory] = useState<string>(
     CATEGORIES_DATA[0].name,
@@ -63,9 +63,7 @@ export const NewOrderPage = () => {
     cancelText,
     handleConfirmDialog,
     handleCloseDialog,
-  } = useOrderLogic();
-
-  const location = useLocation();
+  } = useOrderLogic(isAddingToExisting);
 
   useEffect(() => {
     const state = location.state as {
@@ -76,6 +74,9 @@ export const NewOrderPage = () => {
         quantity: number;
         unitPrice: number;
       }[];
+      addToTable?: number;
+      addToCuentaId?: string;
+      cuentaNumber?: number;
     } | null;
 
     if (state?.reprocessFrom && state.items) {
@@ -273,6 +274,9 @@ export const NewOrderPage = () => {
           onOrderSent={handleCheckout}
           onCancel={handleRequestCancel}
           tableCount={tableCount}
+          preselectedTable={(location.state as any)?.addToTable}
+          preselectedCuentaId={(location.state as any)?.addToCuentaId}
+          preselectedCuentaNumber={(location.state as any)?.cuentaNumber}
         />
       </div>
 
@@ -340,6 +344,9 @@ export const NewOrderPage = () => {
               onOrderSent={handleCheckout}
               onCancel={handleRequestCancel}
               tableCount={tableCount}
+              preselectedTable={(location.state as any)?.addToTable}
+              preselectedCuentaId={(location.state as any)?.addToCuentaId}
+              preselectedCuentaNumber={(location.state as any)?.cuentaNumber}
             />
           </div>
         </div>

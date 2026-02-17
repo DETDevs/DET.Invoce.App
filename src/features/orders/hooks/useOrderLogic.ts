@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { useNavigationBlocker } from "@/shared/context/NavigationBlockerContext";
 import { useCart } from "./useCart";
 
-export const useOrderLogic = () => {
+export const useOrderLogic = (isAddingToExisting = false) => {
     const navigate = useNavigate();
     const { setBlocker } = useNavigationBlocker();
     const { cart, addToCart, updateQuantity, removeFromCart, total, clearCart, initializeCart } =
@@ -24,6 +24,7 @@ export const useOrderLogic = () => {
     const [isCartOpen, setIsCartOpen] = useState(false);
 
     useEffect(() => {
+        if (isAddingToExisting) return;
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (cart.length > 0) {
                 e.preventDefault();
@@ -32,9 +33,13 @@ export const useOrderLogic = () => {
         };
         window.addEventListener("beforeunload", handleBeforeUnload);
         return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-    }, [cart.length]);
+    }, [cart.length, isAddingToExisting]);
 
     useEffect(() => {
+        if (isAddingToExisting) {
+            setBlocker(null);
+            return;
+        }
         const blocker = (path: string) => {
             setPendingPath(path);
             if (cart.length === 0) {
@@ -57,7 +62,7 @@ export const useOrderLogic = () => {
         };
         setBlocker(blocker);
         return () => setBlocker(null);
-    }, [cart.length, orderNumber, setBlocker]);
+    }, [cart.length, orderNumber, setBlocker, isAddingToExisting]);
 
     const refreshOrder = useCallback(() => {
         clearCart();
@@ -66,36 +71,42 @@ export const useOrderLogic = () => {
 
     const handleCheckout = () => {
         if (cart.length > 0) {
-            const invoice = {
-                id: `FAC-VD-${orderNumber}`,
-                orderNumber: `VD-${orderNumber}`,
-                items: cart.map(item => ({
-                    productId: item.id,
-                    productName: item.name,
-                    quantity: item.quantity,
-                    unitPrice: item.price,
-                    subtotal: item.price * item.quantity
-                })),
-                subtotal: total,
-                tax: 0,
-                total: total,
-                status: 'completed' as const,
-                createdAt: new Date().toISOString(),
-                createdBy: 'Usuario Actual'
-            };
+            if (!isAddingToExisting) {
+                const invoice = {
+                    id: `FAC-VD-${orderNumber}`,
+                    orderNumber: `VD-${orderNumber}`,
+                    items: cart.map(item => ({
+                        productId: item.id,
+                        productName: item.name,
+                        quantity: item.quantity,
+                        unitPrice: item.price,
+                        subtotal: item.price * item.quantity
+                    })),
+                    subtotal: total,
+                    tax: 0,
+                    total: total,
+                    status: 'completed' as const,
+                    createdAt: new Date().toISOString(),
+                    createdBy: 'Usuario Actual'
+                };
 
-            try {
-                const stored = localStorage.getItem('invoices');
-                const invoices = stored ? JSON.parse(stored) : [];
-                invoices.unshift(invoice);
-                localStorage.setItem('invoices', JSON.stringify(invoices));
-            } catch (error) {
-                console.error('Error al guardar factura:', error);
+                try {
+                    const stored = localStorage.getItem('invoices');
+                    const invoices = stored ? JSON.parse(stored) : [];
+                    invoices.unshift(invoice);
+                    localStorage.setItem('invoices', JSON.stringify(invoices));
+                } catch (error) {
+                    console.error('Error al guardar factura:', error);
+                }
             }
 
-            toast.success("Orden Tomada correctamente");
+            toast.success(isAddingToExisting ? "Productos agregados correctamente" : "Orden Tomada correctamente");
             refreshOrder();
             setIsCartOpen(false);
+
+            if (isAddingToExisting) {
+                navigate('/takeout');
+            }
         }
     };
 

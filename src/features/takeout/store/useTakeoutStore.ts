@@ -6,6 +6,7 @@ interface TakeoutState {
     orders: TakeoutOrder[];
     addOrder: (tableNumber: number, cuentaNumber: number, items: TakeoutItem[], createdBy: string) => void;
     addItemsToOrder: (orderId: string, items: TakeoutItem[]) => void;
+    splitOrder: (orderId: string, itemIndices: number[]) => void;
     completeOrder: (orderId: string) => void;
     cancelOrder: (orderId: string) => void;
     getActiveOrdersByTable: (tableNumber: number) => TakeoutOrder[];
@@ -46,6 +47,42 @@ export const useTakeoutStore = create<TakeoutState>()(
                             updatedAt: new Date().toISOString(),
                         };
                     }),
+                }));
+            },
+
+            splitOrder: (orderId, itemIndices) => {
+                const sourceOrder = get().orders.find((o) => o.id === orderId);
+                if (!sourceOrder) return;
+
+                const itemsToMove = itemIndices.map((i) => sourceOrder.items[i]).filter(Boolean);
+                if (itemsToMove.length === 0) return;
+
+                const remainingItems = sourceOrder.items.filter((_, i) => !itemIndices.includes(i));
+                const newCuentaNumber = get().getNextCuentaNumber(sourceOrder.tableNumber);
+                const now = new Date().toISOString();
+
+                const newOrder: TakeoutOrder = {
+                    id: `TO-${sourceOrder.tableNumber}-${newCuentaNumber}`,
+                    tableNumber: sourceOrder.tableNumber,
+                    cuentaNumber: newCuentaNumber,
+                    items: itemsToMove,
+                    createdAt: now,
+                    updatedAt: now,
+                    status: 'active',
+                    createdBy: sourceOrder.createdBy,
+                };
+
+                set((state) => ({
+                    orders: [
+                        ...state.orders.map((order) => {
+                            if (order.id !== orderId) return order;
+                            if (remainingItems.length === 0) {
+                                return { ...order, status: 'cancelled' as TakeoutStatus, updatedAt: now };
+                            }
+                            return { ...order, items: remainingItems, updatedAt: now };
+                        }),
+                        newOrder,
+                    ],
                 }));
             },
 

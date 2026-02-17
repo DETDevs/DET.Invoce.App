@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   Wallet,
@@ -8,6 +9,9 @@ import {
   User,
   UtensilsCrossed,
   Package,
+  Plus,
+  Scissors,
+  Check,
 } from "lucide-react";
 import type { TakeoutOrder } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
@@ -34,9 +38,15 @@ export const TakeoutDetailModal = ({
   const [amountPaid, setAmountPaid] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { completeOrder } = useTakeoutStore();
+  const navigate = useNavigate();
+  const { completeOrder, splitOrder } = useTakeoutStore();
   const { user } = useAuthStore();
   const canInvoice = user?.role === "cajero" || user?.role === "admin";
+
+  const [isSplitMode, setIsSplitMode] = useState(false);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
+    new Set(),
+  );
 
   useEffect(() => {
     if (isOpen && cuentas.length > 0) {
@@ -44,6 +54,8 @@ export const TakeoutDetailModal = ({
     }
     if (!isOpen) {
       setSelectedCuentaId(null);
+      setIsSplitMode(false);
+      setSelectedIndices(new Set());
     }
     setAmountPaid("");
     setPaymentMethod("efectivo");
@@ -62,6 +74,8 @@ export const TakeoutDetailModal = ({
     setAmountPaid("");
     setPaymentMethod("efectivo");
     setIsProcessing(false);
+    setIsSplitMode(false);
+    setSelectedIndices(new Set());
   }, [selectedCuentaId]);
 
   if (!isOpen || tableNumber === null || cuentas.length === 0) return null;
@@ -144,6 +158,35 @@ export const TakeoutDetailModal = ({
     }
     setIsProcessing(false);
   };
+
+  const toggleItemSelection = (idx: number) => {
+    setSelectedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  const handleConfirmSplit = () => {
+    if (selectedIndices.size === 0) return;
+    if (selectedIndices.size === selectedCuenta.items.length) {
+      toast.error("No puedes mover todos los productos. Deja al menos uno.");
+      return;
+    }
+    splitOrder(selectedCuenta.id, Array.from(selectedIndices));
+    toast.success(
+      `Cuenta dividida: ${selectedIndices.size} producto${selectedIndices.size > 1 ? "s" : ""} movido${selectedIndices.size > 1 ? "s" : ""} a nueva cuenta`,
+      { icon: "✂️" },
+    );
+    setIsSplitMode(false);
+    setSelectedIndices(new Set());
+  };
+
+  const splitSubtotal = Array.from(selectedIndices).reduce((acc, idx) => {
+    const item = selectedCuenta.items[idx];
+    return item ? acc + item.price * item.quantity : acc;
+  }, 0);
 
   const createdTime = new Date(selectedCuenta.createdAt).toLocaleTimeString(
     "es-NI",
@@ -231,15 +274,22 @@ export const TakeoutDetailModal = ({
 
         <div className="flex-1 overflow-y-auto min-h-0 p-5">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
-            Productos —{" "}
-            {isParaLlevar
-              ? `Orden #${selectedCuenta.cuentaNumber}`
-              : `Cuenta ${selectedCuenta.cuentaNumber}`}
+            {isSplitMode ? (
+              "Selecciona los productos para la nueva cuenta"
+            ) : (
+              <>
+                Productos —{" "}
+                {isParaLlevar
+                  ? `Orden #${selectedCuenta.cuentaNumber}`
+                  : `Cuenta ${selectedCuenta.cuentaNumber}`}
+              </>
+            )}
           </h3>
           <div className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-100 text-gray-600 font-medium">
                 <tr>
+                  {isSplitMode && <th className="px-3 py-2 w-10"></th>}
                   <th className="px-4 py-2">Producto</th>
                   <th className="px-4 py-2 text-center">Cant.</th>
                   <th className="px-4 py-2 text-right">Precio</th>
@@ -248,7 +298,32 @@ export const TakeoutDetailModal = ({
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {selectedCuenta.items.map((item, idx) => (
-                  <tr key={idx}>
+                  <tr
+                    key={idx}
+                    onClick={() => isSplitMode && toggleItemSelection(idx)}
+                    className={`${
+                      isSplitMode
+                        ? `cursor-pointer transition-colors ${
+                            selectedIndices.has(idx)
+                              ? "bg-blue-50"
+                              : "hover:bg-gray-50"
+                          }`
+                        : ""
+                    }`}
+                  >
+                    {isSplitMode && (
+                      <td className="px-3 py-2.5">
+                        <div
+                          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                            selectedIndices.has(idx)
+                              ? "bg-blue-500 border-blue-500 text-white"
+                              : "border-gray-300 bg-white"
+                          }`}
+                        >
+                          {selectedIndices.has(idx) && <Check size={12} />}
+                        </div>
+                      </td>
+                    )}
                     <td className="px-4 py-2.5 text-[#2D2D2D] font-medium">
                       {item.name}
                     </td>
@@ -266,114 +341,182 @@ export const TakeoutDetailModal = ({
               </tbody>
             </table>
           </div>
-        </div>
 
-        <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50">
-          <div className="px-5 py-3 flex items-center justify-between gap-6 border-b border-gray-100">
-            <div className="flex gap-6 text-sm text-gray-500">
-              <span>
-                Sub:
-                <strong className="text-gray-700">
-                  C$ {subtotal.toFixed(2)}
-                </strong>
-              </span>
-              <span>
-                IVA 15%:
-                <strong className="text-gray-700">C$ {tax.toFixed(2)}</strong>
-              </span>
-            </div>
-            <div className="text-right">
-              <span className="text-xl font-bold text-[#2D2D2D]">
-                C$ {total.toFixed(2)}
-              </span>
-            </div>
-          </div>
-
-          {canInvoice ? (
-            <div className="px-5 py-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
-                  Pago
-                </label>
-                <div className="flex gap-2 flex-1">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("efectivo")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 font-bold text-sm transition-all ${
-                      paymentMethod === "efectivo"
-                        ? "bg-emerald-50 border-emerald-400 text-emerald-800"
-                        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
-                    }`}
-                  >
-                    <Wallet size={14} /> Efectivo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPaymentMethod("tarjeta");
-                      setAmountPaid(total.toFixed(2));
-                    }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 font-bold text-sm transition-all ${
-                      paymentMethod === "tarjeta"
-                        ? "bg-sky-50 border-sky-400 text-sky-800"
-                        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
-                    }`}
-                  >
-                    <CreditCard size={14} /> Tarjeta
-                  </button>
-                </div>
-              </div>
-
-              {paymentMethod === "efectivo" && (
-                <div className="flex items-center gap-3">
-                  <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
-                    Recibido
-                  </label>
-                  <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                      C$
-                    </span>
-                    <input
-                      type="number"
-                      value={amountPaid}
-                      onChange={(e) => setAmountPaid(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleInvoice()}
-                      className="w-full pl-8 pr-4 h-9 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm font-bold"
-                      placeholder={total.toFixed(2)}
-                      min="0"
-                    />
-                  </div>
-                  {amountPaid !== "" && (
-                    <div
-                      className={`h-9 px-3 flex items-center rounded-lg font-bold text-sm whitespace-nowrap ${change >= 0 ? "bg-green-100 text-green-800" : "bg-red-50 text-red-700"}`}
-                    >
-                      {change >= 0 ? "Cambio" : "Falta"}: C${" "}
-                      {Math.abs(change).toFixed(2)}
-                    </div>
-                  )}
-                </div>
-              )}
-
+          {!isSplitMode && (
+            <div className="flex gap-2 mt-3">
               <button
-                onClick={handleInvoice}
-                disabled={!isPaymentSufficient || isProcessing}
-                className="w-full h-11 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                onClick={() => {
+                  onClose();
+                  navigate("/ordenes", {
+                    state: {
+                      addToTable: tableNumber,
+                      addToCuentaId: selectedCuenta.id,
+                      cuentaNumber: selectedCuenta.cuentaNumber,
+                    },
+                  });
+                }}
+                className="flex-1 py-2.5 bg-white border-2 border-dashed border-[#E8BC6E] text-[#593D31] font-bold rounded-xl hover:bg-[#FDF8EE] transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
               >
-                <FileText size={18} />
-                {isProcessing ? "Procesando..." : "Facturar"}
+                <Plus size={16} />
+                Agregar Productos
               </button>
-            </div>
-          ) : (
-            <div className="px-5 py-4">
-              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                <Package size={20} className="text-amber-600 flex-shrink-0" />
-                <p className="text-sm text-amber-800">
-                  Solo un <strong>Cajero</strong> puede facturar esta orden.
-                </p>
-              </div>
+              {selectedCuenta.items.length > 1 && (
+                <button
+                  onClick={() => setIsSplitMode(true)}
+                  className="flex-1 py-2.5 bg-white border-2 border-dashed border-violet-300 text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+                >
+                  <Scissors size={16} />
+                  Dividir Cuenta
+                </button>
+              )}
             </div>
           )}
         </div>
+
+        {isSplitMode ? (
+          <div className="flex-shrink-0 border-t border-gray-200 bg-violet-50">
+            <div className="px-5 py-4 space-y-3">
+              {selectedIndices.size > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-violet-700 font-medium">
+                    {selectedIndices.size} producto
+                    {selectedIndices.size > 1 ? "s" : ""} seleccionado
+                    {selectedIndices.size > 1 ? "s" : ""}
+                  </span>
+                  <span className="text-violet-800 font-bold">
+                    C$ {splitSubtotal.toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setIsSplitMode(false);
+                    setSelectedIndices(new Set());
+                  }}
+                  className="flex-1 h-11 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmSplit}
+                  disabled={selectedIndices.size === 0}
+                  className="flex-1 h-11 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                >
+                  <Scissors size={16} />
+                  Crear Nueva Cuenta
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50">
+            <div className="px-5 py-3 flex items-center justify-between gap-6 border-b border-gray-100">
+              <div className="flex gap-6 text-sm text-gray-500">
+                <span>
+                  Sub:
+                  <strong className="text-gray-700">
+                    C$ {subtotal.toFixed(2)}
+                  </strong>
+                </span>
+                <span>
+                  IVA 15%:
+                  <strong className="text-gray-700">C$ {tax.toFixed(2)}</strong>
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-xl font-bold text-[#2D2D2D]">
+                  C$ {total.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {canInvoice ? (
+              <div className="px-5 py-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
+                    Pago
+                  </label>
+                  <div className="flex gap-2 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("efectivo")}
+                      className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 font-bold text-sm transition-all ${
+                        paymentMethod === "efectivo"
+                          ? "bg-emerald-50 border-emerald-400 text-emerald-800"
+                          : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                      }`}
+                    >
+                      <Wallet size={14} /> Efectivo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentMethod("tarjeta");
+                        setAmountPaid(total.toFixed(2));
+                      }}
+                      className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border-2 font-bold text-sm transition-all ${
+                        paymentMethod === "tarjeta"
+                          ? "bg-sky-50 border-sky-400 text-sky-800"
+                          : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                      }`}
+                    >
+                      <CreditCard size={14} /> Tarjeta
+                    </button>
+                  </div>
+                </div>
+
+                {paymentMethod === "efectivo" && (
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
+                      Recibido
+                    </label>
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                        C$
+                      </span>
+                      <input
+                        type="number"
+                        value={amountPaid}
+                        onChange={(e) => setAmountPaid(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleInvoice()}
+                        className="w-full pl-8 pr-4 h-9 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm font-bold"
+                        placeholder={total.toFixed(2)}
+                        min="0"
+                      />
+                    </div>
+                    {amountPaid !== "" && (
+                      <div
+                        className={`h-9 px-3 flex items-center rounded-lg font-bold text-sm whitespace-nowrap ${change >= 0 ? "bg-green-100 text-green-800" : "bg-red-50 text-red-700"}`}
+                      >
+                        {change >= 0 ? "Cambio" : "Falta"}: C${" "}
+                        {Math.abs(change).toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleInvoice}
+                  disabled={!isPaymentSufficient || isProcessing}
+                  className="w-full h-11 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                >
+                  <FileText size={18} />
+                  {isProcessing ? "Procesando..." : "Facturar"}
+                </button>
+              </div>
+            ) : (
+              <div className="px-5 py-4">
+                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <Package size={20} className="text-amber-600 flex-shrink-0" />
+                  <p className="text-sm text-amber-800">
+                    Solo un <strong>Cajero</strong> puede facturar esta orden.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

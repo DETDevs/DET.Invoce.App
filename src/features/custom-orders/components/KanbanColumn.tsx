@@ -10,6 +10,7 @@ interface Props {
   orders: Order[];
   color: string;
   onCardClick: (order: Order) => void;
+  readOnly?: boolean;
 }
 
 export const KanbanColumn = ({
@@ -18,6 +19,7 @@ export const KanbanColumn = ({
   orders,
   color,
   onCardClick,
+  readOnly = false,
 }: Props) => {
   return (
     <div className="flex flex-col h-full w-[calc(100vw-2rem)] md:w-[320px] shrink-0 snap-start bg-gray-50/50 rounded-2xl border border-gray-200/60 shadow-sm">
@@ -41,7 +43,7 @@ export const KanbanColumn = ({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`p-3 flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide transition-colors ${
+            className={`p-3 flex-1 min-h-0 overflow-y-auto overscroll-contain transition-colors ${
               snapshot.isDraggingOver ? "bg-gray-100/80" : ""
             }`}
             style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
@@ -52,6 +54,7 @@ export const KanbanColumn = ({
                 order={order}
                 index={index}
                 onClick={onCardClick}
+                readOnly={readOnly}
               />
             ))}
             {provided.placeholder}
