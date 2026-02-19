@@ -3,7 +3,7 @@ import type { OrderStatus } from "@/shared/types";
 import { useOrdersStore } from "@/features/custom-orders/store/useOrdersStore";
 
 export const useOrdersBoard = () => {
-    const { orders, setOrders, updateOrderStatus, registerPayment } = useOrdersStore();
+    const { orders, setOrders, updateOrderStatus, registerPayment, removeOrder } = useOrdersStore();
 
     const onDragEnd = (result: DropResult) => {
         const { destination, source, draggableId } = result;
@@ -38,5 +38,6 @@ export const useOrdersBoard = () => {
         onDragEnd,
         moveOrder,
         registerPayment,
+        removeOrder,
     };
 };

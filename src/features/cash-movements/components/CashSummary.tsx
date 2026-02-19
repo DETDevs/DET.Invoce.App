@@ -9,7 +9,7 @@ export const CashSummary = ({ summary }: Props) => {
   const isPositiveBalance = summary.balance >= 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
       <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-600">Cash In</span>

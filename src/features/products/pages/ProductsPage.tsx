@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Filter, Edit, Trash2, Search, Boxes } from "lucide-react";
 import { FilterPanel } from "@/features/products/components/FilterPanel";
 import { EditProductModal } from "@/features/products/components/EditProductModal";
@@ -179,7 +179,7 @@ export const ProductsPage = () => {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95"
+            className="px-6 py-3 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-colors active:scale-95"
           >
             Reintentar
           </button>
@@ -273,7 +273,7 @@ export const ProductsPage = () => {
                 paginatedProducts.map((product) => (
                   <tr
                     key={product.productId}
-                    className="hover:bg-[#FDFBF7] transition-colors group"
+                    className="hover:bg-[#FDFBF7] group"
                   >
                     <td className="px-4 lg:px-6 py-3">
                       <div className="h-10 w-10 lg:h-12 lg:w-12 rounded-lg overflow-hidden border border-gray-100">
@@ -284,6 +284,7 @@ export const ProductsPage = () => {
                           }
                           alt={product.name}
                           className="h-full w-full object-cover"
+                          loading="lazy"
                         />
                       </div>
                     </td>
@@ -367,7 +368,7 @@ export const ProductsPage = () => {
               return (
                 <div
                   key={product.productId}
-                  className="p-4 border-b border-red-20 border-gray-100 last:border-none flex items-center gap-4 hover:bg-gray-50 transition-colors"
+                  className="p-4 border-b border-red-20 border-gray-100 last:border-none flex items-center gap-4 hover:bg-gray-50"
                 >
                   <div className="h-16 w-16 shrink-0 rounded-xl overflow-hidden border border-gray-100">
                     <img
@@ -376,6 +377,7 @@ export const ProductsPage = () => {
                       }
                       alt={product.name}
                       className="h-full w-full object-cover"
+                      loading="lazy"
                     />
                   </div>
 

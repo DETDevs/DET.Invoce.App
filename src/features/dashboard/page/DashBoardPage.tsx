@@ -155,10 +155,10 @@ export const DashboardPage = () => {
 
           <Card className="md:col-span-2 xl:col-span-2 min-h-[300px]">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-medium text-[#2D2D2D]">
+              <h3 className="text-lg font-medium text-[#2D2D2D] p-5">
                 Flujo de Ingresos
               </h3>
-              <select className="bg-[#F9F1D8] text-[#593D31] text-sm rounded-lg px-3 py-1 outline-none border-none cursor-pointer">
+              <select className="bg-[#F9F1D8] text-[#593D31] text-sm rounded-lg px-3 py-1 m-4 outline-none border-none cursor-pointer">
                 <option>Esta Semana</option>
                 <option>Mes Pasado</option>
               </select>
@@ -221,7 +221,7 @@ export const DashboardPage = () => {
           </Card>
 
           <Card className="flex flex-col items-center justify-center min-h-[300px]">
-            <h3 className="w-full text-left text-lg font-medium text-[#2D2D2D] mb-4">
+            <h3 className="w-full text-left text-lg font-medium text-[#2D2D2D] mb-4 p-2">
               Ventas por Categoría
             </h3>
             <div className="relative w-full flex-1 flex items-center justify-center">
@@ -277,10 +277,10 @@ export const DashboardPage = () => {
 
           <Card className="md:col-span-2 min-h-[300px]">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-medium text-[#2D2D2D]">
+              <h3 className="text-lg font-medium text-[#2D2D2D] p-2">
                 Volumen de Ventas
               </h3>
-              <button className="text-[#E8BC6E] text-sm font-medium hover:text-[#dca34b]">
+              <button className="text-[#E8BC6E] text-sm font-medium hover:text-[#dca34b] p-2">
                 Ver reporte completo
               </button>
             </div>

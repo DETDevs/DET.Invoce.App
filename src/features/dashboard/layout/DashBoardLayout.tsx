@@ -1,14 +1,28 @@
-import React from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "@/features/dashboard/components/SideBar";
+import { SidebarProvider, useSidebar } from "@/shared/context/SidebarContext";
 
-export const DashboardLayout = () => {
+const LayoutContent = () => {
+  const { isCollapsed } = useSidebar();
+
   return (
     <div className="flex bg-[#FDFBF7] min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-0 lg:ml-64 transition-all duration-300 pt-16 lg:pt-0 overflow-x-hidden">
+      <main
+        className={`flex-1 pt-16 lg:pt-4 overflow-x-hidden ${
+          isCollapsed ? "ml-0 lg:ml-[72px]" : "ml-0 lg:ml-64"
+        }`}
+      >
         <Outlet />
       </main>
     </div>
+  );
+};
+
+export const DashboardLayout = () => {
+  return (
+    <SidebarProvider>
+      <LayoutContent />
+    </SidebarProvider>
   );
 };

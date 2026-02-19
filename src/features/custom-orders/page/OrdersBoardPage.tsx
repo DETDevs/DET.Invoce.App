@@ -11,7 +11,8 @@ import { OrderDetailsModal } from "@/features/custom-orders/components/OrderDeta
 import { type Order, type OrderStatus } from "@/shared/types";
 
 export const OrdersBoardPage = () => {
-  const { orders, onDragEnd, moveOrder, registerPayment } = useOrdersBoard();
+  const { orders, onDragEnd, moveOrder, registerPayment, removeOrder } =
+    useOrdersBoard();
   const navigate = useNavigate();
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -53,6 +54,13 @@ export const OrdersBoardPage = () => {
     toast.success("Factura generada correctamente");
     moveOrder(orderId, "delivered");
     setIsModalOpen(false);
+  };
+
+  const handleCancelOrder = (orderId: string) => {
+    if (readOnly) return;
+    removeOrder(orderId);
+    setIsModalOpen(false);
+    toast.success(`Pedido #${orderId} cancelado`);
   };
 
   const handleDragStart = () => {
@@ -193,6 +201,7 @@ export const OrdersBoardPage = () => {
         onInvoice={handleInvoice}
         onMoveStatus={handleManualMove}
         onRegisterPayment={handlePayment}
+        onCancelOrder={handleCancelOrder}
         readOnly={readOnly}
       />
 

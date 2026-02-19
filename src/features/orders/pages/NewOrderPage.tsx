@@ -182,7 +182,7 @@ export const NewOrderPage = () => {
         <div>
           <div className="p-4 sm:p-6 lg:p-8 pb-4 z-10 bg-[#FDFBF7]">
             <h1 className="text-2xl lg:text-3xl font-bold text-[#2D2D2D] mb-4 lg:mb-6">
-              Nueva Orden
+              {isAddingToExisting ? "Agregar a Orden" : "Nueva Orden"}
             </h1>
             <div className="relative max-w-md">
               <Search

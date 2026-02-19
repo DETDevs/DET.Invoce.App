@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Filter, Edit, Trash2, Search, Mail } from "lucide-react";
 import { UserFilterPanel } from "@/features/users/compnents/UserFilterPanel";
 import { EditUserModal } from "@/features/users/compnents/EditUserModal";
@@ -12,7 +12,8 @@ const INITIAL_USERS = [
     email: "carlos@dulces.com",
     role: "Admin",
     status: "Activo",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e",
+    image:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=75",
   },
   {
     id: 2,
@@ -20,7 +21,8 @@ const INITIAL_USERS = [
     email: "ana@dulces.com",
     role: "Vendedor",
     status: "Activo",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
+    image:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=75",
   },
   {
     id: 3,
@@ -28,7 +30,8 @@ const INITIAL_USERS = [
     email: "jorge@dulces.com",
     role: "Pastelero",
     status: "Inactivo",
-    image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36",
+    image:
+      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=80&q=75",
   },
 ];
 
@@ -158,10 +161,7 @@ export const UsersPage = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="hover:bg-[#FDFBF7] transition-colors"
-                >
+                <tr key={user.id} className="hover:bg-[#FDFBF7]">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-100">
@@ -169,6 +169,7 @@ export const UsersPage = () => {
                           src={user.image}
                           alt={user.name}
                           className="h-full w-full object-cover"
+                          loading="lazy"
                         />
                       </div>
                       <div className="ml-4">
@@ -230,6 +231,7 @@ export const UsersPage = () => {
                   src={user.image}
                   alt={user.name}
                   className="h-12 w-12 rounded-full object-cover border border-gray-100"
+                  loading="lazy"
                 />
                 <div>
                   <h3 className="font-bold text-[#2D2D2D]">{user.name}</h3>

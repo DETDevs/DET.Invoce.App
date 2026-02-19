@@ -7,6 +7,7 @@ interface OrdersState {
     addOrder: (order: Order) => void;
     updateOrderStatus: (orderId: string, status: OrderStatus) => void;
     registerPayment: (orderId: string, amount: number) => void;
+    removeOrder: (orderId: string) => void;
     setOrders: (orders: Order[]) => void;
 }
 
@@ -49,6 +50,7 @@ export const useOrdersStore = create<OrdersState>()(
             orders: MOCK_ORDERS,
             setOrders: (orders) => set({ orders }),
             addOrder: (order) => set((state) => ({ orders: [...state.orders, order] })),
+            removeOrder: (orderId) => set((state) => ({ orders: state.orders.filter((o) => o.id !== orderId) })),
             updateOrderStatus: (orderId, status) =>
                 set((state) => ({
                     orders: state.orders.map((order) =>
