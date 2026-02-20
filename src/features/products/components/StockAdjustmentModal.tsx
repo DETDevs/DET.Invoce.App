@@ -9,12 +9,12 @@ import {
   Plus,
   Minus,
 } from "lucide-react";
-import type { Product } from "@/api/products/types";
+import type { TProduct } from "@/api/products/types";
 
 interface StockAdjustmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: Product | null;
+  product: TProduct | null;
   onSave: (productId: number, newStock: number, reason: string) => void;
 }
 

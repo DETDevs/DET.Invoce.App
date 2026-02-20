@@ -1,2 +1,2 @@
-export { productAPI, default as ProductAPI } from './ProductAPI';
-export type { Product, ProductsResponse, ProductResponse } from './types';
+export { default as productApi } from './ProductAPI';
+export type { TProduct, TSaveProduct } from './types';

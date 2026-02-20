@@ -87,6 +87,7 @@ export const NewOrderPage = () => {
         }
         return {
           id: item.productId,
+          code: `PROD-${String(item.productId).padStart(3, "0")}`,
           name: item.productName,
           price: item.unitPrice,
           category: "Panadería y Repostería" as const,

@@ -26,6 +26,7 @@ export type TakeoutStatus = 'active' | 'completed' | 'cancelled';
 
 export interface TakeoutItem {
     productId: number;
+    productCode: string;
     name: string;
     price: number;
     quantity: number;

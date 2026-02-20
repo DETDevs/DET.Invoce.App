@@ -1,36 +1,25 @@
 import api from '../api';
-import type { Product } from './types';
+import type { TProduct, TSaveProduct } from './types';
 
+const enc = (v: string | number) => encodeURIComponent(String(v ?? ''));
 
-class ProductAPI {
-    private readonly baseEndpoint = '/Product';
-
-    async getAll(): Promise<Product[]> {
-        const response = await api.get<Product[]>(`${this.baseEndpoint}/GetByCode`);
-        return response;
-    }
-    async getByCode(code: string): Promise<Product> {
-        const response = await api.get<Product>(
-            `${this.baseEndpoint}/GetByCode?code=${encodeURIComponent(code)}`
-        );
-        return response;
-    }
-    async create(product: Partial<Product>): Promise<Product> {
-        const response = await api.post<Product>(`${this.baseEndpoint}/Create`, product);
-        return response;
-    }
-
-    async update(code: string, product: Partial<Product>): Promise<Product> {
-        const response = await api.put<Product>(
-            `${this.baseEndpoint}/Update?code=${encodeURIComponent(code)}`,
-            product
-        );
-        return response;
-    }
-    async delete(code: string): Promise<void> {
-        await api.delete(`${this.baseEndpoint}/Delete?code=${encodeURIComponent(code)}`);
-    }
+async function getByCode(code?: string) {
+    const params = code ? `?code=${enc(code)}` : '';
+    return api.get<TProduct[]>(`/Product/GetByCode${params}`);
 }
 
-export const productAPI = new ProductAPI();
-export default productAPI;
+async function save(product: TSaveProduct) {
+    return api.post<any>('/Product/Save', product);
+}
+
+async function getLowStock() {
+    return api.post<TProduct[]>('/Product/GetLowStock', {});
+}
+
+const productApi = {
+    getByCode,
+    save,
+    getLowStock,
+};
+
+export default productApi;

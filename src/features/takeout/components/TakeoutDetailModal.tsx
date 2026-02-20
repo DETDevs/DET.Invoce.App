@@ -10,6 +10,7 @@ import {
   UtensilsCrossed,
   Package,
   Plus,
+  Minus,
   Scissors,
   Check,
 } from "lucide-react";
@@ -44,8 +45,8 @@ export const TakeoutDetailModal = ({
   const canInvoice = user?.role === "cajero" || user?.role === "admin";
 
   const [isSplitMode, setIsSplitMode] = useState(false);
-  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
-    new Set(),
+  const [splitQuantities, setSplitQuantities] = useState<Map<number, number>>(
+    new Map(),
   );
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export const TakeoutDetailModal = ({
     if (!isOpen) {
       setSelectedCuentaId(null);
       setIsSplitMode(false);
-      setSelectedIndices(new Set());
+      setSplitQuantities(new Map());
     }
     setAmountPaid("");
     setPaymentMethod("efectivo");
@@ -75,7 +76,7 @@ export const TakeoutDetailModal = ({
     setPaymentMethod("efectivo");
     setIsProcessing(false);
     setIsSplitMode(false);
-    setSelectedIndices(new Set());
+    setSplitQuantities(new Map());
   }, [selectedCuentaId]);
 
   if (!isOpen || tableNumber === null || cuentas.length === 0) return null;
@@ -96,97 +97,114 @@ export const TakeoutDetailModal = ({
     paymentMethod === "tarjeta" ||
     (paymentMethod === "efectivo" && paidValue >= total);
 
-  const handleInvoice = () => {
+  const handleInvoice = async () => {
     if (!isPaymentSufficient) {
       toast.error("El monto recibido es insuficiente");
       return;
     }
     setIsProcessing(true);
 
-    const invoicePrefix = isParaLlevar
-      ? `PL-${selectedCuenta.cuentaNumber}`
-      : `M${tableNumber}C${selectedCuenta.cuentaNumber}`;
-
-    const invoice = {
-      id: `FAC-${invoicePrefix}`,
-      orderNumber: invoicePrefix,
-      items: selectedCuenta.items.map((item) => ({
-        productId: item.productId,
-        productName: item.name,
-        quantity: item.quantity,
-        unitPrice: item.price,
-        subtotal: item.price * item.quantity,
-      })),
-      subtotal,
-      tax,
-      total,
-      status: "completed" as const,
-      createdAt: new Date().toISOString(),
-      createdBy: "Caja",
-      tableNumber,
-      cuentaNumber: selectedCuenta.cuentaNumber,
-      paymentMethod,
-      type: isParaLlevar ? "para-llevar" : "en-mesa",
-    };
-
     try {
-      const stored = localStorage.getItem("invoices");
-      const invoices = stored ? JSON.parse(stored) : [];
-      invoices.unshift(invoice);
-      localStorage.setItem("invoices", JSON.stringify(invoices));
-    } catch (error) {
-      console.error("Error al guardar factura:", error);
-    }
-
-    completeOrder(selectedCuenta.id);
-
-    if (paymentMethod === "efectivo" && change > 0) {
-      toast.success(`Factura generada. Cambio: C$ ${change.toFixed(2)}`, {
-        icon: "🧾",
-        duration: 5000,
+      console.log("[🧾 Facturación Simulada]", {
+        orderId: selectedCuenta.id,
+        createdBy: user?.name || "Caja",
+        paymentMethod,
+        total,
+        items: selectedCuenta.items.map((item) => ({
+          productCode: item.productCode,
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
       });
-    } else {
-      toast.success("Factura generada correctamente", { icon: "🧾" });
-    }
+      await new Promise((r) => setTimeout(r, 500));
 
-    const remainingCuentas = cuentas.filter((c) => c.id !== selectedCuenta.id);
+      completeOrder(selectedCuenta.id);
 
-    if (remainingCuentas.length === 0) {
-      onClose();
-    } else {
-      setSelectedCuentaId(remainingCuentas[0].id);
+      if (paymentMethod === "efectivo" && change > 0) {
+        toast.success(`Factura generada. Cambio: C$ ${change.toFixed(2)}`, {
+          icon: "🧾",
+          duration: 5000,
+        });
+      } else {
+        toast.success("Factura generada correctamente", { icon: "🧾" });
+      }
+
+      const remainingCuentas = cuentas.filter(
+        (c) => c.id !== selectedCuenta.id,
+      );
+
+      if (remainingCuentas.length === 0) {
+        onClose();
+      } else {
+        setSelectedCuentaId(remainingCuentas[0].id);
+      }
+    } catch (error) {
+      console.error("[TakeoutDetailModal] Error al facturar:", error);
+      toast.error("Error al generar la factura. Intenta de nuevo.");
+    } finally {
+      setIsProcessing(false);
     }
-    setIsProcessing(false);
   };
 
-  const toggleItemSelection = (idx: number) => {
-    setSelectedIndices((prev) => {
-      const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
+  const toggleSplitItem = (idx: number) => {
+    setSplitQuantities((prev) => {
+      const next = new Map(prev);
+      if (next.has(idx)) {
+        next.delete(idx);
+      } else {
+        next.set(idx, selectedCuenta.items[idx].quantity);
+      }
+      return next;
+    });
+  };
+
+  const setSplitQty = (idx: number, qty: number) => {
+    setSplitQuantities((prev) => {
+      const next = new Map(prev);
+      const maxQty = selectedCuenta.items[idx].quantity;
+      if (qty <= 0) {
+        next.delete(idx);
+      } else {
+        next.set(idx, Math.min(qty, maxQty));
+      }
       return next;
     });
   };
 
   const handleConfirmSplit = () => {
-    if (selectedIndices.size === 0) return;
-    if (selectedIndices.size === selectedCuenta.items.length) {
+    if (splitQuantities.size === 0) return;
+    const totalItemsInOrder = selectedCuenta.items.length;
+    const allMovedCompletely =
+      splitQuantities.size === totalItemsInOrder &&
+      Array.from(splitQuantities.entries()).every(
+        ([idx, qty]) => qty >= selectedCuenta.items[idx].quantity,
+      );
+    if (allMovedCompletely) {
       toast.error("No puedes mover todos los productos. Deja al menos uno.");
       return;
     }
-    splitOrder(selectedCuenta.id, Array.from(selectedIndices));
+    const splitItems = Array.from(splitQuantities.entries()).map(
+      ([index, quantity]) => ({ index, quantity }),
+    );
+    splitOrder(selectedCuenta.id, splitItems);
+    const totalMoved = splitItems.reduce((acc, s) => acc + s.quantity, 0);
     toast.success(
-      `Cuenta dividida: ${selectedIndices.size} producto${selectedIndices.size > 1 ? "s" : ""} movido${selectedIndices.size > 1 ? "s" : ""} a nueva cuenta`,
+      `Cuenta dividida: ${totalMoved} unidad${totalMoved > 1 ? "es" : ""} movida${totalMoved > 1 ? "s" : ""} a nueva cuenta`,
       { icon: "✂️" },
     );
     setIsSplitMode(false);
-    setSelectedIndices(new Set());
+    setSplitQuantities(new Map());
   };
 
-  const splitSubtotal = Array.from(selectedIndices).reduce((acc, idx) => {
-    const item = selectedCuenta.items[idx];
-    return item ? acc + item.price * item.quantity : acc;
-  }, 0);
+  const splitSubtotal = Array.from(splitQuantities.entries()).reduce(
+    (acc, [idx, qty]) => {
+      const item = selectedCuenta.items[idx];
+      return item ? acc + item.price * qty : acc;
+    },
+    0,
+  );
+
+  const splitItemCount = splitQuantities.size;
 
   const createdTime = new Date(selectedCuenta.createdAt).toLocaleTimeString(
     "es-NI",
@@ -297,47 +315,84 @@ export const TakeoutDetailModal = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {selectedCuenta.items.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    onClick={() => isSplitMode && toggleItemSelection(idx)}
-                    className={`${
-                      isSplitMode
-                        ? `cursor-pointer transition-colors ${
-                            selectedIndices.has(idx)
-                              ? "bg-blue-50"
-                              : "hover:bg-gray-50"
-                          }`
-                        : ""
-                    }`}
-                  >
-                    {isSplitMode && (
-                      <td className="px-3 py-2.5">
-                        <div
-                          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                            selectedIndices.has(idx)
-                              ? "bg-blue-500 border-blue-500 text-white"
-                              : "border-gray-300 bg-white"
-                          }`}
-                        >
-                          {selectedIndices.has(idx) && <Check size={12} />}
-                        </div>
+                {selectedCuenta.items.map((item, idx) => {
+                  const isSelected = splitQuantities.has(idx);
+                  const splitQty = splitQuantities.get(idx) ?? 0;
+                  return (
+                    <tr
+                      key={idx}
+                      className={`${
+                        isSplitMode
+                          ? `transition-colors ${
+                              isSelected ? "bg-violet-50" : "hover:bg-gray-50"
+                            }`
+                          : ""
+                      }`}
+                    >
+                      {isSplitMode && (
+                        <td className="px-3 py-2.5">
+                          <div
+                            onClick={() => toggleSplitItem(idx)}
+                            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-violet-500 border-violet-500 text-white"
+                                : "border-gray-300 bg-white hover:border-violet-300"
+                            }`}
+                          >
+                            {isSelected && <Check size={12} />}
+                          </div>
+                        </td>
+                      )}
+                      <td className="px-4 py-2.5 text-[#2D2D2D] font-medium">
+                        {item.name}
                       </td>
-                    )}
-                    <td className="px-4 py-2.5 text-[#2D2D2D] font-medium">
-                      {item.name}
-                    </td>
-                    <td className="px-4 py-2.5 text-center text-gray-600">
-                      {item.quantity}
-                    </td>
-                    <td className="px-4 py-2.5 text-right text-gray-600">
-                      C$ {item.price.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-medium">
-                      C$ {(item.price * item.quantity).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-4 py-2.5 text-center text-gray-600">
+                        {isSplitMode && isSelected && item.quantity > 1 ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSplitQty(idx, splitQty - 1);
+                              }}
+                              className="w-6 h-6 rounded-full bg-violet-100 hover:bg-violet-200 text-violet-700 flex items-center justify-center transition-colors"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span className="w-8 text-center font-bold text-violet-700">
+                              {splitQty}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSplitQty(idx, splitQty + 1);
+                              }}
+                              className="w-6 h-6 rounded-full bg-violet-100 hover:bg-violet-200 text-violet-700 flex items-center justify-center transition-colors"
+                            >
+                              <Plus size={12} />
+                            </button>
+                            <span className="text-xs text-gray-400 ml-1">
+                              /{item.quantity}
+                            </span>
+                          </div>
+                        ) : (
+                          item.quantity
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-gray-600">
+                        C$ {item.price.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-medium">
+                        {isSplitMode && isSelected ? (
+                          <span className="text-violet-700 font-bold">
+                            C$ {(item.price * splitQty).toFixed(2)}
+                          </span>
+                        ) : (
+                          <>C$ {(item.price * item.quantity).toFixed(2)}</>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -376,12 +431,12 @@ export const TakeoutDetailModal = ({
         {isSplitMode ? (
           <div className="flex-shrink-0 border-t border-gray-200 bg-violet-50">
             <div className="px-5 py-4 space-y-3">
-              {selectedIndices.size > 0 && (
+              {splitItemCount > 0 && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-violet-700 font-medium">
-                    {selectedIndices.size} producto
-                    {selectedIndices.size > 1 ? "s" : ""} seleccionado
-                    {selectedIndices.size > 1 ? "s" : ""}
+                    {splitItemCount} producto
+                    {splitItemCount > 1 ? "s" : ""} seleccionado
+                    {splitItemCount > 1 ? "s" : ""}
                   </span>
                   <span className="text-violet-800 font-bold">
                     C$ {splitSubtotal.toFixed(2)}
@@ -392,7 +447,7 @@ export const TakeoutDetailModal = ({
                 <button
                   onClick={() => {
                     setIsSplitMode(false);
-                    setSelectedIndices(new Set());
+                    setSplitQuantities(new Map());
                   }}
                   className="flex-1 h-11 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
@@ -400,7 +455,7 @@ export const TakeoutDetailModal = ({
                 </button>
                 <button
                   onClick={handleConfirmSplit}
-                  disabled={selectedIndices.size === 0}
+                  disabled={splitQuantities.size === 0}
                   className="flex-1 h-11 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
                 >
                   <Scissors size={16} />

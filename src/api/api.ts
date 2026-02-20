@@ -71,9 +71,43 @@ async function del<T>(url: string): Promise<T> {
     });
 }
 
+async function getText(url: string): Promise<string> {
+    if (!url.startsWith('http')) {
+        url = `${environments.BASE_API_URI}${url.startsWith('/') ? url : `/${url}`}`;
+    }
+
+    const userLanguage = getDeviceLanguage();
+
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'user-language': userLanguage,
+            'Accept': 'text/plain',
+        },
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[apiCall] Error', url, response.status, errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+    }
+
+    return response.text();
+}
+
+async function getWithBody<T>(url: string, body: any): Promise<T> {
+    return apiCall(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+}
+
 const api = {
     post,
     get,
+    getWithBody,
+    getText,
     put,
     delete: del,
 };

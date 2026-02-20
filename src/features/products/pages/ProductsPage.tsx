@@ -5,12 +5,12 @@ import { EditProductModal } from "@/features/products/components/EditProductModa
 import { StockAdjustmentModal } from "@/features/products/components/StockAdjustmentModal";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
-import { productAPI } from "@/api/products";
-import type { Product } from "@/api/products/types";
+import { productApi } from "@/api/products";
+import type { TProduct } from "@/api/products/types";
 
 export const ProductsPage = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<TProduct[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<TProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +36,7 @@ export const ProductsPage = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await productAPI.getAll();
+        const data = await productApi.getByCode();
         setProducts(data);
         setFilteredProducts(data);
       } catch (err) {

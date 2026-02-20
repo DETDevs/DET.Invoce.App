@@ -6,7 +6,7 @@ interface TakeoutState {
     orders: TakeoutOrder[];
     addOrder: (tableNumber: number, cuentaNumber: number, items: TakeoutItem[], createdBy: string) => void;
     addItemsToOrder: (orderId: string, items: TakeoutItem[]) => void;
-    splitOrder: (orderId: string, itemIndices: number[]) => void;
+    splitOrder: (orderId: string, splitItems: { index: number; quantity: number }[]) => void;
     completeOrder: (orderId: string) => void;
     cancelOrder: (orderId: string) => void;
     getActiveOrdersByTable: (tableNumber: number) => TakeoutOrder[];
@@ -50,14 +50,30 @@ export const useTakeoutStore = create<TakeoutState>()(
                 }));
             },
 
-            splitOrder: (orderId, itemIndices) => {
+            splitOrder: (orderId, splitItems) => {
                 const sourceOrder = get().orders.find((o) => o.id === orderId);
                 if (!sourceOrder) return;
+                if (splitItems.length === 0) return;
 
-                const itemsToMove = itemIndices.map((i) => sourceOrder.items[i]).filter(Boolean);
-                if (itemsToMove.length === 0) return;
+                const splitMap = new Map(splitItems.map((s) => [s.index, s.quantity]));
 
-                const remainingItems = sourceOrder.items.filter((_, i) => !itemIndices.includes(i));
+                const movedItems: TakeoutItem[] = [];
+                const remainingItems: TakeoutItem[] = [];
+
+                sourceOrder.items.forEach((item, idx) => {
+                    const qtyToMove = splitMap.get(idx);
+                    if (qtyToMove === undefined) {
+                        remainingItems.push(item);
+                    } else if (qtyToMove >= item.quantity) {
+                        movedItems.push({ ...item });
+                    } else {
+                        remainingItems.push({ ...item, quantity: item.quantity - qtyToMove });
+                        movedItems.push({ ...item, quantity: qtyToMove });
+                    }
+                });
+
+                if (movedItems.length === 0) return;
+
                 const newCuentaNumber = get().getNextCuentaNumber(sourceOrder.tableNumber);
                 const now = new Date().toISOString();
 
@@ -65,7 +81,7 @@ export const useTakeoutStore = create<TakeoutState>()(
                     id: `TO-${sourceOrder.tableNumber}-${newCuentaNumber}`,
                     tableNumber: sourceOrder.tableNumber,
                     cuentaNumber: newCuentaNumber,
-                    items: itemsToMove,
+                    items: movedItems,
                     createdAt: now,
                     updatedAt: now,
                     status: 'active',

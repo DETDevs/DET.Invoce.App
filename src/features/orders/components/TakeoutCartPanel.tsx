@@ -15,6 +15,7 @@ import type { CartItem } from "@/features/orders/types/index";
 import type { TakeoutItem } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+
 import toast from "react-hot-toast";
 
 type OrderMode = "mesa" | "llevar";
@@ -117,6 +118,7 @@ export const TakeoutCartPanel = ({
 
     const items: TakeoutItem[] = cart.map((item) => ({
       productId: item.id,
+      productCode: item.code,
       name: item.name,
       price: item.price,
       quantity: item.quantity,
@@ -152,7 +154,7 @@ export const TakeoutCartPanel = ({
     setSelectedTable(null);
   };
 
-  const handleCajeroParaLlevarInvoice = () => {
+  const handleCajeroParaLlevarInvoice = async () => {
     if (cart.length === 0) {
       toast.error("Agrega al menos un producto");
       return;
@@ -162,47 +164,35 @@ export const TakeoutCartPanel = ({
       return;
     }
 
-    const invoice = {
-      id: `FAC-LL-${orderNumber}`,
-      orderNumber: `LL-${orderNumber}`,
-      items: cart.map((item) => ({
-        productId: item.id,
-        productName: item.name,
-        quantity: item.quantity,
-        unitPrice: item.price,
-        subtotal: item.price * item.quantity,
-      })),
-      subtotal,
-      tax,
-      total,
-      status: "completed" as const,
-      createdAt: new Date().toISOString(),
-      createdBy: userName,
-      type: "para-llevar",
-      paymentMethod,
-    };
-
     try {
-      const stored = localStorage.getItem("invoices");
-      const invoices = stored ? JSON.parse(stored) : [];
-      invoices.unshift(invoice);
-      localStorage.setItem("invoices", JSON.stringify(invoices));
-    } catch (error) {
-      console.error("Error al guardar factura:", error);
-    }
-
-    if (paymentMethod === "efectivo" && change > 0) {
-      toast.success(`Facturado. Cambio: C$ ${change.toFixed(2)}`, {
-        icon: "🛍️",
-        duration: 5000,
+      console.log("[🧾 Facturación Simulada - Para Llevar]", {
+        createdBy: userName,
+        paymentMethod,
+        total,
+        items: cart.map((item) => ({
+          productCode: item.code,
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
       });
-    } else {
-      toast.success("Facturado correctamente", { icon: "🛍️" });
-    }
+      await new Promise((r) => setTimeout(r, 500));
 
-    setAmountPaid("");
-    setPaymentMethod("efectivo");
-    onOrderSent();
+      if (paymentMethod === "efectivo" && change > 0) {
+        toast.success(`Facturado. Cambio: C$ ${change.toFixed(2)}`, {
+          icon: "🛍️",
+          duration: 5000,
+        });
+      } else {
+        toast.success("Facturado correctamente", { icon: "🛍️" });
+      }
+
+      setAmountPaid("");
+      setPaymentMethod("efectivo");
+      onOrderSent();
+    } catch (error) {
+      console.error("[TakeoutCartPanel] Error al facturar:", error);
+      toast.error("Error al generar la factura. Intenta de nuevo.");
+    }
   };
 
   const tables = Array.from({ length: tableCount }, (_, i) => i + 1);

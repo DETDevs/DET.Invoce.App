@@ -1,8 +1,8 @@
-export interface Product {
+export type TProduct = {
     productId: number;
     code: string;
     categoryCode: string;
-    categoryName: string;
+    categoryName?: string;
     name: string;
     description?: string;
     price: number;
@@ -10,23 +10,26 @@ export interface Product {
     subCategoryId?: number;
     subCategoryName?: string;
     trackInventory: boolean;
-    unitId: number;
+    unitId: number | string;
     unitName?: string;
     divideQuantityBy?: number;
     isActive: boolean;
     quantity: number;
     stockMinimum: number;
-    stockStatus: 'CRITICAL' | 'MEDIUM' | 'NORMAL';
-}
+    stockStatus?: string;
+};
 
-export interface ProductsResponse {
-    data: Product[];
-    message?: string;
-    success: boolean;
-}
-
-export interface ProductResponse {
-    data: Product;
-    message?: string;
-    success: boolean;
-}
+export type TSaveProduct = {
+    productId: number;
+    code: string;
+    categoryCode: string;
+    name: string;
+    description?: string;
+    price: number;
+    trackInventory: boolean;
+    unitId: number | string;
+    divideQuantityBy?: number;
+    isActive: boolean;
+    quantity: number;
+    stockMinimum: number;
+};

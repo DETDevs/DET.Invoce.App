@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Plus, Search } from "lucide-react";
 import type { ProductOption } from "@/shared/types";
 import { useAddOrderItem } from "@/features/custom-orders/hooks/useAddOrderItem";
-import { productAPI } from "@/api/products";
-import type { Product } from "@/api/products/types";
+import { productApi } from "@/api/products";
+import type { TProduct } from "@/api/products/types";
 
 interface Props {
   onAdd: (
@@ -16,7 +16,7 @@ interface Props {
 export const AddProductForm = ({ onAdd }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<TProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -25,7 +25,7 @@ export const AddProductForm = ({ onAdd }: Props) => {
       try {
         setLoading(true);
         setError(false);
-        const data = await productAPI.getAll();
+        const data = await productApi.getByCode();
         setProducts(data.filter((p) => p.isActive));
       } catch (err) {
         console.error("Error loading products:", err);

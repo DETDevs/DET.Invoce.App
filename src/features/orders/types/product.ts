@@ -3,6 +3,7 @@ import type { Product, Category } from "@/features/orders/types/index";
 export const PRODUCTS: Product[] = [
     {
         id: 1,
+        code: "PROD-001",
         name: "Pastel de Chocolate",
         price: 450,
         category: "Pasteles y Postres",
@@ -11,6 +12,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 2,
+        code: "PROD-002",
         name: "Cheesecake de Fresa",
         price: 480,
         category: "Pasteles y Postres",
@@ -19,6 +21,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 3,
+        code: "PROD-003",
         name: "Pastel de Zanahoria",
         price: 420,
         category: "Pasteles y Postres",
@@ -27,6 +30,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 4,
+        code: "PROD-004",
         name: "Porción de Red Velvet",
         price: 65,
         category: "Pasteles y Postres",
@@ -35,6 +39,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 5,
+        code: "PROD-005",
         name: "Porción Pie de Limón",
         price: 55,
         category: "Pasteles y Postres",
@@ -43,6 +48,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 6,
+        code: "PROD-006",
         name: "Tiramisú Individual",
         price: 70,
         category: "Pasteles y Postres",
@@ -51,6 +57,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 7,
+        code: "PROD-007",
         name: "Muffin de Arándanos",
         price: 35,
         category: "Pasteles y Postres",
@@ -59,6 +66,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 20,
+        code: "PROD-020",
         name: "Tres Leches (Grande)",
         price: 550,
         category: "Pasteles y Postres",
@@ -67,6 +75,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 21,
+        code: "PROD-021",
         name: "Selva Negra",
         price: 600,
         category: "Pasteles y Postres",
@@ -75,6 +84,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 22,
+        code: "PROD-022",
         name: "Porción Tres Leches",
         price: 75,
         category: "Pasteles y Postres",
@@ -83,6 +93,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 23,
+        code: "PROD-023",
         name: "Tartaleta de Frutas",
         price: 45,
         category: "Pasteles y Postres",
@@ -91,6 +102,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 24,
+        code: "PROD-024",
         name: "Mousse de Chocolate",
         price: 55,
         category: "Pasteles y Postres",
@@ -99,6 +111,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 25,
+        code: "PROD-025",
         name: "Cupcake de Vainilla",
         price: 30,
         category: "Pasteles y Postres",
@@ -107,6 +120,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 43,
+        code: "PROD-043",
         name: "Pastel de Vainilla",
         price: 400,
         category: "Pasteles y Postres",
@@ -115,6 +129,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 44,
+        code: "PROD-044",
         name: "Torta Helada",
         price: 520,
         category: "Pasteles y Postres",
@@ -123,6 +138,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 45,
+        code: "PROD-045",
         name: "Porción de Torta Helada",
         price: 70,
         category: "Pasteles y Postres",
@@ -131,6 +147,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 46,
+        code: "PROD-046",
         name: "Profiteroles (3 und)",
         price: 50,
         category: "Pasteles y Postres",
@@ -140,6 +157,7 @@ export const PRODUCTS: Product[] = [
 
     {
         id: 8,
+        code: "PROD-008",
         name: "Croissant",
         price: 30,
         category: "Panadería y Repostería",
@@ -148,6 +166,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 9,
+        code: "PROD-009",
         name: "Pan de Ajo",
         price: 25,
         category: "Panadería y Repostería",
@@ -156,6 +175,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 10,
+        code: "PROD-010",
         name: "Galletas de Avena (6 und)",
         price: 60,
         category: "Panadería y Repostería",
@@ -164,6 +184,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 11,
+        code: "PROD-011",
         name: "Dona Glaseada",
         price: 25,
         category: "Panadería y Repostería",
@@ -172,6 +193,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 12,
+        code: "PROD-012",
         name: "Macarons (4 und)",
         price: 80,
         category: "Panadería y Repostería",
@@ -180,6 +202,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 26,
+        code: "PROD-026",
         name: "Baguette Artesanal",
         price: 40,
         category: "Panadería y Repostería",
@@ -188,6 +211,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 27,
+        code: "PROD-027",
         name: "Hogaza de Masa Madre",
         price: 85,
         category: "Panadería y Repostería",
@@ -196,6 +220,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 28,
+        code: "PROD-028",
         name: "Galletas Chispas Chocolate (6)",
         price: 70,
         category: "Panadería y Repostería",
@@ -204,6 +229,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 29,
+        code: "PROD-029",
         name: "Polvorones (Bolsa)",
         price: 50,
         category: "Panadería y Repostería",
@@ -212,6 +238,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 30,
+        code: "PROD-030",
         name: "Dona de Chocolate",
         price: 30,
         category: "Panadería y Repostería",
@@ -220,6 +247,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 31,
+        code: "PROD-031",
         name: "Churros con Azúcar (4 und)",
         price: 40,
         category: "Panadería y Repostería",
@@ -228,6 +256,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 32,
+        code: "PROD-032",
         name: "Brownie con Nuez",
         price: 45,
         category: "Panadería y Repostería",
@@ -236,6 +265,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 33,
+        code: "PROD-033",
         name: "Rollo de Canela",
         price: 50,
         category: "Panadería y Repostería",
@@ -244,6 +274,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 34,
+        code: "PROD-034",
         name: "Pastelito de Piña",
         price: 25,
         category: "Panadería y Repostería",
@@ -252,6 +283,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 47,
+        code: "PROD-047",
         name: "Pan de Banano (Rebanada)",
         price: 35,
         category: "Panadería y Repostería",
@@ -260,6 +292,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 48,
+        code: "PROD-048",
         name: "Galletas de Mantequilla (Bolsa)",
         price: 55,
         category: "Panadería y Repostería",
@@ -268,6 +301,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 49,
+        code: "PROD-049",
         name: "Berlinesa con Manjar",
         price: 35,
         category: "Panadería y Repostería",
@@ -276,6 +310,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 50,
+        code: "PROD-050",
         name: "Milhojas",
         price: 50,
         category: "Panadería y Repostería",
@@ -284,6 +319,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 51,
+        code: "PROD-051",
         name: "Alfajor de Maicena",
         price: 25,
         category: "Panadería y Repostería",
@@ -293,6 +329,7 @@ export const PRODUCTS: Product[] = [
 
     {
         id: 13,
+        code: "PROD-013",
         name: "Coca-Cola (12 onz)",
         price: 30,
         category: "Bebidas",
@@ -301,6 +338,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 14,
+        code: "PROD-014",
         name: "Sprite (12 onz)",
         price: 30,
         category: "Bebidas",
@@ -309,6 +347,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 15,
+        code: "PROD-015",
         name: "Limonada con Hierbabuena",
         price: 45,
         category: "Bebidas",
@@ -317,6 +356,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 16,
+        code: "PROD-016",
         name: "Té de Jamaica",
         price: 40,
         category: "Bebidas",
@@ -325,6 +365,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 17,
+        code: "PROD-017",
         name: "Cappuccino",
         price: 50,
         category: "Bebidas",
@@ -333,6 +374,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 18,
+        code: "PROD-018",
         name: "Espresso",
         price: 35,
         category: "Bebidas",
@@ -341,6 +383,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 19,
+        code: "PROD-019",
         name: "Red Bull",
         price: 70,
         category: "Bebidas",
@@ -349,6 +392,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 35,
+        code: "PROD-035",
         name: "Agua Mineral",
         price: 25,
         category: "Bebidas",
@@ -357,6 +401,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 36,
+        code: "PROD-036",
         name: "Fanta Naranja (12 onz)",
         price: 30,
         category: "Bebidas",
@@ -365,6 +410,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 37,
+        code: "PROD-037",
         name: "Cacao con Leche",
         price: 50,
         category: "Bebidas",
@@ -373,6 +419,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 38,
+        code: "PROD-038",
         name: "Jugo de Naranja",
         price: 45,
         category: "Bebidas",
@@ -381,6 +428,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 39,
+        code: "PROD-039",
         name: "Batido de Fresa",
         price: 60,
         category: "Bebidas",
@@ -389,6 +437,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 40,
+        code: "PROD-040",
         name: "Latte Caramel",
         price: 65,
         category: "Bebidas",
@@ -397,6 +446,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 41,
+        code: "PROD-041",
         name: "Iced Coffee",
         price: 60,
         category: "Bebidas",
@@ -405,6 +455,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 42,
+        code: "PROD-042",
         name: "Monster Energy",
         price: 85,
         category: "Bebidas",
@@ -413,6 +464,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 52,
+        code: "PROD-052",
         name: "Jugo de Piña",
         price: 45,
         category: "Bebidas",
@@ -421,6 +473,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 53,
+        code: "PROD-053",
         name: "Americano",
         price: 40,
         category: "Bebidas",
@@ -429,6 +482,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 54,
+        code: "PROD-054",
         name: "Chocolate Caliente",
         price: 55,
         category: "Bebidas",
