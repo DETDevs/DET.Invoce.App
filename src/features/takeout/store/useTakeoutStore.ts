@@ -4,7 +4,7 @@ import type { TakeoutOrder, TakeoutItem, TakeoutStatus } from '@/shared/types';
 
 interface TakeoutState {
     orders: TakeoutOrder[];
-    addOrder: (tableNumber: number, cuentaNumber: number, items: TakeoutItem[], createdBy: string) => void;
+    addOrder: (tableNumber: number, cuentaNumber: number, items: TakeoutItem[], createdBy: string, backendOrderId?: number) => void;
     addItemsToOrder: (orderId: string, items: TakeoutItem[]) => void;
     splitOrder: (orderId: string, splitItems: { index: number; quantity: number }[]) => void;
     completeOrder: (orderId: string) => void;
@@ -20,7 +20,7 @@ export const useTakeoutStore = create<TakeoutState>()(
         (set, get) => ({
             orders: [],
 
-            addOrder: (tableNumber, cuentaNumber, items, createdBy) => {
+            addOrder: (tableNumber, cuentaNumber, items, createdBy, backendOrderId) => {
                 const now = new Date().toISOString();
                 const newOrder: TakeoutOrder = {
                     id: `TO-${tableNumber}-${cuentaNumber}`,
@@ -31,6 +31,7 @@ export const useTakeoutStore = create<TakeoutState>()(
                     updatedAt: now,
                     status: 'active',
                     createdBy,
+                    backendOrderId,
                 };
                 set((state) => ({
                     orders: [...state.orders, newOrder],
@@ -86,6 +87,7 @@ export const useTakeoutStore = create<TakeoutState>()(
                     updatedAt: now,
                     status: 'active',
                     createdBy: sourceOrder.createdBy,
+                    backendOrderId: sourceOrder.backendOrderId,
                 };
 
                 set((state) => ({

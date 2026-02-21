@@ -3,7 +3,7 @@ export interface Product {
   code: string;
   name: string;
   price: number;
-  category: 'Pasteles y Postres' | 'Panadería y Repostería' | 'Bebidas';
+  category: string;
   subcategory: string;
   image: string;
 }
@@ -13,6 +13,6 @@ export interface CartItem extends Product {
 }
 
 export interface Category {
-  name: 'Pasteles y Postres' | 'Panadería y Repostería' | 'Bebidas';
+  name: string;
   subcategories: string[];
 }

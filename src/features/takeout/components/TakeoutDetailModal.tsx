@@ -17,6 +17,8 @@ import {
 import type { TakeoutOrder } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { handleInvoiceFlow } from "@/services/invoiceService";
+import orderApi from "@/api/order/OrderAPI";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -102,31 +104,56 @@ export const TakeoutDetailModal = ({
       toast.error("El monto recibido es insuficiente");
       return;
     }
+
+    if (!selectedCuenta.backendOrderId) {
+      toast.error(
+        "Ocurrió un problema al cargar esta orden. Intente cerrar y abrir la mesa de nuevo, o contacte a soporte.",
+        { duration: 5000 },
+      );
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      console.log("[🧾 Facturación Simulada]", {
-        orderId: selectedCuenta.id,
-        createdBy: user?.name || "Caja",
-        paymentMethod,
-        total,
-        items: selectedCuenta.items.map((item) => ({
-          productCode: item.productCode,
-          quantity: item.quantity,
-          unitPrice: item.price,
-        })),
-      });
-      await new Promise((r) => setTimeout(r, 500));
+      const accountsData = await orderApi.getOrderAccountWithDetails(
+        selectedCuenta.backendOrderId,
+      );
+      const accountsList = Array.isArray(accountsData)
+        ? accountsData
+        : [accountsData];
+      const account =
+        accountsList.find(
+          (a: any) => a.accountNumber === selectedCuenta.cuentaNumber,
+        ) ||
+        accountsList.find((a: any) => a.status === "Open") ||
+        accountsList[0];
+      const orderAccountId = account?.orderAccountId;
+
+      if (!orderAccountId) {
+        toast.error(
+          "No se pudo obtener la información de la cuenta. Intente de nuevo o contacte a soporte.",
+          { duration: 5000 },
+        );
+        return;
+      }
+
+      console.log("[Order] OrderAccountId obtenido:", orderAccountId);
+
+      const pm = paymentMethod === "tarjeta" ? "CARD" : "CASH";
+      await handleInvoiceFlow({ orderAccountId, paymentmethod: pm });
 
       completeOrder(selectedCuenta.id);
 
       if (paymentMethod === "efectivo" && change > 0) {
         toast.success(`Factura generada. Cambio: C$ ${change.toFixed(2)}`, {
-          icon: "🧾",
+          icon: "\uD83E\uDDFE",
           duration: 5000,
         });
       } else {
-        toast.success("Factura generada correctamente", { icon: "🧾" });
+        toast.success("Factura generada correctamente", {
+          icon: "\uD83E\uDDFE",
+        });
       }
 
       const remainingCuentas = cuentas.filter(
@@ -140,7 +167,10 @@ export const TakeoutDetailModal = ({
       }
     } catch (error) {
       console.error("[TakeoutDetailModal] Error al facturar:", error);
-      toast.error("Error al generar la factura. Intenta de nuevo.");
+      toast.error(
+        "No se pudo generar la factura. Verifique la conexión e intente de nuevo. Si el problema persiste, llame a soporte.",
+        { duration: 6000 },
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -171,7 +201,7 @@ export const TakeoutDetailModal = ({
     });
   };
 
-  const handleConfirmSplit = () => {
+  const handleConfirmSplit = async () => {
     if (splitQuantities.size === 0) return;
     const totalItemsInOrder = selectedCuenta.items.length;
     const allMovedCompletely =
@@ -183,15 +213,81 @@ export const TakeoutDetailModal = ({
       toast.error("No puedes mover todos los productos. Deja al menos uno.");
       return;
     }
-    const splitItems = Array.from(splitQuantities.entries()).map(
-      ([index, quantity]) => ({ index, quantity }),
-    );
-    splitOrder(selectedCuenta.id, splitItems);
-    const totalMoved = splitItems.reduce((acc, s) => acc + s.quantity, 0);
-    toast.success(
-      `Cuenta dividida: ${totalMoved} unidad${totalMoved > 1 ? "es" : ""} movida${totalMoved > 1 ? "s" : ""} a nueva cuenta`,
-      { icon: "✂️" },
-    );
+
+    if (!selectedCuenta.backendOrderId) {
+      toast.error(
+        "Ocurrió un problema al cargar esta orden. Intente cerrar y abrir la mesa de nuevo, o contacte a soporte.",
+        { duration: 5000 },
+      );
+      return;
+    }
+
+    try {
+      const accounts = await orderApi.getOrderAccountWithDetails(
+        selectedCuenta.backendOrderId,
+      );
+      const account = Array.isArray(accounts) ? accounts[0] : accounts;
+
+      if (!account?.orderAccountId) {
+        toast.error(
+          "No se pudo obtener la información de la cuenta. Intente de nuevo o contacte a soporte.",
+          { duration: 5000 },
+        );
+        return;
+      }
+
+      const backendDetails: {
+        orderDetailId: number;
+        productCode: string;
+        quantity: number;
+      }[] = account.orderAccountDetails || [];
+
+      const splitPayload: { orderDetailId: number; quantity: number }[] = [];
+
+      for (const [idx, qty] of splitQuantities.entries()) {
+        const localItem = selectedCuenta.items[idx];
+        const backendDetail = backendDetails.find(
+          (d: any) => d.productCode === localItem.productCode,
+        );
+        if (backendDetail) {
+          splitPayload.push({
+            orderDetailId: backendDetail.orderDetailId,
+            quantity: qty,
+          });
+        }
+      }
+
+      if (splitPayload.length === 0) {
+        toast.error(
+          "No se pudo dividir la cuenta correctamente. Intente de nuevo o contacte a soporte.",
+          { duration: 5000 },
+        );
+        return;
+      }
+
+      await orderApi.accountSplit({
+        fromAccountId: account.orderAccountId,
+        creteBy: user?.name || "Cajero",
+        orderAccountSplitTypes: splitPayload,
+      });
+
+      const splitItems = Array.from(splitQuantities.entries()).map(
+        ([index, quantity]) => ({ index, quantity }),
+      );
+      splitOrder(selectedCuenta.id, splitItems);
+      const totalMoved = splitItems.reduce((acc, s) => acc + s.quantity, 0);
+      toast.success(
+        `Cuenta dividida: ${totalMoved} unidad${totalMoved > 1 ? "es" : ""} movida${totalMoved > 1 ? "s" : ""} a nueva cuenta`,
+        { icon: "✂️" },
+      );
+    } catch (error) {
+      console.error("[TakeoutDetailModal] Error al dividir cuenta:", error);
+      toast.error(
+        "No se pudo dividir la cuenta. Verifique la conexión e intente de nuevo.",
+        { duration: 5000 },
+      );
+    }
+
     setIsSplitMode(false);
     setSplitQuantities(new Map());
   };

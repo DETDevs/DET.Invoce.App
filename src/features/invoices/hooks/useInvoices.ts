@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
-import type { Invoice, InvoiceStatus, InvoiceReturn } from "@/features/invoices/types";
-import { loadInvoices, saveInvoices } from "@/features/invoices/utils/invoiceStorage";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import type { Invoice, InvoiceItem, InvoiceStatus, InvoiceReturn } from "@/features/invoices/types";
+import invoiceApi from "@/api/invoice/InvoiceAPI";
 
 export type DateFilterPreset = "all" | "today" | "week" | "month" | "custom";
 
@@ -34,8 +34,39 @@ const getDateRange = (
     }
 };
 
+function mapBackendInvoice(raw: any): Invoice {
+    const details: any[] = raw.details ?? [];
+    const items: InvoiceItem[] = details.map((d: any) => ({
+        productId: d.productId ?? 0,
+        productName: d.productCode ?? d.productName ?? "Producto",
+        quantity: d.quantity ?? 1,
+        unitPrice: d.unitPrice ?? 0,
+        subtotal: (d.quantity ?? 1) * (d.unitPrice ?? 0),
+    }));
+
+    const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
+    const tax = subtotal * 0.15;
+    const total = raw.total ?? subtotal + tax;
+
+    return {
+        id: String(raw.invoiceId ?? raw.invoiceNumber ?? ""),
+        orderNumber: raw.invoiceNumber ?? raw.invoiceId ?? "",
+        customerName: raw.customer ?? raw.createdBy ?? "",
+        createdAt: raw.invoiceDate ?? raw.createdAt ?? new Date().toISOString(),
+        createdBy: raw.createdBy ?? "",
+        items,
+        subtotal,
+        tax,
+        total,
+        status: "completed" as InvoiceStatus,
+        returns: [],
+    };
+}
+
 export const useInvoices = () => {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<InvoiceStatus | "all">("all");
     const [dateFilter, setDateFilter] = useState<DateFilterPreset>("all");
@@ -44,25 +75,33 @@ export const useInvoices = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    useEffect(() => {
-        const loaded = loadInvoices();
-        setInvoices(loaded);
+    const fetchInvoices = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const data = await invoiceApi.getAll();
+            const mapped = (Array.isArray(data) ? data : []).map(mapBackendInvoice);
+            setInvoices(mapped);
+        } catch (err) {
+            console.error("[useInvoices] Error al cargar facturas:", err);
+            setError("No se pudieron cargar las facturas. Verifique la conexión.");
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [fetchInvoices]);
 
     const addReturn = (
         invoiceId: string,
-        returnData: {
-            reason: string;
-            notes?: string;
-        }
+        returnData: { reason: string; notes?: string }
     ) => {
         const invoice = invoices.find((inv) => inv.id === invoiceId);
         if (!invoice) return;
 
-        const totalReturned = invoice.items.reduce(
-            (sum, item) => sum + item.subtotal,
-            0
-        );
+        const totalReturned = invoice.items.reduce((sum, item) => sum + item.subtotal, 0);
 
         const newReturn: InvoiceReturn = {
             id: `RET-${Date.now()}`,
@@ -80,12 +119,7 @@ export const useInvoices = () => {
             returns: [...(invoice.returns || []), newReturn],
         };
 
-        const updatedInvoices = invoices.map((inv) =>
-            inv.id === invoiceId ? updatedInvoice : inv
-        );
-
-        setInvoices(updatedInvoices);
-        saveInvoices(updatedInvoices);
+        setInvoices((prev) => prev.map((inv) => inv.id === invoiceId ? updatedInvoice : inv));
     };
 
     const filteredInvoices = useMemo(() => {
@@ -94,10 +128,10 @@ export const useInvoices = () => {
         return invoices.filter((invoice) => {
             const matchesSearch =
                 invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                String(invoice.orderNumber).toLowerCase().includes(searchQuery.toLowerCase()) ||
                 invoice.customerName?.toLowerCase().includes(searchQuery.toLowerCase());
 
-            const matchesStatus =
-                filterStatus === "all" || invoice.status === filterStatus;
+            const matchesStatus = filterStatus === "all" || invoice.status === filterStatus;
 
             let matchesDate = true;
             if (from || to) {
@@ -112,58 +146,47 @@ export const useInvoices = () => {
 
     const paginatedInvoices = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        return filteredInvoices.slice(startIndex, endIndex);
+        return filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredInvoices, currentPage, itemsPerPage]);
 
     const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
 
     const summary = useMemo(() => {
-        const source = filteredInvoices;
-        const totalSales = source.reduce((sum, inv) => sum + inv.total, 0);
-        const totalReturned = source.reduce((sum, inv) => {
-            const returnedAmount = inv.returns?.reduce(
-                (retSum, ret) => retSum + ret.totalReturned,
-                0
-            ) || 0;
-            return sum + returnedAmount;
+        const totalSales = filteredInvoices.reduce((sum, inv) => sum + inv.total, 0);
+        const totalReturned = filteredInvoices.reduce((sum, inv) => {
+            return sum + (inv.returns?.reduce((r, ret) => r + ret.totalReturned, 0) ?? 0);
         }, 0);
-
         return {
-            totalInvoices: source.length,
+            totalInvoices: filteredInvoices.length,
             totalSales,
             totalReturned,
             netBalance: totalSales - totalReturned,
         };
     }, [filteredInvoices]);
 
-    const handleFilterChange = (
-        type: "search" | "status",
-        value: string | InvoiceStatus
-    ) => {
+    const handleFilterChange = (type: "search" | "status", value: string | InvoiceStatus) => {
         setCurrentPage(1);
         if (type === "search") setSearchQuery(value as string);
-        else if (type === "status") setFilterStatus(value as InvoiceStatus | "all");
+        else setFilterStatus(value as InvoiceStatus | "all");
     };
 
     return {
         invoices: paginatedInvoices,
         allInvoices: invoices,
+        isLoading,
+        error,
+        refetch: fetchInvoices,
         filteredCount: filteredInvoices.length,
         summary,
         searchQuery,
-        setSearchQuery: (query: string) => handleFilterChange("search", query),
+        setSearchQuery: (q: string) => handleFilterChange("search", q),
         filterStatus,
-        setFilterStatus: (status: InvoiceStatus | "all") =>
-            handleFilterChange("status", status),
+        setFilterStatus: (s: InvoiceStatus | "all") => handleFilterChange("status", s),
         dateFilter,
         setDateFilter: (preset: DateFilterPreset) => {
             setCurrentPage(1);
             setDateFilter(preset);
-            if (preset !== "custom") {
-                setCustomDateFrom("");
-                setCustomDateTo("");
-            }
+            if (preset !== "custom") { setCustomDateFrom(""); setCustomDateTo(""); }
         },
         customDateFrom,
         setCustomDateFrom: (val: string) => { setCurrentPage(1); setCustomDateFrom(val); },

@@ -15,19 +15,29 @@ import type { CartItem } from "@/features/orders/types/index";
 import type { TakeoutItem } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-
+import orderApi from "@/api/order/OrderAPI";
+import restaurantTableApi from "@/api/restaurant-table/RestaurantTableAPI";
+import { handleInvoiceFlow } from "@/services/invoiceService";
 import toast from "react-hot-toast";
+
+type RestaurantTable = {
+  tableId: number;
+  tableNumber: number;
+  isOccupied: boolean;
+  isActive: boolean;
+};
 
 type OrderMode = "mesa" | "llevar";
 
 type TakeoutCartPanelProps = {
   cart: CartItem[];
   orderNumber: number;
+  orderId: number | null;
   onUpdateQuantity: (id: number, delta: number) => void;
   onRemoveFromCart: (id: number) => void;
   onOrderSent: () => void;
   onCancel: () => void;
-  tableCount: number;
+  tableCount?: number;
   preselectedTable?: number;
   preselectedCuentaId?: string;
   preselectedCuentaNumber?: number;
@@ -38,11 +48,12 @@ const PARA_LLEVAR_TABLE = 0;
 export const TakeoutCartPanel = ({
   cart,
   orderNumber,
+  orderId,
   onUpdateQuantity,
   onRemoveFromCart,
   onOrderSent,
   onCancel,
-  tableCount,
+  tableCount: _tableCount,
   preselectedTable,
   preselectedCuentaId,
   preselectedCuentaNumber,
@@ -106,13 +117,19 @@ export const TakeoutCartPanel = ({
     paymentMethod === "tarjeta" ||
     (paymentMethod === "efectivo" && paidValue >= total);
 
-  const handleSendOrder = () => {
+  const handleSendOrder = async () => {
     if (mode === "mesa" && !selectedTable) {
       toast.error("Selecciona una mesa");
       return;
     }
     if (cart.length === 0) {
       toast.error("Agrega al menos un producto");
+      return;
+    }
+    if (!orderId) {
+      toast.error(
+        "El sistema aún está preparando la orden. Espere un momento e intente de nuevo.",
+      );
       return;
     }
 
@@ -125,33 +142,57 @@ export const TakeoutCartPanel = ({
       addedAt: new Date().toISOString(),
     }));
 
-    if (mode === "llevar") {
-      const cuentaNumber = getNextCuentaNumber(PARA_LLEVAR_TABLE);
-      addOrder(PARA_LLEVAR_TABLE, cuentaNumber, items, userName);
-      toast.success(`Orden Para Llevar #${cuentaNumber} enviada a caja`, {
-        icon: "🛍️",
+    try {
+      await orderApi.save({
+        orderId,
+        createdBy: userName,
+        orderType: mode === "llevar",
+        tableId: mode === "mesa" ? (selectedTable ?? undefined) : undefined,
+        details: cart.map((item) => ({
+          productCode: item.code,
+          quantity: item.quantity,
+          unitPrice: item.price,
+          discount: 0,
+          notes: "",
+        })),
       });
-    } else if (
-      selectedAction === "add-to-cuenta" &&
-      selectedCuentaId &&
-      selectedTable
-    ) {
-      addItemsToOrder(selectedCuentaId, items);
-      toast.success(
-        `Productos agregados a Mesa ${selectedTable} - Cuenta ${activeCuentas.find((c) => c.id === selectedCuentaId)?.cuentaNumber}`,
-        { icon: "🍽️" },
-      );
-    } else if (selectedTable) {
-      const cuentaNumber = getNextCuentaNumber(selectedTable);
-      addOrder(selectedTable, cuentaNumber, items, userName);
-      toast.success(
-        `Orden enviada - Mesa ${selectedTable}${cuentaNumber > 1 ? ` (Cuenta ${cuentaNumber})` : ""}`,
-        { icon: "🍽️" },
+
+      console.log("[Order] Save OK, orderId:", orderId);
+
+      if (mode === "llevar") {
+        const cuentaNumber = getNextCuentaNumber(PARA_LLEVAR_TABLE);
+        addOrder(PARA_LLEVAR_TABLE, cuentaNumber, items, userName, orderId);
+        toast.success(`Orden Para Llevar #${cuentaNumber} enviada a caja`, {
+          icon: "🛍️",
+        });
+      } else if (
+        selectedAction === "add-to-cuenta" &&
+        selectedCuentaId &&
+        selectedTable
+      ) {
+        addItemsToOrder(selectedCuentaId, items);
+        toast.success(
+          `Productos agregados a Mesa ${selectedTable} - Cuenta ${activeCuentas.find((c) => c.id === selectedCuentaId)?.cuentaNumber}`,
+          { icon: "🍽️" },
+        );
+      } else if (selectedTable) {
+        const cuentaNumber = getNextCuentaNumber(selectedTable);
+        addOrder(selectedTable, cuentaNumber, items, userName, orderId);
+        toast.success(
+          `Orden enviada - Mesa ${selectedTable}${cuentaNumber > 1 ? ` (Cuenta ${cuentaNumber})` : ""}`,
+          { icon: "🍽️" },
+        );
+      }
+
+      onOrderSent();
+      setSelectedTable(null);
+    } catch (error) {
+      console.error("[Order] Error al guardar:", error);
+      toast.error(
+        "No se pudo enviar la orden. Verifique la conexión e intente de nuevo.",
+        { duration: 5000 },
       );
     }
-
-    onOrderSent();
-    setSelectedTable(null);
   };
 
   const handleCajeroParaLlevarInvoice = async () => {
@@ -163,27 +204,51 @@ export const TakeoutCartPanel = ({
       toast.error("El monto recibido es insuficiente");
       return;
     }
+    if (!orderId) {
+      toast.error(
+        "El sistema aún está preparando la orden. Espere un momento e intente de nuevo.",
+      );
+      return;
+    }
 
     try {
-      console.log("[🧾 Facturación Simulada - Para Llevar]", {
+      await orderApi.save({
+        orderId,
         createdBy: userName,
-        paymentMethod,
-        total,
-        items: cart.map((item) => ({
+        orderType: true,
+        details: cart.map((item) => ({
           productCode: item.code,
           quantity: item.quantity,
           unitPrice: item.price,
+          discount: 0,
+          notes: "",
         })),
       });
-      await new Promise((r) => setTimeout(r, 500));
+
+      const accounts = await orderApi.getOrderAccountWithDetails(orderId);
+      const account = Array.isArray(accounts) ? accounts[0] : accounts;
+      const orderAccountId = account?.orderAccountId;
+
+      if (!orderAccountId) {
+        toast.error(
+          "No se pudo obtener la información de la cuenta. Intente de nuevo o contacte a soporte.",
+          { duration: 5000 },
+        );
+        return;
+      }
+
+      const pm = paymentMethod === "tarjeta" ? "CARD" : "CASH";
+      await handleInvoiceFlow({ orderAccountId, paymentmethod: pm });
 
       if (paymentMethod === "efectivo" && change > 0) {
         toast.success(`Facturado. Cambio: C$ ${change.toFixed(2)}`, {
-          icon: "🛍️",
+          icon: "\uD83D\uDECD\uFE0F",
           duration: 5000,
         });
       } else {
-        toast.success("Facturado correctamente", { icon: "🛍️" });
+        toast.success("Facturado correctamente", {
+          icon: "\uD83D\uDECD\uFE0F",
+        });
       }
 
       setAmountPaid("");
@@ -191,11 +256,25 @@ export const TakeoutCartPanel = ({
       onOrderSent();
     } catch (error) {
       console.error("[TakeoutCartPanel] Error al facturar:", error);
-      toast.error("Error al generar la factura. Intenta de nuevo.");
+      toast.error(
+        "No se pudo generar la factura. Verifique la conexión e intente de nuevo. Si el problema persiste, llame a soporte.",
+        { duration: 6000 },
+      );
     }
   };
 
-  const tables = Array.from({ length: tableCount }, (_, i) => i + 1);
+  const [apiTables, setApiTables] = useState<RestaurantTable[]>([]);
+
+  useEffect(() => {
+    restaurantTableApi
+      .get()
+      .then((data: RestaurantTable[]) => {
+        setApiTables(data.filter((t) => t.isActive));
+      })
+      .catch((err: unknown) => {
+        console.error("[TakeoutCartPanel] Error fetching tables:", err);
+      });
+  }, []);
 
   return (
     <div className="bg-white h-full grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
@@ -302,21 +381,30 @@ export const TakeoutCartPanel = ({
                 </button>
                 {isTableDropdownOpen && (
                   <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-20">
-                    {tables.map((t) => {
-                      const tableActive = getActiveOrdersByTable(t).length > 0;
+                    {apiTables.map((t) => {
+                      const tableActive =
+                        getActiveOrdersByTable(t.tableId).length > 0;
                       return (
                         <button
-                          key={t}
+                          key={t.tableId}
                           onClick={() => {
-                            setSelectedTable(t);
+                            setSelectedTable(t.tableId);
                             setIsTableDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-between ${selectedTable === t ? "bg-[#F9F1D8] text-[#593D31]" : "text-[#2D2D2D]"}`}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-between ${selectedTable === t.tableId ? "bg-[#F9F1D8] text-[#593D31]" : "text-[#2D2D2D]"}`}
                         >
-                          <span>Mesa {t}</span>
-                          {tableActive && (
+                          <span>Mesa {t.tableNumber}</span>
+                          {t.isOccupied ? (
+                            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">
+                              Ocupada
+                            </span>
+                          ) : tableActive ? (
                             <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">
                               Activa
+                            </span>
+                          ) : (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
+                              Libre
                             </span>
                           )}
                         </button>

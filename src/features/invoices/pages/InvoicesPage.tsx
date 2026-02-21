@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Receipt, Search, Filter, Calendar } from "lucide-react";
+import {
+  Receipt,
+  Search,
+  Filter,
+  Calendar,
+  RefreshCw,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { useInvoices } from "@/features/invoices/hooks/useInvoices";
 import type { DateFilterPreset } from "@/features/invoices/hooks/useInvoices";
@@ -18,6 +26,9 @@ export const InvoicesPage = () => {
 
   const {
     invoices,
+    isLoading,
+    error,
+    refetch,
     filteredCount,
     summary,
     searchQuery,
@@ -113,6 +124,22 @@ export const InvoicesPage = () => {
 
       <InvoiceSummary summary={summary} />
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <AlertTriangle size={20} className="text-red-500 shrink-0" />
+            <p className="text-red-700 text-sm font-medium">{error}</p>
+          </div>
+          <button
+            onClick={refetch}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors shrink-0"
+          >
+            <RefreshCw size={15} />
+            Reintentar
+          </button>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Filter size={20} className="text-gray-600" />
@@ -182,7 +209,12 @@ export const InvoicesPage = () => {
       </div>
 
       <div className="space-y-4">
-        {invoices.length === 0 ? (
+        {isLoading ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-12 flex flex-col items-center gap-4">
+            <Loader2 size={36} className="text-[#E8BC6E] animate-spin" />
+            <p className="text-gray-500 text-sm">Cargando facturas...</p>
+          </div>
+        ) : invoices.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
             <div className="flex flex-col items-center gap-4">
               <div className="p-4 bg-gray-100 rounded-full">

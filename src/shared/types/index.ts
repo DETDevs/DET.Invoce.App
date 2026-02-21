@@ -42,4 +42,5 @@ export interface TakeoutOrder {
     updatedAt: string;
     status: TakeoutStatus;
     createdBy: string;
+    backendOrderId?: number;
 }

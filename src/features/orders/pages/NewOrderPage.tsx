@@ -1,12 +1,14 @@
 import React, { useMemo, useState, useEffect, useTransition } from "react";
 import { useLocation } from "react-router-dom";
-import { Search, X } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import { ProductCard } from "@/features/orders/components/ProductCard";
 import { TakeoutCartPanel } from "@/features/orders/components/TakeoutCartPanel";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useOrderLogic } from "@/features/orders/hooks/useOrderLogic";
 import { Toaster } from "react-hot-toast";
-import { PRODUCTS, CATEGORIES_DATA } from "@/features/orders/types/product";
+import productApi from "@/api/products/ProductAPI";
+import type { TProduct } from "@/api/products/types";
+import type { Product, Category } from "@/features/orders/types/index";
 
 const SETTINGS_STORAGE_KEY = "app-settings";
 
@@ -38,16 +40,70 @@ export const NewOrderPage = () => {
   const location = useLocation();
   const isAddingToExisting = !!(location.state as any)?.addToTable;
 
-  const [selectedCategory, setSelectedCategory] = useState<string>(
-    CATEGORIES_DATA[0].name,
-  );
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  const categoriesData = useMemo<Category[]>(() => {
+    const catMap = new Map<string, Set<string>>();
+    allProducts.forEach((p) => {
+      if (!catMap.has(p.category)) catMap.set(p.category, new Set());
+      catMap.get(p.category)!.add(p.subcategory);
+    });
+    return Array.from(catMap.entries()).map(([name, subs]) => ({
+      name: name as Category["name"],
+      subcategories: Array.from(subs),
+    }));
+  }, [allProducts]);
+
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(
-    CATEGORIES_DATA[0].subcategories[0],
+    null,
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingProducts(true);
+    productApi
+      .getByCode()
+      .then((data: TProduct[]) => {
+        if (cancelled) return;
+        const mapped: Product[] = data
+          .filter((p) => p.isActive)
+          .map((p) => ({
+            id: p.productId,
+            code: p.code,
+            name: p.name,
+            price: p.price,
+            category: (p.categoryName ||
+              "Sin Categoría") as Product["category"],
+            subcategory: p.subCategoryName || "General",
+            image: p.imageUrl || "",
+          }));
+        setAllProducts(mapped);
+        setIsLoadingProducts(false);
+      })
+      .catch((err: unknown) => {
+        console.error("Error fetching products:", err);
+        setIsLoadingProducts(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (categoriesData.length > 0 && !selectedCategory) {
+      setSelectedCategory(categoriesData[0].name);
+      if (categoriesData[0].subcategories.length > 0) {
+        setSelectedSubcategory(categoriesData[0].subcategories[0]);
+      }
+    }
+  }, [categoriesData]);
 
   const {
     cart,
     orderNumber,
+    orderId,
     isCartOpen,
     setIsCartOpen,
     addToCart,
@@ -79,9 +135,9 @@ export const NewOrderPage = () => {
       cuentaNumber?: number;
     } | null;
 
-    if (state?.reprocessFrom && state.items) {
+    if (state?.reprocessFrom && state.items && allProducts.length > 0) {
       const cartItems = state.items.map((item) => {
-        const product = PRODUCTS.find((p) => p.id === item.productId);
+        const product = allProducts.find((p) => p.id === item.productId);
         if (product) {
           return { ...product, quantity: item.quantity };
         }
@@ -90,7 +146,7 @@ export const NewOrderPage = () => {
           code: `PROD-${String(item.productId).padStart(3, "0")}`,
           name: item.productName,
           price: item.unitPrice,
-          category: "Panadería y Repostería" as const,
+          category: "Sin Categoría" as const,
           subcategory: "General",
           image: "",
           quantity: item.quantity,
@@ -104,14 +160,14 @@ export const NewOrderPage = () => {
 
       window.history.replaceState({}, document.title);
     }
-  }, []);
+  }, [allProducts]);
 
   const handleCategorySelect = (categoryName: string) => {
     if (selectedCategory === categoryName) return;
 
     startTransition(() => {
       setSelectedCategory(categoryName);
-      const category = CATEGORIES_DATA.find((c) => c.name === categoryName);
+      const category = categoriesData.find((c) => c.name === categoryName);
       if (category && category.subcategories.length > 0) {
         setSelectedSubcategory(category.subcategories[0]);
       } else {
@@ -129,10 +185,10 @@ export const NewOrderPage = () => {
 
   const currentSubcategories = useMemo(() => {
     return (
-      CATEGORIES_DATA.find((c) => c.name === selectedCategory)?.subcategories ||
+      categoriesData.find((c) => c.name === selectedCategory)?.subcategories ||
       []
     );
-  }, [selectedCategory]);
+  }, [selectedCategory, categoriesData]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -144,7 +200,7 @@ export const NewOrderPage = () => {
   }, [searchTerm]);
 
   const filteredProducts = useMemo(() => {
-    let result = PRODUCTS.filter(
+    let result = allProducts.filter(
       (p) =>
         p.category === selectedCategory &&
         p.subcategory === selectedSubcategory,
@@ -156,7 +212,7 @@ export const NewOrderPage = () => {
     }
 
     return result;
-  }, [selectedCategory, selectedSubcategory, debouncedSearchTerm]);
+  }, [selectedCategory, selectedSubcategory, debouncedSearchTerm, allProducts]);
 
   useEffect(() => {
     document.body.style.overflow = isCartOpen ? "hidden" : "unset";
@@ -205,7 +261,7 @@ export const NewOrderPage = () => {
               className="flex gap-2 border-b border-gray-200 pb-2 overflow-x-auto scrollbar-hide overscroll-x-contain scroll-smooth"
               style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
             >
-              {CATEGORIES_DATA.map((cat) => (
+              {categoriesData.map((cat) => (
                 <button
                   key={cat.name}
                   onClick={() => handleCategorySelect(cat.name)}
@@ -245,7 +301,12 @@ export const NewOrderPage = () => {
           <div
             className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 min-[1400px]:grid-cols-3 min-[1600px]:grid-cols-4 gap-4 px-4 sm:px-6 lg:px-8 transition-opacity duration-200 ${isPending ? "opacity-50" : "opacity-100"}`}
           >
-            {filteredProducts.length > 0 ? (
+            {isLoadingProducts ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
+                <Loader2 size={32} className="animate-spin" />
+                <p>Cargando productos...</p>
+              </div>
+            ) : filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <MemoizedProductCard
                   key={product.id}
@@ -270,6 +331,7 @@ export const NewOrderPage = () => {
         <TakeoutCartPanel
           cart={cart}
           orderNumber={orderNumber}
+          orderId={orderId}
           onUpdateQuantity={updateQuantity}
           onRemoveFromCart={removeFromCart}
           onOrderSent={handleCheckout}
@@ -340,6 +402,7 @@ export const NewOrderPage = () => {
             <TakeoutCartPanel
               cart={cart}
               orderNumber={orderNumber}
+              orderId={orderId}
               onUpdateQuantity={updateQuantity}
               onRemoveFromCart={removeFromCart}
               onOrderSent={handleCheckout}

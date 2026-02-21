@@ -3,15 +3,20 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useNavigationBlocker } from "@/shared/context/NavigationBlockerContext";
 import { useCart } from "./useCart";
+import orderApi from "@/api/order/OrderAPI";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 export const useOrderLogic = (isAddingToExisting = false) => {
     const navigate = useNavigate();
     const { setBlocker } = useNavigationBlocker();
     const { cart, addToCart, updateQuantity, removeFromCart, total, clearCart, initializeCart } =
         useCart();
+    const { user } = useAuthStore();
+    const [orderId, setOrderId] = useState<number | null>(null);
     const [orderNumber, setOrderNumber] = useState(
         Math.floor(Math.random() * 9000) + 1000,
     );
+    const [isCreatingOrder, setIsCreatingOrder] = useState(false);
     const [isManualCancelOpen, setIsManualCancelOpen] = useState(false);
     const [pendingPath, setPendingPath] = useState<string | null>(null);
     const [dialogConfig, setDialogConfig] = useState({
@@ -22,6 +27,26 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         cancelText: "Volver",
     });
     const [isCartOpen, setIsCartOpen] = useState(false);
+
+    useEffect(() => {
+        if (isAddingToExisting) return;
+        let cancelled = false;
+        setIsCreatingOrder(true);
+        orderApi.create({ createdBy: user?.name || "Caja" })
+            .then((res: any) => {
+                if (cancelled) return;
+                const id = res?.orderId ?? res;
+                setOrderId(id);
+                setOrderNumber(id);
+                console.log("[Order] Creado orderId:", id);
+            })
+            .catch((err: unknown) => {
+                console.error("[Order] Error al crear:", err);
+                toast.error("No se pudo iniciar la sesión de orden. Verifique la conexión e intente de nuevo.");
+            })
+            .finally(() => setIsCreatingOrder(false));
+        return () => { cancelled = true; };
+    }, []);
 
     useEffect(() => {
         if (isAddingToExisting) return;
@@ -66,8 +91,21 @@ export const useOrderLogic = (isAddingToExisting = false) => {
 
     const refreshOrder = useCallback(() => {
         clearCart();
-        setOrderNumber(Math.floor(Math.random() * 9000) + 1000);
-    }, [clearCart]);
+        setOrderId(null);
+        setIsCreatingOrder(true);
+        orderApi.create({ createdBy: user?.name || "Caja" })
+            .then((res: any) => {
+                const id = res?.orderId ?? res;
+                setOrderId(id);
+                setOrderNumber(id);
+                console.log("[Order] Nuevo orderId:", id);
+            })
+            .catch((err: unknown) => {
+                console.error("[Order] Error al refrescar:", err);
+                setOrderNumber(Math.floor(Math.random() * 9000) + 1000);
+            })
+            .finally(() => setIsCreatingOrder(false));
+    }, [clearCart, user]);
 
     const handleCheckout = () => {
         if (cart.length > 0) {
@@ -146,7 +184,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
     };
 
     return {
-        cart, total, orderNumber, isCartOpen, setIsCartOpen, addToCart, updateQuantity, removeFromCart, initializeCart,
+        cart, total, orderNumber, orderId, isCreatingOrder, isCartOpen, setIsCartOpen, addToCart, updateQuantity, removeFromCart, initializeCart,
         handleCheckout, handleRequestCancel, isDialogOpen: isManualCancelOpen,
         dialogTitle: dialogConfig.title, dialogMessage: dialogConfig.message,
         confirmText: dialogConfig.confirmText, cancelText: dialogConfig.cancelText,
