@@ -80,7 +80,9 @@ export const useInvoices = () => {
         setError(null);
         try {
             const data = await invoiceApi.getAll();
-            const mapped = (Array.isArray(data) ? data : []).map(mapBackendInvoice);
+            const mapped = (Array.isArray(data) ? data : [])
+                .map(mapBackendInvoice)
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
             setInvoices(mapped);
         } catch (err) {
             console.error("[useInvoices] Error al cargar facturas:", err);
