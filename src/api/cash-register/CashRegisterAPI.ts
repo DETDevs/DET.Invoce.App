@@ -2,8 +2,9 @@ import api from '../api';
 import type {
     TCashRegisterOpen,
     TCashMovementSave,
+    TCashMovement,
+    TCashMovementType,
     TGetMovementParams,
-    TGetMovementTypeParams,
 } from './types';
 
 async function open(data: TCashRegisterOpen) {
@@ -15,15 +16,18 @@ async function saveMovement(data: TCashMovementSave) {
 }
 
 async function getTotal() {
-    return api.get<any>('/CashRegister/GetTotal');
+    return api.get<number>('/CashRegister/GetTotal');
 }
 
 async function getMovement(params: TGetMovementParams = {}) {
-    return api.getWithBody<any>('/CashRegister/GetMovement', params);
+    return api.post<TCashMovement[]>('/CashRegister/GetMovement', {
+        cashMovementId: params.cashMovementId ?? null,
+        flow: params.flow ?? null,
+    });
 }
 
-async function getMovementType(params: TGetMovementTypeParams = {}) {
-    return api.getWithBody<any>('/CashRegister/GetMovementType', params);
+async function getMovementType() {
+    return api.get<TCashMovementType[]>('/CashRegister/GetMovementType');
 }
 
 const cashRegisterApi = {

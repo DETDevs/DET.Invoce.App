@@ -1,7 +1,6 @@
 import {
   X,
   Printer,
-  Trash2,
   ArrowDownToLine,
   ArrowUpFromLine,
   User,
@@ -18,19 +17,6 @@ interface Props {
   movement: CashMovement | null;
   onPrint?: (movementId: string) => void;
 }
-
-const getCategoryLabel = (category: string): string => {
-  const labelMap: Record<string, string> = {
-    fondo_caja: "Fondo de Caja",
-    aporte: "Aporte del Dueño",
-    devolucion: "Devolución",
-    proveedor: "Pago a Proveedor",
-    gasto: "Gasto Operativo",
-    retiro: "Retiro del Dueño",
-    otro: "Otro",
-  };
-  return labelMap[category] || category;
-};
 
 export const MovementDetailsModal = ({
   isOpen,
@@ -127,9 +113,7 @@ export const MovementDetailsModal = ({
                 <Tag size={16} />
                 <span className="text-sm font-medium">Categoría</span>
               </div>
-              <p className="text-gray-900 font-bold">
-                {getCategoryLabel(movement.category)}
-              </p>
+              <p className="text-gray-900 font-bold">{movement.categoryName}</p>
             </div>
 
             <div className="p-4 bg-gray-50 rounded-xl">

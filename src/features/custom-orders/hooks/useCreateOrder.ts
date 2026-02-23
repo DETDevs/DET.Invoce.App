@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { CreateOrderFormData } from "@/features/custom-orders/types";
-import type { Order, OrderItem, ProductOption, PaymentStatus } from "@/shared/types";
-import { useOrdersStore } from "@/features/custom-orders/store/useOrdersStore";
+import type { Order, OrderItem } from "@/shared/types";
+import { useOrdersStore } from "../store/useOrdersStore";
+import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 export const useCreateOrder = () => {
   const navigate = useNavigate();
   const { addOrder } = useOrdersStore();
+  const { user } = useAuthStore();
+  const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState<CreateOrderFormData>({
     customerName: "",
@@ -21,45 +25,24 @@ export const useCreateOrder = () => {
 
   useEffect(() => {
     setFormData((prev) => {
-      const total = prev.items.reduce(
-        (acc, item) => acc + item.price * item.quantity,
-        0,
-      );
+      const total = prev.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
       const deposit = Number(prev.deposit) || 0;
-
-      let newStatus: PaymentStatus = "Pendiente";
-      if (total > 0) {
-        if (deposit >= total) {
-          newStatus = "Pagado";
-        } else if (deposit > 0) {
-          newStatus = "Abonado";
-        }
-      }
-
-      if (prev.status !== newStatus) {
-        return { ...prev, status: newStatus };
-      }
-      return prev;
+      return {
+        ...prev,
+        status: deposit >= total && total > 0 ? "Pagado" : deposit > 0 ? "Abonado" : "Pendiente",
+      };
     });
   }, [formData.items, formData.deposit]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const updateField = (field: keyof CreateOrderFormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const addItem = (product: ProductOption, quantity: number, description: string) => {
-    const newItem: OrderItem = {
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      quantity,
-      description,
-    };
-    setFormData((prev) => ({ ...prev, items: [...prev.items, newItem] }));
-    toast.success("Producto agregado al pedido");
+  const addItem = (item: OrderItem) => {
+    setFormData((prev) => ({
+      ...prev,
+      items: [...prev.items, item],
+    }));
   };
 
   const removeItem = (index: number) => {
@@ -73,52 +56,80 @@ export const useCreateOrder = () => {
     return formData.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.customerName.trim()) {
-      toast.error("El nombre del cliente es obligatorio");
-      return;
-    }
-    if (!formData.dueDate) {
-      toast.error("La fecha de entrega es obligatoria");
-      return;
-    }
     if (formData.items.length === 0) {
-      toast.error("Debes agregar al menos un producto");
+      toast.error("Debe agregar al menos un producto");
       return;
     }
 
-    const total = calculateTotal();
-    const deposit = Number(formData.deposit) || 0;
+    setIsSaving(true);
+    try {
+      const total = formData.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+      const deposit = Number(formData.deposit) || 0;
 
-    const formattedItems = formData.items.map(item =>
-      `${item.quantity}x ${item.name}${item.description ? ` (${item.description})` : ''}`
-    );
+      const payload = {
+        customer: formData.customerName,
+        identificationCustomer: formData.customerId || null,
+        deliveryDate: formData.dueDate,
+        orderDate: new Date().toISOString(),
+        status: "Pending",
+        deposit,
+        total,
+        notes: formData.comments?.trim() || null,
+        createdBy: user?.name || "Sistema",
+        details: formData.items.map((item) => ({
+          productCode: item.productCode,
+          quantity: item.quantity,
+          unitPrice: item.price,
+          discount: 0,
+          notes: item.description || null,
+        })),
+      };
 
-    const newOrder: Order = {
-      id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-      customer: formData.customerName,
-      items: formattedItems,
-      total: total,
-      deposit: deposit,
-      paymentStatus: formData.status,
-      dueDate: formData.dueDate,
-      status: "pending",
-    };
+      const result = await reservationOrderApi.save(payload);
 
-    console.log("Creando pedido:", newOrder);
-    addOrder(newOrder);
-    toast.success("Pedido creado exitosamente");
-    navigate("/tablero");
+      const reservationOrderId: number | undefined =
+        typeof result === 'number'
+          ? result
+          : (result?.reservationOrderId ?? result?.id ?? undefined);
+
+      const formattedItems = formData.items.map(
+        (item) => `${item.quantity}x ${item.name}${item.description ? ` (${item.description})` : ""}`
+      );
+
+      const newOrder: Order = {
+        id: (typeof result === 'object' && result?.orderNumber) ? result.orderNumber : `ORD-${Date.now()}`,
+        reservationOrderId,
+        customer: formData.customerName,
+        identificationCustomer: formData.customerId || undefined,
+        items: formattedItems,
+        rawItems: formData.items,
+        total,
+        deposit,
+        paymentStatus: formData.status,
+        dueDate: formData.dueDate,
+        status: "pending",
+      };
+
+      addOrder(newOrder);
+      toast.success("Pedido guardado correctamente");
+      navigate("/tablero");
+    } catch (err) {
+      console.error("[useCreateOrder] Error al guardar pedido:", err);
+      toast.error("No se pudo guardar el pedido. Verifique la conexión e intente de nuevo.", { duration: 5000 });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return {
     formData,
-    handleInputChange,
+    isSaving,
+    updateField,
     addItem,
     removeItem,
     calculateTotal,
     handleSubmit,
-    setFormData
   };
 };

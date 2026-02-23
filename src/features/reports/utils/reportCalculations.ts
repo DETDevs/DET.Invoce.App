@@ -16,20 +16,16 @@ export const calculateSalesReport = (invoices: Invoice[], movements: CashMovemen
     const totalOrders = completedInvoices.length;
     const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-    const cashIn = movements
-        .filter(m => m.type === 'cash-in' && m.category === 'fondo_caja')
-        .reduce((sum, m) => sum + m.amount, 0);
-
-    const otherIn = movements
-        .filter(m => m.type === 'cash-in' && m.category !== 'fondo_caja')
+    const totalCashIn = movements
+        .filter(m => m.type === 'cash-in')
         .reduce((sum, m) => sum + m.amount, 0);
 
     const totalOut = movements
         .filter(m => m.type === 'cash-out')
         .reduce((sum, m) => sum + m.amount, 0);
 
-    const theoreticalCash = totalSales + cashIn + otherIn - totalOut;
-    const initialCash = cashIn;
+    const theoreticalCash = totalSales + totalCashIn - totalOut;
+    const initialCash = totalCashIn;
 
     const salesByDateMap = new Map<string, { amount: number; orders: number }>();
 
@@ -102,11 +98,11 @@ export const calculateCashFlowReport = (movements: CashMovement[]): CashFlowRepo
         .reduce((sum, m) => sum + m.amount, 0);
 
     const movementsByCategory = movements.reduce((acc, m) => {
-        const existing = acc.find(item => item.category === m.category && item.type === (m.type === 'cash-in' ? 'in' : 'out'));
+        const existing = acc.find(item => item.category === m.categoryName && item.type === (m.type === 'cash-in' ? 'in' : 'out'));
         if (existing) {
             existing.amount += m.amount;
         } else {
-            acc.push({ category: m.category, amount: m.amount, type: m.type === 'cash-in' ? 'in' : 'out' });
+            acc.push({ category: m.categoryName, amount: m.amount, type: m.type === 'cash-in' ? 'in' : 'out' });
         }
         return acc;
     }, [] as { category: string; amount: number; type: "in" | "out" }[]);

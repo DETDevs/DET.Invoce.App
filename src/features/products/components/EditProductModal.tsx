@@ -1,22 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { X, Save } from "lucide-react";
+import { X, Save, Loader2 } from "lucide-react";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  stock: number;
-  category: string;
-  image: string;
-}
+import type { TProduct } from "@/api/products/types";
 
 interface EditProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: Product | null;
-  onSave: (updatedProduct: Product) => void;
+  product: TProduct | null;
+  onSave: (updatedProduct: TProduct) => void;
 }
 
 export const EditProductModal = ({
@@ -25,13 +17,15 @@ export const EditProductModal = ({
   product,
   onSave,
 }: EditProductModalProps) => {
-  const [formData, setFormData] = useState<Product | null>(null);
+  const [formData, setFormData] = useState<TProduct | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (product) {
-      setFormData(product);
+      setFormData({ ...product });
       setNewImageFile(null);
+      setIsSaving(false);
     }
   }, [product]);
 
@@ -40,8 +34,8 @@ export const EditProductModal = ({
   const isFormValid =
     formData.name.trim() !== "" &&
     formData.price > 0 &&
-    formData.stock >= 0 &&
-    (formData.image || newImageFile);
+    formData.stockMinimum >= 0 &&
+    (formData.imageUrl || newImageFile);
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     if (!e.target.value) {
@@ -51,7 +45,7 @@ export const EditProductModal = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isFormValid) {
@@ -60,9 +54,8 @@ export const EditProductModal = ({
     }
 
     if (formData) {
-      console.log("Actualizando producto...", { ...formData, newImageFile });
+      setIsSaving(true);
       onSave(formData);
-      toast.success("Producto actualizado correctamente");
       onClose();
     }
   };
@@ -85,7 +78,7 @@ export const EditProductModal = ({
             <div className="grid grid-cols-1 gap-6">
               <ImageUploadField
                 label="Imagen del Producto"
-                currentImage={formData.image}
+                currentImage={formData.imageUrl || ""}
                 onImageSelected={setNewImageFile}
               />
 
@@ -132,16 +125,16 @@ export const EditProductModal = ({
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Cantidad Minima
+                    Cantidad Mínima
                   </label>
                   <input
                     type="number"
-                    name="stock"
-                    value={formData.stock}
+                    name="stockMinimum"
+                    value={formData.stockMinimum}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        stock: Number(e.target.value),
+                        stockMinimum: Number(e.target.value),
                       })
                     }
                     onBlur={handleBlur}
@@ -154,9 +147,9 @@ export const EditProductModal = ({
                     Categoría
                   </label>
                   <select
-                    value={formData.category}
+                    value={formData.categoryCode}
                     onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
+                      setFormData({ ...formData, categoryCode: e.target.value })
                     }
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D] appearance-none bg-no-repeat bg-right"
                     style={{
@@ -176,7 +169,7 @@ export const EditProductModal = ({
           </form>
         </div>
 
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+        <div className="flex justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50 shrink-0">
           <button
             type="button"
             onClick={onClose}
@@ -187,15 +180,22 @@ export const EditProductModal = ({
           <button
             type="submit"
             form="edit-form"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSaving}
             className={`flex items-center gap-2 px-6 py-3 font-bold rounded-xl shadow-md transition-all active:scale-95 ${
-              isFormValid
+              isFormValid && !isSaving
                 ? "bg-[#E8BC6E] hover:bg-[#dca34b] text-white cursor-pointer"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
             }`}
           >
-            <Save size={20} />
-            Guardar Cambios
+            {isSaving ? (
+              <>
+                <Loader2 size={20} className="animate-spin" /> Guardando...
+              </>
+            ) : (
+              <>
+                <Save size={20} /> Guardar Cambios
+              </>
+            )}
           </button>
         </div>
       </div>

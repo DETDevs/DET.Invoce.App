@@ -3,30 +3,13 @@ import type { OrderStatus } from "@/shared/types";
 import { useOrdersStore } from "@/features/custom-orders/store/useOrdersStore";
 
 export const useOrdersBoard = () => {
-    const { orders, setOrders, updateOrderStatus, registerPayment, removeOrder } = useOrdersStore();
+    const { orders, updateOrderStatus, registerPayment, removeOrder } = useOrdersStore();
 
     const onDragEnd = (result: DropResult) => {
         const { destination, source, draggableId } = result;
-
         if (!destination) return;
-
-        if (
-            destination.droppableId === source.droppableId &&
-            destination.index === source.index
-        ) {
-            return;
-        }
-
-        const newOrders = [...orders];
-        const draggedOrderIndex = newOrders.findIndex((o) => o.id === draggableId);
-
-        if (draggedOrderIndex > -1) {
-            newOrders[draggedOrderIndex] = {
-                ...newOrders[draggedOrderIndex],
-                status: destination.droppableId as OrderStatus,
-            };
-            setOrders(newOrders);
-        }
+        if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+        updateOrderStatus(draggableId, destination.droppableId as OrderStatus);
     };
 
     const moveOrder = (orderId: string, newStatus: OrderStatus) => {
@@ -41,3 +24,4 @@ export const useOrdersBoard = () => {
         removeOrder,
     };
 };
+

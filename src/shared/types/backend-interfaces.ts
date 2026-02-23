@@ -177,7 +177,7 @@ export interface InvoiceReturn {
     totalReturned: number;
 }
 
-export type InvoiceStatus = 'completed' | 'returned';
+export type InvoiceStatus = 'completed' | 'returned' | 'partially_returned';
 
 export interface Invoice {
     id: string;
@@ -195,14 +195,11 @@ export interface Invoice {
 
 export type MovementType = 'cash-in' | 'cash-out';
 
-export type CashInCategory = 'fondo_caja' | 'aporte' | 'devolucion' | 'otro';
-export type CashOutCategory = 'proveedor' | 'gasto' | 'retiro' | 'otro';
-export type MovementCategory = CashInCategory | CashOutCategory;
-
 export interface CashMovement {
     id: string;
     type: MovementType;
-    category: MovementCategory;
+    cashMovementTypeId: number;
+    categoryName: string;
     amount: number;
     description: string;
     createdBy: string;

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Save } from "lucide-react";
+import { ArrowLeft, Calendar, Save, Loader2 } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
 import { useCreateOrder } from "@/features/custom-orders/hooks/useCreateOrder";
 import { AddProductForm } from "@/features/custom-orders/components/AddProductForm";
@@ -14,6 +14,7 @@ export const CreateCustomOrderPage = () => {
     removeItem,
     calculateTotal,
     handleSubmit,
+    isSaving,
   } = useCreateOrder();
 
   const total = calculateTotal();
@@ -193,12 +194,21 @@ export const CreateCustomOrderPage = () => {
                 type="submit"
                 className="w-full flex items-center justify-center gap-2 bg-[#E8BC6E] hover:bg-[#dca34b] text-white py-3.5 rounded-xl font-bold shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={
+                  isSaving ||
                   formData.items.length === 0 ||
                   !formData.customerName ||
                   !formData.dueDate
                 }
               >
-                <Save size={20} /> Guardar Pedido
+                {isSaving ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" /> Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save size={20} /> Guardar Pedido
+                  </>
+                )}
               </button>
             </Card>
           </div>

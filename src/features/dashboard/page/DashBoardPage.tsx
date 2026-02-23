@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/shared/ui/Card";
 import {
   TrendingUp,
@@ -23,6 +23,13 @@ import {
 } from "recharts";
 import { TopSellerCarousel } from "@/features/dashboard/components/TopSellerCarousel";
 import { LowStockProductsModal } from "@/features/dashboard/components/LowStockProductsModal";
+import { productApi } from "@/api/products";
+import dashboardApi from "@/api/dashboard/DashboardAPI";
+import type { TProduct } from "@/api/products/types";
+import type {
+  TSalesByCategory,
+  TTopProductByCategory,
+} from "@/api/dashboard/types";
 
 const salesData = [
   { name: "Lun", value: 4000 },
@@ -44,40 +51,133 @@ const productsSoldMonthly = [
   { name: "Jul", value: 210 },
 ];
 
-const categoryData = [
-  { name: "Pasteles", value: 45 },
-  { name: "Postres", value: 30 },
-  { name: "Bebidas", value: 25 },
-];
-
-const COLORS = ["#E8BC6E", "#593D31", "#F3EFE0"];
-
-const lowStockProducts = [
-  {
-    id: 1,
-    name: "Tiramisu",
-    stock: 5,
-    minStock: 10,
-    image: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9",
-  },
-  {
-    id: 2,
-    name: "Croissant",
-    stock: 8,
-    minStock: 15,
-    image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a",
-  },
-  {
-    id: 3,
-    name: "Muffin de Arándanos",
-    stock: 4,
-    minStock: 5,
-    image: "https://images.unsplash.com/photo-1607958996333-41aef7caefaa",
-  },
-];
+const COLORS = ["#E8BC6E", "#593D31", "#F3EFE0", "#D4A373", "#A0785A"];
 
 export const DashboardPage = () => {
   const [isLowStockModalOpen, setIsLowStockModalOpen] = useState(false);
+
+  const [lowStockProducts, setLowStockProducts] = useState<TProduct[]>([]);
+  const [loadingLowStock, setLoadingLowStock] = useState(false);
+
+  const [totalMoney, setTotalMoney] = useState<number | null>(null);
+  const [totalProductsSold, setTotalProductsSold] = useState<number | null>(
+    null,
+  );
+  const [salesByCategory, setSalesByCategory] = useState<TSalesByCategory[]>(
+    [],
+  );
+  const [topProducts, setTopProducts] = useState<TTopProductByCategory[]>([]);
+
+  const [loadingKpis, setLoadingKpis] = useState(true);
+  const [loadingTopProducts, setLoadingTopProducts] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      setLoadingKpis(true);
+      try {
+        const [moneyRes, soldRes, categoryRes] = await Promise.allSettled([
+          dashboardApi.getTotalMoneyToday(),
+          dashboardApi.getTotalProductsSoldToday(),
+          dashboardApi.getSalesByCategoryToday(),
+        ]);
+
+        if (moneyRes.status === "fulfilled") {
+          const data = moneyRes.value;
+          setTotalMoney(
+            typeof data === "number"
+              ? data
+              : ((data as any)?.totalMoneyToday_ ?? 0),
+          );
+        }
+
+        if (soldRes.status === "fulfilled") {
+          const data = soldRes.value;
+          setTotalProductsSold(
+            typeof data === "number"
+              ? data
+              : ((data as any)?.totalProductsSoldToday_ ?? 0),
+          );
+        }
+
+        if (categoryRes.status === "fulfilled") {
+          const data = categoryRes.value;
+          if (Array.isArray(data)) {
+            setSalesByCategory(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoadingKpis(false);
+      }
+    };
+
+    const fetchTopProducts = async () => {
+      setLoadingTopProducts(true);
+      try {
+        const data = await dashboardApi.getTopProductByCategoryToday();
+        if (Array.isArray(data)) {
+          setTopProducts(data);
+        }
+      } catch (err) {
+        console.error("Error fetching top products:", err);
+      } finally {
+        setLoadingTopProducts(false);
+      }
+    };
+
+    const fetchLowStock = async () => {
+      setLoadingLowStock(true);
+      try {
+        const data = await productApi.getLowStock();
+        setLowStockProducts(data);
+      } catch (err) {
+        console.error("Error fetching low stock products:", err);
+      } finally {
+        setLoadingLowStock(false);
+      }
+    };
+
+    fetchDashboard();
+    fetchTopProducts();
+    fetchLowStock();
+  }, []);
+
+  const lowStockForModal = lowStockProducts.map((p) => ({
+    id: p.productId,
+    name: p.name,
+    stock: p.quantity,
+    minStock: p.stockMinimum,
+    image: p.imageUrl || "https://via.placeholder.com/150",
+  }));
+
+  const categoryChartData =
+    salesByCategory.length > 0
+      ? salesByCategory.map((c) => ({
+          name: c.categoryName,
+          value: c.totalMoney,
+        }))
+      : [{ name: "Sin datos", value: 1 }];
+
+  const totalCategorySales = categoryChartData.reduce(
+    (sum, c) => sum + c.value,
+    0,
+  );
+  const topCategory =
+    categoryChartData.length > 0
+      ? categoryChartData.reduce(
+          (max, c) => (c.value > max.value ? c : max),
+          categoryChartData[0],
+        )
+      : null;
+  const topCategoryPercent =
+    topCategory && totalCategorySales > 0
+      ? Math.round((topCategory.value / totalCategorySales) * 100)
+      : 0;
+
+  const formatMoney = (value: number) => {
+    return `C$${value.toLocaleString("es-NI")}`;
+  };
 
   return (
     <>
@@ -103,10 +203,12 @@ export const DashboardPage = () => {
               <p className="text-sm text-gray-500 font-medium mb-1">
                 Ingresos de Hoy
               </p>
-              <h2 className="text-3xl font-bold text-[#2D2D2D]">C$1,250</h2>
+              <h2 className="text-3xl font-bold text-[#2D2D2D]">
+                {loadingKpis ? "..." : formatMoney(totalMoney ?? 0)}
+              </h2>
               <div className="flex items-center mt-2 text-green-600 text-sm font-medium">
                 <ArrowUpRight size={16} className="mr-1" />
-                <span>+12% ayer</span>
+                <span>Hoy</span>
               </div>
             </div>
             <div className="p-4 bg-[#F9F1D8] rounded-2xl text-[#E8BC6E]">
@@ -119,10 +221,12 @@ export const DashboardPage = () => {
               <p className="text-sm text-gray-500 font-medium mb-1">
                 Productos Vendidos
               </p>
-              <h2 className="text-3xl font-bold text-[#2D2D2D]">85</h2>
+              <h2 className="text-3xl font-bold text-[#2D2D2D]">
+                {loadingKpis ? "..." : (totalProductsSold ?? 0)}
+              </h2>
               <div className="flex items-center mt-2 text-[#E8BC6E] text-sm font-medium">
                 <ShoppingBag size={16} className="mr-1" />
-                <span>Items totales</span>
+                <span>Items totales hoy</span>
               </div>
             </div>
             <div className="p-4 bg-[#F9F1D8] rounded-2xl text-[#E8BC6E]">
@@ -139,7 +243,7 @@ export const DashboardPage = () => {
                 Alerta de Cantidad
               </p>
               <h2 className="text-3xl font-bold text-[#2D2D2D]">
-                {lowStockProducts.length} Prod.
+                {loadingLowStock ? "..." : lowStockProducts.length} Prod.
               </h2>
               <div className="flex items-center mt-2 text-red-500 text-sm font-medium">
                 <AlertTriangle size={16} className="mr-1" />
@@ -151,7 +255,10 @@ export const DashboardPage = () => {
             </div>
           </Card>
 
-          <TopSellerCarousel />
+          <TopSellerCarousel
+            topProducts={topProducts}
+            loading={loadingTopProducts}
+          />
 
           <Card className="md:col-span-2 xl:col-span-2 min-h-[300px]">
             <div className="flex justify-between items-center mb-6">
@@ -228,14 +335,14 @@ export const DashboardPage = () => {
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
-                    data={categoryData}
+                    data={categoryChartData}
                     innerRadius={60}
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
                   >
-                    {categoryData.map((entry, index) => (
+                    {categoryChartData.map((_entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
@@ -253,21 +360,23 @@ export const DashboardPage = () => {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-3xl font-bold text-[#593D31]">45%</span>
+                <span className="text-3xl font-bold text-[#593D31]">
+                  {topCategoryPercent}%
+                </span>
                 <span className="text-xs text-gray-500 uppercase tracking-wide">
-                  Pasteles
+                  {topCategory?.name ?? "—"}
                 </span>
               </div>
             </div>
             <div className="flex w-full justify-around mt-4">
-              {categoryData.map((cat, index) => (
+              {categoryChartData.map((cat, index) => (
                 <div
                   key={index}
                   className="flex items-center text-xs text-gray-500"
                 >
                   <div
                     className="w-2 h-2 rounded-full mr-2"
-                    style={{ backgroundColor: COLORS[index] }}
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   ></div>
                   {cat.name}
                 </div>
@@ -318,7 +427,7 @@ export const DashboardPage = () => {
       <LowStockProductsModal
         isOpen={isLowStockModalOpen}
         onClose={() => setIsLowStockModalOpen(false)}
-        products={lowStockProducts}
+        products={lowStockForModal}
       />
     </>
   );

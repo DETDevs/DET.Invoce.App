@@ -9,12 +9,7 @@ import { MovementDetailsModal } from "@/features/cash-movements/components/Movem
 import { Pagination } from "@/features/cash-movements/components/Pagination";
 import type {
   MovementType,
-  MovementCategory,
   CashMovement,
-} from "@/features/cash-movements/types";
-import {
-  CASH_IN_CATEGORIES,
-  CASH_OUT_CATEGORIES,
 } from "@/features/cash-movements/types";
 
 export const CashMovementsPage = () => {
@@ -25,20 +20,24 @@ export const CashMovementsPage = () => {
 
   const {
     movements,
+    loading,
     filteredCount,
     summary,
     searchQuery,
     setSearchQuery,
     filterType,
     setFilterType,
-    filterCategory,
-    setFilterCategory,
+    filterCategoryId,
+    setFilterCategoryId,
     addMovement,
     currentPage,
     setCurrentPage,
     itemsPerPage,
     setItemsPerPage,
     totalPages,
+    cashInTypes,
+    cashOutTypes,
+    allDisplayTypes,
   } = useCashMovements();
 
   const handlePrintTicket = (movementId: string) => {
@@ -108,33 +107,55 @@ export const CashMovementsPage = () => {
           </select>
 
           <select
-            value={filterCategory}
-            onChange={(e) =>
-              setFilterCategory(e.target.value as MovementCategory | "all")
-            }
+            value={filterCategoryId}
+            onChange={(e) => {
+              const val = e.target.value;
+              setFilterCategoryId(val === "all" ? "all" : Number(val));
+            }}
             className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm text-gray-900"
           >
             <option value="all">Todas las categorías</option>
-            <optgroup label="Cash In">
-              {CASH_IN_CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Cash Out">
-              {CASH_OUT_CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </optgroup>
+            {allDisplayTypes.filter((t) => t.flow === "IN").length > 0 && (
+              <optgroup label="Cash In">
+                {allDisplayTypes
+                  .filter((t) => t.flow === "IN")
+                  .map((t) => (
+                    <option
+                      key={t.cashMovementTypeId}
+                      value={t.cashMovementTypeId}
+                    >
+                      {t.name}
+                    </option>
+                  ))}
+              </optgroup>
+            )}
+            {allDisplayTypes.filter((t) => t.flow === "OUT").length > 0 && (
+              <optgroup label="Cash Out">
+                {allDisplayTypes
+                  .filter((t) => t.flow === "OUT")
+                  .map((t) => (
+                    <option
+                      key={t.cashMovementTypeId}
+                      value={t.cashMovementTypeId}
+                    >
+                      {t.name}
+                    </option>
+                  ))}
+              </optgroup>
+            )}
           </select>
         </div>
       </div>
 
       <div className="space-y-4">
-        {movements.length === 0 ? (
+        {loading ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-10 h-10 border-4 border-[#E8BC6E] border-t-transparent rounded-full animate-spin" />
+              <p className="text-gray-500">Cargando movimientos...</p>
+            </div>
+          </div>
+        ) : movements.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
             <div className="flex flex-col items-center gap-4">
               <div className="p-4 bg-gray-100 rounded-full">
@@ -147,14 +168,14 @@ export const CashMovementsPage = () => {
                 <p className="text-gray-600">
                   {searchQuery ||
                   filterType !== "all" ||
-                  filterCategory !== "all"
+                  filterCategoryId !== "all"
                     ? "No se encontraron movimientos con los filtros aplicados"
                     : "Comienza registrando tu primer movimiento de caja"}
                 </p>
               </div>
               {!searchQuery &&
                 filterType === "all" &&
-                filterCategory === "all" && (
+                filterCategoryId === "all" && (
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="mt-2 px-6 py-3 bg-[#E8BC6E] text-white rounded-xl font-bold hover:bg-[#dca34b] transition-colors"
@@ -192,6 +213,8 @@ export const CashMovementsPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={addMovement}
+        cashInTypes={cashInTypes}
+        cashOutTypes={cashOutTypes}
       />
 
       <MovementDetailsModal

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
+import invoiceApi from "@/api/invoice/InvoiceAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useOrdersBoard } from "@/features/custom-orders/hooks/useOrdersBoard";
 import { KanbanColumn } from "@/features/custom-orders/components/KanbanColumn";
@@ -17,6 +18,7 @@ export const OrdersBoardPage = () => {
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInvoicing, setIsInvoicing] = useState(false);
 
   const { user } = useAuthStore();
   const readOnly = !["admin", "cajero"].includes(user?.role || "");
@@ -49,11 +51,53 @@ export const OrdersBoardPage = () => {
     });
   };
 
-  const handleInvoice = (orderId: string) => {
+  const handleInvoice = async (orderId: string) => {
     if (readOnly) return;
-    toast.success("Factura generada correctamente");
-    moveOrder(orderId, "delivered");
-    setIsModalOpen(false);
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    if (!order.reservationOrderId) {
+      toast.error(
+        "Este pedido no tiene registro en el servidor. Elimínalo y créalo de nuevo.",
+        { duration: 6000 },
+      );
+      return;
+    }
+
+    setIsInvoicing(true);
+    try {
+      await invoiceApi.saveFromReservationOrder({
+        invoiceId: 0,
+        invoiceNumber: null,
+        orderNumber: order.id,
+        orderAccountId: 0,
+        reservationOrderId: order.reservationOrderId ?? 0,
+        invoiceDate: new Date().toISOString(),
+        status: "1",
+        customerId: 0,
+        createdBy: user?.name ?? "Sistema",
+        paymentMethod: "Efectivo",
+        amountPaid: order.deposit,
+        details: (order.rawItems ?? []).map((item) => ({
+          invoiceId: 0,
+          productCode: item.productCode,
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
+      });
+
+      moveOrder(orderId, "delivered");
+      setIsModalOpen(false);
+      toast.success("¡Factura generada y pedido entregado!");
+    } catch (err) {
+      console.error("[handleInvoice] Error al facturar:", err);
+      toast.error(
+        "No se pudo generar la factura. Verifique la conexión e intente de nuevo.",
+        { duration: 5000 },
+      );
+    } finally {
+      setIsInvoicing(false);
+    }
   };
 
   const handleCancelOrder = (orderId: string) => {
@@ -127,10 +171,12 @@ export const OrdersBoardPage = () => {
 
   return (
     <div className="h-[calc(100vh-4rem)] lg:h-screen w-full flex flex-col bg-[#FDFBF7] overflow-hidden">
-      <div className="px-4 md:px-8 py-3 md:py-4 bg-white border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-        <h1 className="text-xl md:text-2xl font-bold text-[#2D2D2D]">
-          Gestion de Pedidos
-        </h1>
+      <div className="px-4 md:px-8 py-3 md:py-4 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-[#2D2D2D]">
+            Gestion de Pedidos
+          </h1>
+        </div>
 
         <div className="flex items-center gap-2">
           <button
@@ -203,6 +249,7 @@ export const OrdersBoardPage = () => {
         onRegisterPayment={handlePayment}
         onCancelOrder={handleCancelOrder}
         readOnly={readOnly}
+        isInvoicing={isInvoicing}
       />
 
       <Toaster position="top-center" />

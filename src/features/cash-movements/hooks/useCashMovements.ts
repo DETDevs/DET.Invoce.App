@@ -1,159 +1,167 @@
-import { useState, useMemo } from "react";
-import type { CashMovement, MovementType, MovementCategory } from "@/features/cash-movements/types";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import type { CashMovement, MovementType, MovementTypeOption } from "@/features/cash-movements/types";
+import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
+import type { TCashMovement } from "@/api/cash-register/types";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import toast from "react-hot-toast";
 
-const generateMockMovements = (): CashMovement[] => {
-    const movements: CashMovement[] = [
-        {
-            id: "CM-001",
-            type: "cash-in",
-            category: "fondo_caja",
-            amount: 500,
-            description: "Aporte para fondo de caja del día",
-            createdBy: "María González",
-            createdAt: new Date().toISOString(),
-            notes: "Billetes de C$20 y C$50 para dar cambio",
-        },
-        {
-            id: "CM-002",
-            type: "cash-out",
-            category: "proveedor",
-            amount: 1200,
-            description: "Pago a proveedor de harina",
-            createdBy: "Ana López",
-            createdAt: new Date(Date.now() - 3600000).toISOString(),
-            notes: "Factura #4521",
-        },
-        {
-            id: "CM-003",
-            type: "cash-in",
-            category: "aporte",
-            amount: 2000,
-            description: "Aporte de capital",
-            createdBy: "Carlos Martínez",
-            createdAt: new Date(Date.now() - 7200000).toISOString(),
-        },
-        {
-            id: "CM-004",
-            type: "cash-out",
-            category: "gasto",
-            amount: 350,
-            description: "Compra de gas para cocina",
-            createdBy: "María González",
-            createdAt: new Date(Date.now() - 10800000).toISOString(),
-        },
-        {
-            id: "CM-005",
-            type: "cash-in",
-            category: "fondo_caja",
-            amount: 800,
-            description: "Refuerzo de efectivo para cambio",
-            createdBy: "Ana López",
-            createdAt: new Date(Date.now() - 14400000).toISOString(),
-            notes: "Billetes de C$10 y C$20",
-        },
-        {
-            id: "CM-006",
-            type: "cash-out",
-            category: "proveedor",
-            amount: 950,
-            description: "Pago a proveedor de azúcar",
-            createdBy: "Carlos Martínez",
-            createdAt: new Date(Date.now() - 18000000).toISOString(),
-        },
-        {
-            id: "CM-007",
-            type: "cash-out",
-            category: "retiro",
-            amount: 1500,
-            description: "Retiro del dueño",
-            createdBy: "María González",
-            createdAt: new Date(Date.now() - 21600000).toISOString(),
-        },
-        {
-            id: "CM-008",
-            type: "cash-in",
-            category: "devolucion",
-            amount: 200,
-            description: "Devolución de cliente",
-            createdBy: "Ana López",
-            createdAt: new Date(Date.now() - 25200000).toISOString(),
-            notes: "Pedido cancelado #1234",
-        },
-        {
-            id: "CM-009",
-            type: "cash-out",
-            category: "gasto",
-            amount: 180,
-            description: "Pago de servicio de agua",
-            createdBy: "Carlos Martínez",
-            createdAt: new Date(Date.now() - 28800000).toISOString(),
-        },
-        {
-            id: "CM-010",
-            type: "cash-in",
-            category: "fondo_caja",
-            amount: 600,
-            description: "Aporte para fondo de caja semanal",
-            createdBy: "María González",
-            createdAt: new Date(Date.now() - 32400000).toISOString(),
-        },
-        {
-            id: "CM-011",
-            type: "cash-out",
-            category: "proveedor",
-            amount: 2100,
-            description: "Pago a proveedor de mantequilla",
-            createdBy: "Ana López",
-            createdAt: new Date(Date.now() - 36000000).toISOString(),
-            notes: "Factura #4522",
-        },
-        {
-            id: "CM-012",
-            type: "cash-in",
-            category: "aporte",
-            amount: 3000,
-            description: "Aporte de capital mensual",
-            createdBy: "Carlos Martínez",
-            createdAt: new Date(Date.now() - 39600000).toISOString(),
-        },
-    ];
-    return movements;
-};
-
-const MOCK_MOVEMENTS = generateMockMovements();
+const SYSTEM_TYPE_IDS = [1];
 
 export const useCashMovements = () => {
-    const [movements, setMovements] = useState<CashMovement[]>(MOCK_MOVEMENTS);
+    const [movements, setMovements] = useState<CashMovement[]>([]);
+    const [movementTypes, setMovementTypes] = useState<MovementTypeOption[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterType, setFilterType] = useState<MovementType | "all">("all");
-    const [filterCategory, setFilterCategory] = useState<MovementCategory | "all">("all");
+    const [filterCategoryId, setFilterCategoryId] = useState<number | "all">("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const user = useAuthStore((s) => s.user);
 
-    const addMovement = (movement: Omit<CashMovement, "id" | "createdAt" | "createdBy">) => {
-        const newMovement: CashMovement = {
-            ...movement,
-            id: `CM-${String(movements.length + 1).padStart(3, "0")}`,
-            createdAt: new Date().toISOString(),
-            createdBy: "Usuario Actual",
-        };
+    const typesMap = useMemo(() => {
+        const map = new Map<number, MovementTypeOption>();
+        movementTypes.forEach((t) => map.set(t.cashMovementTypeId, t));
+        return map;
+    }, [movementTypes]);
 
-        setMovements((prev) => [newMovement, ...prev]);
-        setCurrentPage(1);
+    const mapApiMovement = useCallback(
+        (m: TCashMovement): CashMovement => {
+            const typeInfo = typesMap.get(m.cashMovementTypeId);
+            return {
+                id: String(m.cashMovementId),
+                type: m.flow === "IN" ? "cash-in" : "cash-out",
+                cashMovementTypeId: m.cashMovementTypeId,
+                categoryName: typeInfo?.name ?? "Otro",
+                amount: m.amount,
+                description: m.description || "",
+                createdBy: m.createdBy || "",
+                createdAt: m.createdDate,
+                notes: undefined,
+            };
+        },
+        [typesMap]
+    );
+
+    const fetchTypes = useCallback(async () => {
+        try {
+            const data = await cashRegisterApi.getMovementType();
+            if (Array.isArray(data)) {
+                setMovementTypes(
+                    data
+                        .filter((t) => t.isActive)
+                        .map((t) => ({
+                            cashMovementTypeId: t.cashMovementTypeId,
+                            name: t.name,
+                            flow: t.flow as "IN" | "OUT",
+                        }))
+                );
+            }
+        } catch (err) {
+            console.error("Error fetching movement types:", err);
+        }
+    }, []);
+
+    const fetchMovements = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await cashRegisterApi.getMovement({});
+            if (Array.isArray(data)) {
+                const mapped = data
+                    .filter((m) => !SYSTEM_TYPE_IDS.includes(m.cashMovementTypeId))
+                    .map(mapApiMovement);
+                mapped.sort(
+                    (a, b) =>
+                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+                setMovements(mapped);
+            }
+        } catch (err) {
+            console.error("Error fetching cash movements:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [mapApiMovement]);
+
+    useEffect(() => {
+        fetchTypes();
+    }, [fetchTypes]);
+
+    useEffect(() => {
+        if (movementTypes.length > 0) {
+            fetchMovements();
+        }
+    }, [movementTypes, fetchMovements]);
+
+    const selectableTypes = useMemo(() => {
+        return movementTypes.filter(
+            (t) => !SYSTEM_TYPE_IDS.includes(t.cashMovementTypeId)
+        );
+    }, [movementTypes]);
+
+    const cashInTypes = useMemo(
+        () => selectableTypes.filter((t) => t.flow === "IN"),
+        [selectableTypes]
+    );
+
+    const cashOutTypes = useMemo(
+        () => selectableTypes.filter((t) => t.flow === "OUT"),
+        [selectableTypes]
+    );
+
+    const allDisplayTypes = useMemo(() => {
+        return movementTypes.filter(
+            (t) => !SYSTEM_TYPE_IDS.includes(t.cashMovementTypeId)
+        );
+    }, [movementTypes]);
+
+    const addMovement = async (data: {
+        cashMovementTypeId: number;
+        amount: number;
+        description: string;
+    }) => {
+        const typeInfo = typesMap.get(data.cashMovementTypeId);
+        if (!typeInfo) {
+            toast.error("Tipo de movimiento inválido");
+            return;
+        }
+
+        try {
+            await cashRegisterApi.saveMovement({
+                cashMovementId: 0,
+                cashRegisterId: 0,
+                cashMovementTypeId: data.cashMovementTypeId,
+                amount: data.amount,
+                description: data.description,
+                createdBy: user?.name ?? "Sistema",
+                flow: typeInfo.flow,
+                createdDate: new Date().toISOString(),
+            });
+
+            await fetchMovements();
+            setCurrentPage(1);
+        } catch (err) {
+            console.error("Error saving cash movement:", err);
+            toast.error("No se pudo registrar el movimiento");
+            throw err;
+        }
     };
 
     const filteredMovements = useMemo(() => {
         return movements.filter((movement) => {
-            const matchesSearch =
-                movement.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                movement.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = movement.description
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase());
 
-            const matchesType = filterType === "all" || movement.type === filterType;
-            const matchesCategory = filterCategory === "all" || movement.category === filterCategory;
+            const matchesType =
+                filterType === "all" || movement.type === filterType;
+
+            const matchesCategory =
+                filterCategoryId === "all" ||
+                movement.cashMovementTypeId === filterCategoryId;
 
             return matchesSearch && matchesType && matchesCategory;
         });
-    }, [movements, searchQuery, filterType, filterCategory]);
+    }, [movements, searchQuery, filterType, filterCategoryId]);
 
     const paginatedMovements = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -182,30 +190,38 @@ export const useCashMovements = () => {
 
     const handleFilterChange = (
         type: "search" | "type" | "category",
-        value: string | MovementType | MovementCategory
+        value: string | MovementType | number
     ) => {
         setCurrentPage(1);
         if (type === "search") setSearchQuery(value as string);
         else if (type === "type") setFilterType(value as MovementType | "all");
-        else if (type === "category") setFilterCategory(value as MovementCategory | "all");
+        else if (type === "category")
+            setFilterCategoryId(value as number | "all");
     };
 
     return {
         movements: paginatedMovements,
         allMovements: movements,
+        loading,
         filteredCount: filteredMovements.length,
         summary,
         searchQuery,
         setSearchQuery: (query: string) => handleFilterChange("search", query),
         filterType,
-        setFilterType: (type: MovementType | "all") => handleFilterChange("type", type),
-        filterCategory,
-        setFilterCategory: (category: MovementCategory | "all") => handleFilterChange("category", category),
+        setFilterType: (type: MovementType | "all") =>
+            handleFilterChange("type", type),
+        filterCategoryId,
+        setFilterCategoryId: (id: number | "all") =>
+            handleFilterChange("category", id),
         addMovement,
         currentPage,
         setCurrentPage,
         itemsPerPage,
         setItemsPerPage,
         totalPages,
+        refetch: fetchMovements,
+        cashInTypes,
+        cashOutTypes,
+        allDisplayTypes,
     };
 };

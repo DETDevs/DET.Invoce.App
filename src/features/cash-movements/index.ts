@@ -3,6 +3,6 @@ export { useCashMovements } from "@/features/cash-movements/hooks/useCashMovemen
 export type {
     CashMovement,
     MovementType,
-    MovementCategory,
+    MovementTypeOption,
     CashSummaryData,
 } from "@/features/cash-movements/types";

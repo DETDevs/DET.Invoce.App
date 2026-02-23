@@ -5,6 +5,7 @@ import {
   X,
   Printer,
   FileText,
+  Loader2,
   User,
   Calendar,
   ArrowRight,
@@ -26,6 +27,7 @@ interface Props {
   onRegisterPayment: (orderId: string, amount: number) => void;
   onCancelOrder?: (orderId: string) => void;
   readOnly?: boolean;
+  isInvoicing?: boolean;
 }
 
 export const OrderDetailsModal = ({
@@ -37,6 +39,7 @@ export const OrderDetailsModal = ({
   onRegisterPayment,
   onCancelOrder,
   readOnly = false,
+  isInvoicing = false,
 }: Props) => {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -56,17 +59,12 @@ export const OrderDetailsModal = ({
 
   const handleConfirmPayment = () => {
     const amount = Number(paymentAmount);
-    if (amount > 0 && amount <= remaining + 0.1) {
-      onRegisterPayment(order.id, amount);
-      setPaymentAmount("");
-    } else if (amount > remaining) {
-      onRegisterPayment(order.id, remaining);
-      setPaymentAmount("");
-    } else {
-      if (amount <= 0) {
-        toast.error("El monto debe ser mayor a 0");
-      }
+    if (amount <= 0) {
+      toast.error("El monto debe ser mayor a 0");
+      return;
     }
+    onRegisterPayment(order.id, amount);
+    setPaymentAmount("");
   };
 
   const inputValue = Number(paymentAmount) || 0;
@@ -142,14 +140,22 @@ export const OrderDetailsModal = ({
 
                 <button
                   onClick={() => onInvoice(order.id)}
-                  disabled={!isPaid}
+                  disabled={!isPaid || isInvoicing}
                   className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                   title={
                     !isPaid ? "Debe saldar la cuenta antes de facturar" : ""
                   }
                 >
-                  <FileText size={18} />
-                  Facturar y Entregar
+                  {isInvoicing ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />{" "}
+                      Facturando...
+                    </>
+                  ) : (
+                    <>
+                      <FileText size={18} /> Facturar y Entregar
+                    </>
+                  )}
                 </button>
               </>
             ) : (

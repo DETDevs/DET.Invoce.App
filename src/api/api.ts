@@ -12,8 +12,7 @@ const getDeviceLanguage = (): string => {
 
 async function apiCall<T>(url: string, options: RequestInit): Promise<T> {
     if (!url.startsWith('http')) {
-        url = `${environments.BASE_API_URI}${url.startsWith('/') ? url : `/${url}`
-            }`;
+        url = `${environments.BASE_API_URI}${url.startsWith('/') ? url : `/${url}`}`;
     }
 
     const userLanguage = getDeviceLanguage();
@@ -95,18 +94,9 @@ async function getText(url: string): Promise<string> {
     return response.text();
 }
 
-async function getWithBody<T>(url: string, body: any): Promise<T> {
-    return apiCall(url, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-}
-
 const api = {
     post,
     get,
-    getWithBody,
     getText,
     put,
     delete: del,

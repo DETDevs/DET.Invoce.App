@@ -3,34 +3,39 @@ import { X, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import toast from "react-hot-toast";
 import type {
   MovementType,
-  MovementCategory,
-} from "@/features/cash-movements/types";
-import {
-  CASH_IN_CATEGORIES,
-  CASH_OUT_CATEGORIES,
+  MovementTypeOption,
 } from "@/features/cash-movements/types";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (movement: {
-    type: MovementType;
-    category: MovementCategory;
+    cashMovementTypeId: number;
     amount: number;
     description: string;
-    notes?: string;
   }) => void;
+  cashInTypes: MovementTypeOption[];
+  cashOutTypes: MovementTypeOption[];
 }
 
-export const AddCashMovementModal = ({ isOpen, onClose, onAdd }: Props) => {
+export const AddCashMovementModal = ({
+  isOpen,
+  onClose,
+  onAdd,
+  cashInTypes,
+  cashOutTypes,
+}: Props) => {
   const [type, setType] = useState<MovementType>("cash-in");
-  const [category, setCategory] = useState<MovementCategory>("fondo_caja");
+  const [selectedTypeId, setSelectedTypeId] = useState<number>(0);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
 
-  const categories =
-    type === "cash-in" ? CASH_IN_CATEGORIES : CASH_OUT_CATEGORIES;
+  const categories = type === "cash-in" ? cashInTypes : cashOutTypes;
+
+  const currentTypeId =
+    selectedTypeId ||
+    (categories.length > 0 ? categories[0].cashMovementTypeId : 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,12 +52,15 @@ export const AddCashMovementModal = ({ isOpen, onClose, onAdd }: Props) => {
       return;
     }
 
+    if (!currentTypeId) {
+      toast.error("Selecciona un tipo de movimiento");
+      return;
+    }
+
     onAdd({
-      type,
-      category,
+      cashMovementTypeId: currentTypeId,
       amount: amountNum,
       description: description.trim(),
-      notes: notes.trim() || undefined,
     });
 
     toast.success("Movimiento registrado exitosamente");
@@ -61,7 +69,7 @@ export const AddCashMovementModal = ({ isOpen, onClose, onAdd }: Props) => {
 
   const handleClose = () => {
     setType("cash-in");
-    setCategory("fondo_caja");
+    setSelectedTypeId(0);
     setAmount("");
     setDescription("");
     setNotes("");
@@ -70,7 +78,7 @@ export const AddCashMovementModal = ({ isOpen, onClose, onAdd }: Props) => {
 
   const handleTypeChange = (newType: MovementType) => {
     setType(newType);
-    setCategory(newType === "cash-in" ? "fondo_caja" : "proveedor");
+    setSelectedTypeId(0);
   };
 
   if (!isOpen) return null;
@@ -141,14 +149,17 @@ export const AddCashMovementModal = ({ isOpen, onClose, onAdd }: Props) => {
               Categoría
             </label>
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as MovementCategory)}
+              value={currentTypeId}
+              onChange={(e) => setSelectedTypeId(Number(e.target.value))}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-gray-900"
               required
             >
               {categories.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
+                <option
+                  key={cat.cashMovementTypeId}
+                  value={cat.cashMovementTypeId}
+                >
+                  {cat.name}
                 </option>
               ))}
             </select>

@@ -41,6 +41,7 @@ export const AddProductForm = ({ onAdd }: Props) => {
 
   const AVAILABLE_PRODUCTS: ProductOption[] = products.map((p) => ({
     id: p.productId,
+    code: p.code,
     name: p.name,
     price: p.price,
   }));

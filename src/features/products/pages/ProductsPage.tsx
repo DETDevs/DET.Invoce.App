@@ -1,12 +1,22 @@
-import { useState, useEffect } from "react";
-import { Plus, Filter, Edit, Trash2, Search, Boxes } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  Plus,
+  Filter,
+  Edit,
+  Trash2,
+  Search,
+  Boxes,
+  Loader2,
+} from "lucide-react";
 import { FilterPanel } from "@/features/products/components/FilterPanel";
 import { EditProductModal } from "@/features/products/components/EditProductModal";
 import { StockAdjustmentModal } from "@/features/products/components/StockAdjustmentModal";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import { productApi } from "@/api/products";
+import inventoryApi from "@/api/inventory/InventoryAPI";
 import type { TProduct } from "@/api/products/types";
+import toast from "react-hot-toast";
 
 export const ProductsPage = () => {
   const [products, setProducts] = useState<TProduct[]>([]);
@@ -31,26 +41,26 @@ export const ProductsPage = () => {
   const itemsPerPage = 5;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await productApi.getByCode();
-        setProducts(data);
-        setFilteredProducts(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Error al cargar productos",
-        );
-        console.error("Error fetching products:", err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await productApi.getByCode();
+      setProducts(data);
+      setFilteredProducts(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Error al cargar productos",
+      );
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
     }
-
-    fetchProducts();
   }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const getStockStatus = (stock: number) => {
     if (stock <= 5) {
@@ -122,27 +132,57 @@ export const ProductsPage = () => {
     setIsStockModalOpen(true);
   };
 
-  const handleSaveProduct = (updatedProduct: any) => {
-    setProducts(
-      products.map((p) =>
-        p.productId === updatedProduct.productId ? updatedProduct : p,
-      ),
-    );
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveProduct = async (updatedProduct: any) => {
+    setIsSaving(true);
+    try {
+      await productApi.save({
+        productId: updatedProduct.productId,
+        code: updatedProduct.code,
+        categoryCode:
+          updatedProduct.categoryCode ?? updatedProduct.category ?? "",
+        name: updatedProduct.name,
+        description: updatedProduct.description ?? "",
+        price: updatedProduct.price,
+        trackInventory: updatedProduct.trackInventory ?? true,
+        unitId: updatedProduct.unitId ?? 0,
+        divideQuantityBy: updatedProduct.divideQuantityBy ?? 0,
+        isActive: updatedProduct.isActive ?? true,
+        quantity: updatedProduct.quantity ?? updatedProduct.stock ?? 0,
+        stockMinimum: updatedProduct.stockMinimum ?? 0,
+      });
+      toast.success("Producto actualizado correctamente");
+      await fetchProducts();
+    } catch (err) {
+      console.error("Error saving product:", err);
+      toast.error("No se pudo guardar el producto");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSaveStock = (
+  const handleSaveStock = async (
     productId: number,
     newStock: number,
     reason: string,
   ) => {
-    setProducts(
-      products.map((p) =>
-        p.productId === productId ? { ...p, quantity: newStock } : p,
-      ),
-    );
-    console.log(
-      `Stock ajustado para producto ${productId}. Nuevo stock: ${newStock}. Razón: ${reason}`,
-    );
+    const product = products.find((p) => p.productId === productId);
+    if (!product) return;
+
+    try {
+      await inventoryApi.save({
+        inventoryId: 0,
+        productCode: product.code,
+        quantityInStock: newStock,
+        minimumStock: product.stockMinimum ?? 0,
+      });
+      toast.success("Inventario actualizado correctamente");
+      await fetchProducts();
+    } catch (err) {
+      console.error("Error saving stock:", err);
+      toast.error("No se pudo actualizar el inventario");
+    }
   };
 
   const handleConfirmDelete = () => {

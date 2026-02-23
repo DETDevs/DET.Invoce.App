@@ -3,18 +3,22 @@ export type OrderStatus = 'pending' | 'production' | 'ready' | 'delivered';
 
 export interface OrderItem {
     productId: number;
+    productCode: string;
     name: string;
     price: number;
     quantity: number;
     description?: string;
 }
 
-export type ProductOption = { id: number; name: string; price: number };
+export type ProductOption = { id: number; code: string; name: string; price: number };
 
 export interface Order {
     id: string;
+    reservationOrderId?: number;
     customer: string;
+    identificationCustomer?: string;
     items: string[];
+    rawItems?: OrderItem[];
     total: number;
     deposit: number;
     paymentStatus: PaymentStatus;
