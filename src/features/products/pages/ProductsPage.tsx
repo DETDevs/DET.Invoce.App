@@ -185,10 +185,9 @@ export const ProductsPage = () => {
     }
   };
 
-  const handleConfirmDelete = () => {
-    setProducts(
-      products.filter((p) => p.productId !== selectedProduct.productId),
-    );
+  const handleConfirmDelete = async () => {
+    if (!selectedProduct) return;
+    toast.error("Endpoint de inactivar producto pendiente en el backend");
     setIsDeleteModalOpen(false);
   };
 

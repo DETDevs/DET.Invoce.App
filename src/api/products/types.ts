@@ -23,6 +23,7 @@ export type TSaveProduct = {
     productId: number;
     code: string;
     categoryCode: string;
+    subCategoryId?: number;
     name: string;
     description?: string;
     price: number;

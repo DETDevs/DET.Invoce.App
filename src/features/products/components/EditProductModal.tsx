@@ -3,6 +3,8 @@ import { X, Save, Loader2 } from "lucide-react";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
 import type { TProduct } from "@/api/products/types";
+import type { TCategory, TSubCategory } from "@/api/category/types";
+import categoryApi from "@/api/category/CategoryAPI";
 
 interface EditProductModalProps {
   isOpen: boolean;
@@ -20,6 +22,25 @@ export const EditProductModal = ({
   const [formData, setFormData] = useState<TProduct | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [categories, setCategories] = useState<TCategory[]>([]);
+  const [subCategories, setSubCategories] = useState<TSubCategory[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoadingCategories(true);
+      categoryApi
+        .getAll()
+        .then((data) => {
+          const active = (data || []).filter((c) => c.isActive);
+          setCategories(active);
+        })
+        .catch(() => {
+          toast.error("Error al cargar categorías");
+        })
+        .finally(() => setIsLoadingCategories(false));
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (product) {
@@ -28,6 +49,20 @@ export const EditProductModal = ({
       setIsSaving(false);
     }
   }, [product]);
+
+  useEffect(() => {
+    if (!formData || categories.length === 0) {
+      setSubCategories([]);
+      return;
+    }
+    const selected = categories.find(
+      (c) => c.categoryCode === formData.categoryCode,
+    );
+    const activeSubs = (selected?.subCategories || []).filter(
+      (s) => s.isActive,
+    );
+    setSubCategories(activeSubs);
+  }, [formData?.categoryCode, categories]);
 
   if (!isOpen || !formData) return null;
 
@@ -45,6 +80,28 @@ export const EditProductModal = ({
     }
   };
 
+  const handleCategoryChange = (categoryCode: string) => {
+    const cat = categories.find((c) => c.categoryCode === categoryCode);
+    setFormData({
+      ...formData,
+      categoryCode,
+      categoryName: cat?.categoryName || "",
+      subCategoryId: undefined,
+      subCategoryName: undefined,
+    });
+  };
+
+  const handleSubCategoryChange = (subCategoryId: string) => {
+    const sub = subCategories.find(
+      (s) => s.subCategoryId === Number(subCategoryId),
+    );
+    setFormData({
+      ...formData,
+      subCategoryId: sub ? sub.subCategoryId : undefined,
+      subCategoryName: sub ? sub.name : undefined,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -58,6 +115,12 @@ export const EditProductModal = ({
       onSave(formData);
       onClose();
     }
+  };
+
+  const selectStyle = {
+    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+    backgroundPosition: "right 1rem center",
+    backgroundSize: "1.5em 1.5em",
   };
 
   return (
@@ -142,26 +205,52 @@ export const EditProductModal = ({
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
                     Categoría
                   </label>
+                  {isLoadingCategories ? (
+                    <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2 text-gray-400">
+                      <Loader2 size={16} className="animate-spin" /> Cargando...
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.categoryCode}
+                      onChange={(e) => handleCategoryChange(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D] appearance-none bg-no-repeat bg-right"
+                      style={selectStyle}
+                    >
+                      <option value="">Seleccionar categoría</option>
+                      {categories.map((cat) => (
+                        <option key={cat.categoryCode} value={cat.categoryCode}>
+                          {cat.categoryName}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                    Subcategoría
+                  </label>
                   <select
-                    value={formData.categoryCode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, categoryCode: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D] appearance-none bg-no-repeat bg-right"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: "right 1rem center",
-                      backgroundSize: "1.5em 1.5em",
-                    }}
+                    value={formData.subCategoryId ?? ""}
+                    onChange={(e) => handleSubCategoryChange(e.target.value)}
+                    disabled={subCategories.length === 0}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D] appearance-none bg-no-repeat bg-right disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={selectStyle}
                   >
-                    <option value="Cake">Pasteles</option>
-                    <option value="Panes">Panes</option>
-                    <option value="Pastry">Repostería</option>
-                    <option value="Bebidas">Bebidas</option>
+                    <option value="">
+                      {subCategories.length === 0
+                        ? "Sin subcategorías"
+                        : "Seleccionar subcategoría"}
+                    </option>
+                    {subCategories.map((sub) => (
+                      <option key={sub.subCategoryId} value={sub.subCategoryId}>
+                        {sub.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

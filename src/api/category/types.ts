@@ -1,4 +1,16 @@
+export type TSubCategory = {
+    subCategoryId: number;
+    categoryCode: string;
+    name: string;
+    isActive: boolean;
+    categoryName: string | null;
+};
+
 export type TCategory = {
-    categoryCode?: string | null;
-    categoryName?: string | null;
+    categoryId: number;
+    categoryCode: string;
+    categoryName: string;
+    description: string | null;
+    isActive: boolean;
+    subCategories: TSubCategory[];
 };
