@@ -1,4 +1,4 @@
-import { Building, Coins, Landmark, Save, UtensilsCrossed } from "lucide-react";
+import { Building, Coins, Landmark, UtensilsCrossed } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { useSettings } from "@/features/settings/hooks/useSettings";
 import { SettingsCard } from "@/features/settings/components/SettingsCard";
@@ -8,8 +8,7 @@ import { CashBoxSettings } from "@/features/settings/components/CashBoxSettings"
 import { TableSettings } from "@/features/settings/components/TableSettings";
 
 export const SettingsPage = () => {
-  const { settings, isLoading, isDirty, updateSetting, handleSaveSettings } =
-    useSettings();
+  const { settings, updateSetting } = useSettings();
 
   return (
     <div className="h-full bg-[#FDFBF7] overflow-y-auto">
@@ -17,14 +16,6 @@ export const SettingsPage = () => {
         <h1 className="text-xl md:text-2xl font-bold text-[#2D2D2D]">
           Configuración del Sistema
         </h1>
-        <button
-          onClick={handleSaveSettings}
-          disabled={isLoading || !isDirty}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-[#E8BC6E] text-white text-sm font-bold shadow-md hover:bg-[#dca34b] transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-wait"
-        >
-          <Save size={18} />
-          {isLoading ? "Guardando..." : "Guardar Cambios"}
-        </button>
       </div>
 
       <main className="p-4 md:p-8">

@@ -1,4 +1,10 @@
-import { TrendingUp, Package, DollarSign, ClipboardList } from "lucide-react";
+import {
+  TrendingUp,
+  Package,
+  DollarSign,
+  ClipboardList,
+  Landmark,
+} from "lucide-react";
 import type { ReportType } from "@/features/reports/types";
 
 interface ReportSelectorProps {
@@ -15,10 +21,11 @@ export const ReportSelector = ({
     { id: "products", label: "Productos", icon: Package },
     { id: "cash", label: "Flujo de Caja", icon: DollarSign },
     { id: "orders", label: "Órdenes", icon: ClipboardList },
+    { id: "cashClose", label: "Cierre de Caja", icon: Landmark },
   ];
 
   return (
-    <div className="flex space-x-2 bg-gray-100 p-1 rounded-xl">
+    <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-xl">
       {reports.map((report) => (
         <button
           key={report.id}

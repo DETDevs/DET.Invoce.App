@@ -6,6 +6,9 @@ import {
   User,
   Clock,
   RefreshCw,
+  CreditCard,
+  Banknote,
+  Coins,
 } from "lucide-react";
 import type { Invoice } from "@/features/invoices/types";
 
@@ -56,6 +59,10 @@ export const InvoiceDetailsModal = ({
         label: "Devuelta",
         className: "bg-red-100 text-red-700",
       },
+      partially_returned: {
+        label: "Parcialmente Devuelta",
+        className: "bg-yellow-100 text-yellow-700",
+      },
     };
 
     const badge = badges[status];
@@ -69,6 +76,17 @@ export const InvoiceDetailsModal = ({
   };
 
   const isReturned = invoice.status === "returned";
+  const change =
+    (invoice.amountPaid ?? 0) > invoice.total
+      ? (invoice.amountPaid ?? 0) - invoice.total
+      : 0;
+
+  const paymentLabel: Record<string, string> = {
+    Efectivo: "Efectivo",
+    Tarjeta: "Tarjeta",
+    Transferencia: "Transferencia",
+    Mixto: "Mixto",
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -94,7 +112,7 @@ export const InvoiceDetailsModal = ({
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
               <Calendar size={20} className="text-gray-600" />
               <div>
@@ -122,6 +140,43 @@ export const InvoiceDetailsModal = ({
                   <p className="text-xs text-gray-600">Cliente</p>
                   <p className="text-sm font-semibold text-gray-900">
                     {invoice.customerName}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {invoice.paymentMethod && (
+              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                <CreditCard size={20} className="text-blue-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Método de Pago</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {paymentLabel[invoice.paymentMethod] ??
+                      invoice.paymentMethod}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {(invoice.amountPaid ?? 0) > 0 && (
+              <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+                <Banknote size={20} className="text-green-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Monto Pagado</p>
+                  <p className="text-sm font-bold text-green-700">
+                    {formatCurrency(invoice.amountPaid!)}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {change > 0 && (
+              <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-lg">
+                <Coins size={20} className="text-amber-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Cambio</p>
+                  <p className="text-sm font-bold text-amber-700">
+                    {formatCurrency(change)}
                   </p>
                 </div>
               </div>

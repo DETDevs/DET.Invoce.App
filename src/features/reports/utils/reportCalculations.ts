@@ -4,7 +4,8 @@ import type {
     SalesReportData,
     ProductsReportData,
     CashFlowReportData,
-    OrdersReportData
+    OrdersReportData,
+    CashCloseReportData,
 } from "@/features/reports/types";
 
 export const calculateSalesReport = (invoices: Invoice[], movements: CashMovement[] = []): SalesReportData => {
@@ -164,5 +165,88 @@ export const calculateOrdersReport = (invoices: Invoice[]): OrdersReportData => 
         returnedOrders,
         peakHours,
         averageItemsPerOrder: totalOrders > 0 ? totalItems / totalOrders : 0
+    };
+};
+
+export const calculateCashCloseReport = (
+    invoices: Invoice[],
+    movements: CashMovement[],
+    initialAmount: number
+): CashCloseReportData => {
+    const completedInvoices = invoices.filter(
+        (inv) => inv.status === "completed" || inv.status === "partially_returned"
+    );
+    const returnedInvoices = invoices.filter((inv) => inv.status === "returned");
+
+    const salesTotal = completedInvoices.reduce((sum, inv) => sum + inv.total, 0);
+    const returnsTotal = returnedInvoices.reduce((sum, inv) => sum + inv.total, 0);
+
+    const cashInTotal = movements
+        .filter((m) => m.type === "cash-in")
+        .reduce((sum, m) => sum + m.amount, 0);
+
+    const cashOutTotal = movements
+        .filter((m) => m.type === "cash-out")
+        .reduce((sum, m) => sum + m.amount, 0);
+
+    const expectedTotal = initialAmount + salesTotal + cashInTotal - cashOutTotal - returnsTotal;
+
+    const paymentMap = new Map<string, { amount: number; count: number }>();
+    completedInvoices.forEach((inv) => {
+        const method = inv.paymentMethod || "Efectivo";
+        const current = paymentMap.get(method) || { amount: 0, count: 0 };
+        paymentMap.set(method, {
+            amount: current.amount + inv.total,
+            count: current.count + 1,
+        });
+    });
+    const paymentBreakdown = Array.from(paymentMap.entries())
+        .map(([method, data]) => ({ method, ...data }))
+        .sort((a, b) => b.amount - a.amount);
+
+    const movementLines: CashCloseReportData["movementLines"] = [];
+
+    completedInvoices.forEach((inv) => {
+        movementLines.push({
+            time: inv.createdAt,
+            type: "venta",
+            description: `Factura #${inv.orderNumber}`,
+            amount: inv.total,
+        });
+    });
+
+    returnedInvoices.forEach((inv) => {
+        movementLines.push({
+            time: inv.createdAt,
+            type: "devolucion",
+            description: `Devolución Factura #${inv.orderNumber}`,
+            amount: inv.total,
+        });
+    });
+
+    movements.forEach((m) => {
+        movementLines.push({
+            time: m.createdAt,
+            type: m.type === "cash-in" ? "ingreso" : "egreso",
+            description: `${m.categoryName}: ${m.description || "Sin descripción"}`,
+            amount: m.amount,
+        });
+    });
+
+    movementLines.sort(
+        (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
+    );
+
+    return {
+        initialAmount,
+        salesTotal,
+        cashInTotal,
+        cashOutTotal,
+        returnsTotal,
+        expectedTotal,
+        invoiceCount: completedInvoices.length,
+        returnsCount: returnedInvoices.length,
+        paymentBreakdown,
+        movementLines,
     };
 };

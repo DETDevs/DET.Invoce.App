@@ -33,8 +33,8 @@ export const KPICard = ({
   };
 
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between relative">
-      <div>
+    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-2 relative overflow-hidden">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 mb-1">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
             {title}
@@ -60,7 +60,9 @@ export const KPICard = ({
             </div>
           )}
         </div>
-        <h3 className="text-2xl font-bold text-[#2D2D2D]">{value}</h3>
+        <h3 className="text-xl lg:text-2xl font-bold text-[#2D2D2D] truncate">
+          {value}
+        </h3>
         {subValue && (
           <span
             className={`text-xs font-medium px-2 py-0.5 rounded-full mt-2 inline-block ${
@@ -75,7 +77,7 @@ export const KPICard = ({
           </span>
         )}
       </div>
-      <div className={`p-3 rounded-xl ${colorClasses[color]}`}>
+      <div className={`p-3 rounded-xl shrink-0 ${colorClasses[color]}`}>
         <Icon size={24} />
       </div>
     </div>

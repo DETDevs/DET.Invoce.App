@@ -5,6 +5,12 @@ interface Props {
   summary: CashSummaryData;
 }
 
+const fmt = (n: number) =>
+  n.toLocaleString("es-NI", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
 export const CashSummary = ({ summary }: Props) => {
   const isPositiveBalance = summary.balance >= 0;
 
@@ -18,7 +24,7 @@ export const CashSummary = ({ summary }: Props) => {
           </div>
         </div>
         <p className="text-2xl font-bold text-green-600">
-          C$ {summary.totalCashIn.toFixed(2)}
+          C$ {fmt(summary.totalCashIn)}
         </p>
         <p className="text-xs text-gray-500 mt-1">Ingresos de efectivo</p>
       </div>
@@ -31,7 +37,7 @@ export const CashSummary = ({ summary }: Props) => {
           </div>
         </div>
         <p className="text-2xl font-bold text-red-600">
-          C$ {summary.totalCashOut.toFixed(2)}
+          C$ {fmt(summary.totalCashOut)}
         </p>
         <p className="text-xs text-gray-500 mt-1">Salidas de efectivo</p>
       </div>
@@ -51,7 +57,7 @@ export const CashSummary = ({ summary }: Props) => {
         <p
           className={`text-2xl font-bold ${isPositiveBalance ? "text-blue-600" : "text-red-600"}`}
         >
-          C$ {summary.balance.toFixed(2)}
+          C$ {fmt(summary.balance)}
         </p>
         <p className="text-xs text-gray-500 mt-1">Diferencia neta</p>
       </div>

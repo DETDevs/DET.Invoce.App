@@ -86,7 +86,11 @@ export const MovementDetailsModal = ({
                 <p
                   className={`text-3xl font-bold mt-1 ${isCashIn ? "text-green-600" : "text-red-600"}`}
                 >
-                  {isCashIn ? "+" : "-"}C$ {movement.amount.toFixed(2)}
+                  {isCashIn ? "+" : "-"}C${" "}
+                  {movement.amount.toLocaleString("es-NI", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </p>
               </div>
             </div>

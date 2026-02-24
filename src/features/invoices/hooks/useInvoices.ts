@@ -54,6 +54,8 @@ function mapBackendInvoice(raw: any): Invoice {
         customerName: raw.customer ?? raw.createdBy ?? "",
         createdAt: raw.invoiceDate ?? raw.createdAt ?? new Date().toISOString(),
         createdBy: raw.createdBy ?? "",
+        paymentMethod: raw.paymentMethod ?? "",
+        amountPaid: raw.amountPaid ?? 0,
         items,
         subtotal,
         tax,

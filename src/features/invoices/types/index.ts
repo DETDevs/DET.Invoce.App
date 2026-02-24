@@ -29,5 +29,7 @@ export interface Invoice {
     customerName?: string;
     createdAt: string;
     createdBy: string;
+    paymentMethod?: string;
+    amountPaid?: number;
     returns?: InvoiceReturn[];
 }

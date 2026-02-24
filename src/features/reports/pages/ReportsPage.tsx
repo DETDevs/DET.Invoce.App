@@ -6,6 +6,7 @@ import { SalesReport } from "@/features/reports/components/SalesReport";
 import { ProductsReport } from "@/features/reports/components/ProductsReport";
 import { CashFlowReport } from "@/features/reports/components/CashFlowReport";
 import { OrdersReport } from "@/features/reports/components/OrdersReport";
+import { CashCloseReport } from "@/features/reports/components/CashCloseReport";
 import { useReports } from "@/features/reports/hooks/useReports";
 
 export const ReportsPage = () => {
@@ -14,10 +15,12 @@ export const ReportsPage = () => {
     setActiveReport,
     dateRange,
     setDateRange,
+    setCustomRange,
     salesReport,
     productsReport,
     cashFlowReport,
     ordersReport,
+    cashCloseReport,
   } = useReports();
 
   const handleExport = (type: string) => {
@@ -34,6 +37,8 @@ export const ReportsPage = () => {
         return <CashFlowReport data={cashFlowReport} />;
       case "orders":
         return <OrdersReport data={ordersReport} />;
+      case "cashClose":
+        return <CashCloseReport data={cashCloseReport} />;
       default:
         return null;
     }
@@ -55,6 +60,7 @@ export const ReportsPage = () => {
           <DateRangePicker
             dateRange={dateRange}
             setDateRange={(range: string) => setDateRange(range as any)}
+            onCustomRange={(start, end) => setCustomRange({ start, end })}
           />
 
           <button

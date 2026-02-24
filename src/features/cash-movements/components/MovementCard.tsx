@@ -93,7 +93,11 @@ export const MovementCard = ({ movement, onClick }: Props) => {
               isCashIn ? "text-green-600" : "text-red-600"
             }`}
           >
-            {isCashIn ? "+" : "-"}C$ {movement.amount.toFixed(2)}
+            {isCashIn ? "+" : "-"}C${" "}
+            {movement.amount.toLocaleString("es-NI", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </p>
           <span className="text-xs text-gray-500">#{movement.id}</span>
         </div>

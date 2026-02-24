@@ -2,11 +2,13 @@ import { useState, useMemo } from "react";
 import type { ReportType, DateRangeType } from "@/features/reports/types";
 import { loadInvoices } from "@/features/invoices/utils/invoiceStorage";
 import { useCashMovements } from "@/features/cash-movements/hooks/useCashMovements";
+import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 import {
     calculateSalesReport,
     calculateProductsReport,
     calculateCashFlowReport,
-    calculateOrdersReport
+    calculateOrdersReport,
+    calculateCashCloseReport,
 } from "@/features/reports/utils/reportCalculations";
 
 export const useReports = () => {
@@ -16,6 +18,7 @@ export const useReports = () => {
 
     const allInvoices = useMemo(() => loadInvoices(), []);
     const { allMovements } = useCashMovements();
+    const { session } = useCashBox();
 
     const filterByDate = <T extends { createdAt: string }>(items: T[]) => {
         const now = new Date();
@@ -60,6 +63,10 @@ export const useReports = () => {
     const productsReport = useMemo(() => calculateProductsReport(filteredInvoices), [filteredInvoices]);
     const cashFlowReport = useMemo(() => calculateCashFlowReport(filteredMovements), [filteredMovements]);
     const ordersReport = useMemo(() => calculateOrdersReport(filteredInvoices), [filteredInvoices]);
+    const cashCloseReport = useMemo(
+        () => calculateCashCloseReport(filteredInvoices, filteredMovements, session?.initialAmount ?? 0),
+        [filteredInvoices, filteredMovements, session]
+    );
 
     return {
         activeReport,
@@ -71,6 +78,7 @@ export const useReports = () => {
         productsReport,
         cashFlowReport,
         ordersReport,
+        cashCloseReport,
         hasData: allInvoices.length > 0 || allMovements.length > 0
     };
 };
