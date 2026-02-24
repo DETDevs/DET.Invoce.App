@@ -47,4 +47,5 @@ export interface TakeoutOrder {
     status: TakeoutStatus;
     createdBy: string;
     backendOrderId?: number;
+    orderNumber?: string;
 }

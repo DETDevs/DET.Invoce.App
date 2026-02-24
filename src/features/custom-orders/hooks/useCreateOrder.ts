@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { CreateOrderFormData } from "@/features/custom-orders/types";
-import type { Order, OrderItem } from "@/shared/types";
+import type { Order, OrderItem, ProductOption } from "@/shared/types";
 import { useOrdersStore } from "../store/useOrdersStore";
 import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
@@ -38,10 +38,40 @@ export const useCreateOrder = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const addItem = (item: OrderItem) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      items: [...prev.items, item],
+      [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
+    }));
+  };
+
+  const addItem = (product: ProductOption, quantity: number, description: string) => {
+    const newItem: OrderItem = {
+      productId: product.id,
+      productCode: product.code,
+      name: product.name,
+      price: product.price,
+      quantity,
+      description: description || undefined,
+    };
+    setFormData((prev) => ({
+      ...prev,
+      items: [...prev.items, newItem],
+    }));
+  };
+
+  const addCustomItem = (name: string, quantity: number, price: number) => {
+    const newItem: OrderItem = {
+      productId: 0,
+      productCode: "CUSTOM",
+      name,
+      price,
+      quantity,
+    };
+    setFormData((prev) => ({
+      ...prev,
+      items: [...prev.items, newItem],
     }));
   };
 
@@ -127,7 +157,9 @@ export const useCreateOrder = () => {
     formData,
     isSaving,
     updateField,
+    handleInputChange,
     addItem,
+    addCustomItem,
     removeItem,
     calculateTotal,
     handleSubmit,

@@ -1,57 +1,145 @@
 import { useState } from "react";
-import { UtensilsCrossed, RefreshCw, Package, ShoppingBag } from "lucide-react";
+import {
+  UtensilsCrossed,
+  RefreshCw,
+  Package,
+  ShoppingBag,
+  Loader2,
+} from "lucide-react";
 import { Toaster } from "react-hot-toast";
-import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
-import { TakeoutOrderCard } from "@/features/takeout/components/TakeoutOrderCard";
+import toast from "react-hot-toast";
+import { useOrders } from "@/features/takeout/hooks/useOrders";
+import { OrderCard } from "@/features/takeout/components/OrderCard";
 import { TakeoutDetailModal } from "@/features/takeout/components/TakeoutDetailModal";
+import orderApi from "@/api/order/OrderAPI";
+import type { TOrder } from "@/api/order/types";
+import type { TakeoutOrder } from "@/shared/types";
 
-const PARA_LLEVAR_TABLE = 0;
 type DashboardTab = "mesas" | "llevar";
 
 export const TakeoutDashboardPage = () => {
-  const { getAllActiveOrders, getActiveTables, getActiveOrdersByTable } =
-    useTakeoutStore();
+  const { tableGroups, takeoutOrders, totalActive, loading, refetch } =
+    useOrders();
   const [activeTab, setActiveTab] = useState<DashboardTab>("mesas");
-  const [selectedTable, setSelectedTable] = useState<number | null>(null);
-  const [selectedParaLlevarId, setSelectedParaLlevarId] = useState<
-    string | null
-  >(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [, forceUpdate] = useState(0);
+  const [selectedTable, setSelectedTable] = useState<number | null>(null);
+  const [cuentasForModal, setCuentasForModal] = useState<TakeoutOrder[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
-  const activeTables = getActiveTables();
-  const activeOrders = getAllActiveOrders();
+  const mesaCount = tableGroups.size;
+  const takeoutCount = takeoutOrders.length;
 
-  const mesaTables = activeTables.filter((t) => t !== PARA_LLEVAR_TABLE);
-  const paraLlevarOrders = getActiveOrdersByTable(PARA_LLEVAR_TABLE);
+  const buildCuentas = async (
+    orders: TOrder[],
+    tableId: number | null,
+  ): Promise<TakeoutOrder[]> => {
+    const seen = new Set<number>();
+    const uniqueOrders = orders.filter((o) => {
+      if (seen.has(o.orderId)) return false;
+      seen.add(o.orderId);
+      return true;
+    });
 
-  const handleMesaClick = (tableNumber: number) => {
-    setSelectedTable(tableNumber);
-    setSelectedParaLlevarId(null);
-    setIsModalOpen(true);
+    const cuentas: TakeoutOrder[] = [];
+
+    for (const order of uniqueOrders) {
+      try {
+        const accountsData = await orderApi.getOrderAccountWithDetails(
+          order.orderId,
+        );
+        const accountsList = Array.isArray(accountsData)
+          ? accountsData
+          : [accountsData];
+        const openAccounts = accountsList.filter(
+          (a: any) => a.status === "Open",
+        );
+        const accountsToUse =
+          openAccounts.length > 0 ? openAccounts : accountsList;
+
+        for (const account of accountsToUse) {
+          const items = (account.orderAccountDetails || []).map((d: any) => ({
+            productId: d.orderDetailId ?? 0,
+            productCode: d.productCode ?? "",
+            name: d.productName ?? d.productCode ?? "Producto",
+            price: d.unitPrice ?? 0,
+            quantity: d.quantity ?? 1,
+            addedAt: order.orderDate,
+          }));
+
+          cuentas.push({
+            id: `${order.orderId}-${account.orderAccountId}`,
+            tableNumber: tableId ?? 0,
+            cuentaNumber: account.accountNumber ?? 1,
+            items,
+            createdAt: order.orderDate,
+            updatedAt: order.orderDate,
+            status: "active",
+            createdBy: order.createdBy,
+            backendOrderId: order.orderId,
+            orderNumber: order.orderNumber,
+          });
+        }
+      } catch {
+        cuentas.push({
+          id: String(order.orderId),
+          tableNumber: tableId ?? 0,
+          cuentaNumber: 1,
+          items: [],
+          createdAt: order.orderDate,
+          updatedAt: order.orderDate,
+          status: "active",
+          createdBy: order.createdBy,
+          backendOrderId: order.orderId,
+          orderNumber: order.orderNumber,
+        });
+      }
+    }
+
+    return cuentas;
   };
 
-  const handleParaLlevarClick = (orderId: string) => {
-    setSelectedTable(PARA_LLEVAR_TABLE);
-    setSelectedParaLlevarId(orderId);
-    setIsModalOpen(true);
+  const handleTableClick = async (tableId: number, orders: TOrder[]) => {
+    setLoadingDetail(true);
+    try {
+      const cuentas = await buildCuentas(orders, tableId);
+      if (cuentas.length === 0) {
+        toast.error("No se pudieron cargar los detalles de la mesa.");
+        return;
+      }
+      setCuentasForModal(cuentas);
+      setSelectedTable(tableId);
+      setIsModalOpen(true);
+    } catch {
+      toast.error("Error al cargar la orden. Intenta de nuevo.");
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  const handleTakeoutClick = async (order: TOrder) => {
+    setLoadingDetail(true);
+    try {
+      const cuentas = await buildCuentas([order], null);
+      if (cuentas.length === 0) {
+        toast.error("No se pudieron cargar los detalles de la orden.");
+        return;
+      }
+      setCuentasForModal(cuentas);
+      setSelectedTable(0);
+      setIsModalOpen(true);
+    } catch {
+      toast.error("Error al cargar la orden. Intenta de nuevo.");
+    } finally {
+      setLoadingDetail(false);
+    }
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedTable(null);
-    setSelectedParaLlevarId(null);
-    forceUpdate((n) => n + 1);
+    setCuentasForModal([]);
+    refetch();
   };
-
-  const selectedCuentas =
-    selectedTable !== null
-      ? selectedParaLlevarId
-        ? getActiveOrdersByTable(PARA_LLEVAR_TABLE).filter(
-            (o) => o.id === selectedParaLlevarId,
-          )
-        : getActiveOrdersByTable(selectedTable)
-      : [];
 
   return (
     <div className="h-full bg-[#FDFBF7] overflow-y-auto">
@@ -62,16 +150,17 @@ export const TakeoutDashboardPage = () => {
               Takeout
             </h1>
             <p className="text-sm text-gray-500">
-              {mesaTables.length} {mesaTables.length === 1 ? "mesa" : "mesas"} ·{" "}
-              {paraLlevarOrders.length} para llevar · {activeOrders.length}{" "}
-              {activeOrders.length === 1 ? "cuenta total" : "cuentas totales"}
+              {mesaCount} {mesaCount === 1 ? "mesa" : "mesas"} · {takeoutCount}{" "}
+              para llevar · {totalActive}{" "}
+              {totalActive === 1 ? "cuenta total" : "cuentas totales"}
             </p>
           </div>
           <button
-            onClick={() => forceUpdate((n) => n + 1)}
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors active:scale-95"
+            onClick={refetch}
+            disabled={loading}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors active:scale-95 disabled:opacity-60"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             Actualizar
           </button>
         </div>
@@ -87,9 +176,9 @@ export const TakeoutDashboardPage = () => {
           >
             <UtensilsCrossed size={14} />
             Mesas
-            {mesaTables.length > 0 && (
+            {mesaCount > 0 && (
               <span className="bg-[#593D31] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                {mesaTables.length}
+                {mesaCount}
               </span>
             )}
           </button>
@@ -103,9 +192,9 @@ export const TakeoutDashboardPage = () => {
           >
             <Package size={14} />
             Para Llevar
-            {paraLlevarOrders.length > 0 && (
+            {takeoutCount > 0 && (
               <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                {paraLlevarOrders.length}
+                {takeoutCount}
               </span>
             )}
           </button>
@@ -113,75 +202,94 @@ export const TakeoutDashboardPage = () => {
       </div>
 
       <main className="p-4 md:p-8">
-        {activeTab === "mesas" && (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 text-gray-400 gap-4">
+            <Loader2 size={40} className="animate-spin" />
+            <p className="text-sm">Cargando órdenes...</p>
+          </div>
+        ) : (
           <>
-            {mesaTables.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center py-24 text-gray-400">
-                <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
-                  <UtensilsCrossed size={40} className="opacity-40" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-500 mb-2">
-                  Sin mesas activas
-                </h2>
-                <p className="text-sm max-w-sm">
-                  Cuando los meseros tomen órdenes en mesa desde "Nueva Orden",
-                  aparecerán aquí para cobrar y facturar.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                {mesaTables.map((tableNumber) => {
-                  const cuentas = getActiveOrdersByTable(tableNumber);
-                  return (
-                    <TakeoutOrderCard
-                      key={tableNumber}
-                      tableNumber={tableNumber}
-                      cuentas={cuentas}
-                      onClick={() => handleMesaClick(tableNumber)}
-                    />
-                  );
-                })}
-              </div>
+            {activeTab === "mesas" && (
+              <>
+                {mesaCount === 0 ? (
+                  <div className="flex flex-col items-center justify-center text-center py-24 text-gray-400">
+                    <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
+                      <UtensilsCrossed size={40} className="opacity-40" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-500 mb-2">
+                      Sin mesas activas
+                    </h2>
+                    <p className="text-sm max-w-sm">
+                      Cuando los meseros tomen órdenes en mesa desde "Nueva
+                      Orden", aparecerán aquí para cobrar y facturar.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    {Array.from(tableGroups.entries()).map(
+                      ([tableId, orders]) => (
+                        <OrderCard
+                          key={tableId}
+                          tableId={tableId}
+                          orders={orders}
+                          onClick={() => handleTableClick(tableId, orders)}
+                        />
+                      ),
+                    )}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
 
-        {activeTab === "llevar" && (
-          <>
-            {paraLlevarOrders.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center py-24 text-gray-400">
-                <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
-                  <ShoppingBag size={40} className="opacity-40" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-500 mb-2">
-                  Sin órdenes para llevar
-                </h2>
-                <p className="text-sm max-w-sm">
-                  Las órdenes marcadas como "Para Llevar" aparecerán aquí listas
-                  para cobrar.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                {paraLlevarOrders.map((order) => (
-                  <TakeoutOrderCard
-                    key={order.id}
-                    tableNumber={PARA_LLEVAR_TABLE}
-                    cuentas={[order]}
-                    onClick={() => handleParaLlevarClick(order.id)}
-                  />
-                ))}
-              </div>
+            {activeTab === "llevar" && (
+              <>
+                {takeoutCount === 0 ? (
+                  <div className="flex flex-col items-center justify-center text-center py-24 text-gray-400">
+                    <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
+                      <ShoppingBag size={40} className="opacity-40" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-500 mb-2">
+                      Sin órdenes para llevar
+                    </h2>
+                    <p className="text-sm max-w-sm">
+                      Las órdenes marcadas como "Para Llevar" aparecerán aquí
+                      listas para cobrar.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    {takeoutOrders.map((order) => (
+                      <OrderCard
+                        key={order.orderId}
+                        tableId={null}
+                        orders={[order]}
+                        onClick={() => handleTakeoutClick(order)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
       </main>
 
+      {loadingDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-xl">
+            <Loader2 size={32} className="animate-spin text-[#593D31]" />
+            <p className="text-sm font-bold text-gray-700">
+              Cargando detalles...
+            </p>
+          </div>
+        </div>
+      )}
+
       <TakeoutDetailModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
         tableNumber={selectedTable}
-        cuentas={selectedCuentas}
+        cuentas={cuentasForModal}
       />
 
       <Toaster position="top-center" />

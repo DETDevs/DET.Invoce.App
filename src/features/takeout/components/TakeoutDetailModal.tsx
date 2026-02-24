@@ -13,6 +13,9 @@ import {
   Minus,
   Scissors,
   Check,
+  XCircle,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import type { TakeoutOrder } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
@@ -50,6 +53,8 @@ export const TakeoutDetailModal = ({
   const [splitQuantities, setSplitQuantities] = useState<Map<number, number>>(
     new Map(),
   );
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (isOpen && cuentas.length > 0) {
@@ -59,6 +64,8 @@ export const TakeoutDetailModal = ({
       setSelectedCuentaId(null);
       setIsSplitMode(false);
       setSplitQuantities(new Map());
+      setShowCancelConfirm(false);
+      setIsCancelling(false);
     }
     setAmountPaid("");
     setPaymentMethod("efectivo");
@@ -122,23 +129,28 @@ export const TakeoutDetailModal = ({
       const accountsList = Array.isArray(accountsData)
         ? accountsData
         : [accountsData];
-      const account =
-        accountsList.find(
-          (a: any) => a.accountNumber === selectedCuenta.cuentaNumber,
-        ) ||
-        accountsList.find((a: any) => a.status === "Open") ||
-        accountsList[0];
-      const orderAccountId = account?.orderAccountId;
 
-      if (!orderAccountId) {
+      const openAccounts = accountsList.filter((a: any) => a.status === "Open");
+      const account =
+        openAccounts.find(
+          (a: any) => a.accountNumber === selectedCuenta.cuentaNumber,
+        ) || openAccounts[0];
+
+      if (!account?.orderAccountId) {
         toast.error(
-          "No se pudo obtener la información de la cuenta. Intente de nuevo o contacte a soporte.",
+          "No hay cuentas abiertas para facturar. La orden puede ya estar cerrada.",
           { duration: 5000 },
         );
         return;
       }
 
-      console.log("[Order] OrderAccountId obtenido:", orderAccountId);
+      const orderAccountId: number = account.orderAccountId;
+      console.log(
+        "[Order] OrderAccountId obtenido:",
+        orderAccountId,
+        "| AccountNumber:",
+        account.accountNumber,
+      );
 
       const pm = paymentMethod === "tarjeta" ? "CARD" : "CASH";
       await handleInvoiceFlow({ orderAccountId, paymentmethod: pm });
@@ -156,15 +168,7 @@ export const TakeoutDetailModal = ({
         });
       }
 
-      const remainingCuentas = cuentas.filter(
-        (c) => c.id !== selectedCuenta.id,
-      );
-
-      if (remainingCuentas.length === 0) {
-        onClose();
-      } else {
-        setSelectedCuentaId(remainingCuentas[0].id);
-      }
+      onClose();
     } catch (error) {
       console.error("[TakeoutDetailModal] Error al facturar:", error);
       toast.error(
@@ -201,20 +205,75 @@ export const TakeoutDetailModal = ({
     });
   };
 
+  const handleCancelCuenta = async () => {
+    if (!selectedCuenta.backendOrderId) {
+      toast.error("No se pudo obtener la información de la cuenta.", {
+        duration: 5000,
+      });
+      return;
+    }
+    const originalCuenta = cuentas[0];
+    setIsProcessing(true);
+    try {
+      const accountsData = await orderApi.getOrderAccountWithDetails(
+        selectedCuenta.backendOrderId,
+      );
+      const accountsList = Array.isArray(accountsData)
+        ? accountsData
+        : [accountsData];
+      const fromAccount =
+        accountsList.find(
+          (a: any) => a.accountNumber === selectedCuenta.cuentaNumber,
+        ) ||
+        accountsList.find(
+          (a: any) => a.accountNumber !== originalCuenta.cuentaNumber,
+        );
+      const toAccount =
+        accountsList.find(
+          (a: any) => a.accountNumber === originalCuenta.cuentaNumber,
+        ) || accountsList[0];
+      if (!fromAccount?.orderAccountId || !toAccount?.orderAccountId) {
+        toast.error("No se pudo identificar las cuentas. Intente de nuevo.", {
+          duration: 5000,
+        });
+        return;
+      }
+      await orderApi.accountMerge(
+        fromAccount.orderAccountId,
+        toAccount.orderAccountId,
+        user?.name || "Cajero",
+      );
+      toast.success(
+        "Cuenta cancelada. Los productos regresaron a la cuenta original.",
+        { icon: "↩️" },
+      );
+      onClose();
+    } catch (error) {
+      console.error("[TakeoutDetailModal] Error al cancelar cuenta:", error);
+      toast.error(
+        "No se pudo cancelar la cuenta. Verifique la conexión e intente de nuevo.",
+        { duration: 5000 },
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleConfirmSplit = async () => {
     if (splitQuantities.size === 0) return;
-    const totalItemsInOrder = selectedCuenta.items.length;
+    const originalCuenta = cuentas[0];
+    const totalItemsInOrder = originalCuenta.items.length;
     const allMovedCompletely =
       splitQuantities.size === totalItemsInOrder &&
       Array.from(splitQuantities.entries()).every(
-        ([idx, qty]) => qty >= selectedCuenta.items[idx].quantity,
+        ([idx, qty]) => qty >= originalCuenta.items[idx].quantity,
       );
     if (allMovedCompletely) {
       toast.error("No puedes mover todos los productos. Deja al menos uno.");
       return;
     }
 
-    if (!selectedCuenta.backendOrderId) {
+    if (!originalCuenta.backendOrderId) {
       toast.error(
         "Ocurrió un problema al cargar esta orden. Intente cerrar y abrir la mesa de nuevo, o contacte a soporte.",
         { duration: 5000 },
@@ -224,9 +283,15 @@ export const TakeoutDetailModal = ({
 
     try {
       const accounts = await orderApi.getOrderAccountWithDetails(
-        selectedCuenta.backendOrderId,
+        originalCuenta.backendOrderId,
       );
-      const account = Array.isArray(accounts) ? accounts[0] : accounts;
+      const accountsList = Array.isArray(accounts) ? accounts : [accounts];
+      const account =
+        accountsList.find(
+          (a: any) =>
+            a.accountNumber === 1 ||
+            a.accountNumber === originalCuenta.cuentaNumber,
+        ) || accountsList[0];
 
       if (!account?.orderAccountId) {
         toast.error(
@@ -245,7 +310,7 @@ export const TakeoutDetailModal = ({
       const splitPayload: { orderDetailId: number; quantity: number }[] = [];
 
       for (const [idx, qty] of splitQuantities.entries()) {
-        const localItem = selectedCuenta.items[idx];
+        const localItem = originalCuenta.items[idx];
         const backendDetail = backendDetails.find(
           (d: any) => d.productCode === localItem.productCode,
         );
@@ -274,12 +339,13 @@ export const TakeoutDetailModal = ({
       const splitItems = Array.from(splitQuantities.entries()).map(
         ([index, quantity]) => ({ index, quantity }),
       );
-      splitOrder(selectedCuenta.id, splitItems);
+      splitOrder(originalCuenta.id, splitItems);
       const totalMoved = splitItems.reduce((acc, s) => acc + s.quantity, 0);
       toast.success(
         `Cuenta dividida: ${totalMoved} unidad${totalMoved > 1 ? "es" : ""} movida${totalMoved > 1 ? "s" : ""} a nueva cuenta`,
         { icon: "✂️" },
       );
+      onClose();
     } catch (error) {
       console.error("[TakeoutDetailModal] Error al dividir cuenta:", error);
       toast.error(
@@ -307,13 +373,44 @@ export const TakeoutDetailModal = ({
     { hour: "2-digit", minute: "2-digit" },
   );
 
+  const handleCancelOrder = async () => {
+    const mainCuenta = cuentas[0];
+    if (!mainCuenta.backendOrderId) {
+      toast.error("No se pudo obtener la información de la orden.", {
+        duration: 5000,
+      });
+      return;
+    }
+
+    setIsCancelling(true);
+    try {
+      await orderApi.cancel(mainCuenta.backendOrderId, user?.name || "Sistema");
+
+      cuentas.forEach((cuenta) => {
+        completeOrder(cuenta.id);
+      });
+
+      toast.success("Orden cancelada correctamente", { icon: "🚫" });
+      onClose();
+    } catch (error) {
+      console.error("[TakeoutDetailModal] Error al cancelar orden:", error);
+      toast.error(
+        "No se pudo cancelar la orden. Verifique la conexión e intente de nuevo.",
+        { duration: 5000 },
+      );
+    } finally {
+      setIsCancelling(false);
+      setShowCancelConfirm(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-white w-[95%] md:w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        className="bg-white w-[95%] md:w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col relative"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex-shrink-0 flex justify-between items-start p-5 border-b border-gray-100 bg-[#FDFBF7]">
@@ -356,14 +453,28 @@ export const TakeoutDetailModal = ({
                     ? "cuenta"
                     : "cuentas"}
               </span>
+              {selectedCuenta.orderNumber && (
+                <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded font-mono font-bold">
+                  {selectedCuenta.orderNumber}
+                </span>
+              )}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowCancelConfirm(true)}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+              title="Cancelar orden"
+            >
+              <XCircle size={20} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {cuentas.length > 1 && (
@@ -511,13 +622,24 @@ export const TakeoutDetailModal = ({
                 <Plus size={16} />
                 Agregar Productos
               </button>
-              {selectedCuenta.items.length > 1 && (
+              {selectedCuenta.cuentaNumber === 1 ? (
+                selectedCuenta.items.length > 1 && (
+                  <button
+                    onClick={() => setIsSplitMode(true)}
+                    className="flex-1 py-2.5 bg-white border-2 border-dashed border-violet-300 text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+                  >
+                    <Scissors size={16} />
+                    Dividir Cuenta
+                  </button>
+                )
+              ) : (
                 <button
-                  onClick={() => setIsSplitMode(true)}
-                  className="flex-1 py-2.5 bg-white border-2 border-dashed border-violet-300 text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+                  onClick={handleCancelCuenta}
+                  disabled={isProcessing}
+                  className="flex-1 py-2.5 bg-white border-2 border-dashed border-red-300 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Scissors size={16} />
-                  Dividir Cuenta
+                  <X size={16} />
+                  Cancelar Cuenta
                 </button>
               )}
             </div>
@@ -669,6 +791,54 @@ export const TakeoutDetailModal = ({
           </div>
         )}
       </div>
+
+      {showCancelConfirm && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[2px] rounded-2xl"
+          onClick={() => setShowCancelConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 mx-6 max-w-sm w-full animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <AlertTriangle size={28} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-[#2D2D2D] mb-1">
+                ¿Cancelar esta orden?
+              </h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Esta acción no se puede deshacer. Se cancelará la orden completa
+                incluyendo todas las cuentas.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  disabled={isCancelling}
+                  className="flex-1 h-11 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all active:scale-95"
+                >
+                  No, mantener
+                </button>
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={isCancelling}
+                  className="flex-1 h-11 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isCancelling ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />{" "}
+                      Cancelando...
+                    </>
+                  ) : (
+                    "Sí, cancelar orden"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

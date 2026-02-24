@@ -1,5 +1,5 @@
 import api from '../api';
-import type { TOrderSave, TOrderCreate, TAccountSplit } from './types';
+import type { TOrderSave, TOrderCreate, TAccountSplit, TOrder } from './types';
 
 async function save(data: TOrderSave) {
     return api.post<any>('/Order/Save', data);
@@ -24,12 +24,27 @@ async function accountMerge(fromAccountId: number, toAccountId: number, createdB
     );
 }
 
+async function getByOrderNumber(orderNumber: string) {
+    return api.get<TOrder>(`/Order/Get?OrderNumber=${orderNumber}`);
+}
+
+async function getAll() {
+    return api.get<TOrder[]>('/Order/GetAll');
+}
+
+async function cancel(orderId: number, createdBy: string) {
+    return api.post<any>('/Order/Cancell', { orderId, createdBy });
+}
+
 const orderApi = {
     save,
     create,
     accountSplit,
     getOrderAccountWithDetails,
     accountMerge,
+    getAll,
+    getByOrderNumber,
+    cancel,
 };
 
 export default orderApi;

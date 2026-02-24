@@ -28,3 +28,17 @@ export type TAccountSplit = {
     creteBy: string;
     orderAccountSplitTypes: TSplitItem[];
 };
+
+export type TOrder = {
+    orderId: number;
+    orderNumber: string;
+    customerId: number | null;
+    tableId: number | null;
+    orderType: string | null;
+    orderDate: string;
+    status: string;
+    total: number;
+    notes: string | null;
+    createdBy: string;
+    details: TOrderDetail[] | null;
+};
