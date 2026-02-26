@@ -1,5 +1,5 @@
-import { Printer, Download } from "lucide-react";
-import toast from "react-hot-toast";
+import { useState } from "react";
+import { Download, Loader2 } from "lucide-react";
 import { ReportSelector } from "@/features/reports/components/ReportSelector";
 import { DateRangePicker } from "@/features/reports/components/DateRangePicker";
 import { SalesReport } from "@/features/reports/components/SalesReport";
@@ -8,6 +8,7 @@ import { CashFlowReport } from "@/features/reports/components/CashFlowReport";
 import { OrdersReport } from "@/features/reports/components/OrdersReport";
 import { CashCloseReport } from "@/features/reports/components/CashCloseReport";
 import { useReports } from "@/features/reports/hooks/useReports";
+import { generateReportPdf } from "@/features/reports/utils/generateReportPdf";
 
 export const ReportsPage = () => {
   const {
@@ -23,8 +24,16 @@ export const ReportsPage = () => {
     cashCloseReport,
   } = useReports();
 
-  const handleExport = (type: string) => {
-    toast.success(`Exportando reporte de ${activeReport} en ${type}...`);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await generateReportPdf("report-content", activeReport);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const renderActiveReport = () => {
@@ -46,7 +55,7 @@ export const ReportsPage = () => {
 
   return (
     <div className="p-4 md:p-8 bg-[#FDFBF7] min-h-screen w-full max-w-full overflow-x-hidden pb-20">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#2D2D2D]">
             Centro de Reportes
@@ -56,7 +65,7 @@ export const ReportsPage = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2 w-full xl:w-auto items-center">
+        <div className="flex gap-2 items-center shrink-0">
           <DateRangePicker
             dateRange={dateRange}
             setDateRange={(range: string) => setDateRange(range as any)}
@@ -64,18 +73,16 @@ export const ReportsPage = () => {
           />
 
           <button
-            onClick={() => handleExport("PDF")}
-            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center justify-center"
-            title="Imprimir PDF"
+            onClick={handleDownloadPdf}
+            disabled={isExporting}
+            className="p-2 bg-[#593D31] text-white rounded-lg hover:bg-[#4a332a] flex items-center justify-center transition-colors disabled:opacity-60"
+            title="Descargar PDF"
           >
-            <Printer size={20} />
-          </button>
-          <button
-            onClick={() => handleExport("Excel")}
-            className="p-2 bg-[#593D31] text-white rounded-lg hover:bg-[#4a332a] flex items-center justify-center"
-            title="Exportar CSV"
-          >
-            <Download size={20} />
+            {isExporting ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <Download size={20} />
+            )}
           </button>
         </div>
       </div>
@@ -87,7 +94,9 @@ export const ReportsPage = () => {
         />
       </div>
 
-      <div className="min-h-[400px]">{renderActiveReport()}</div>
+      <div id="report-content" className="min-h-[400px]">
+        {renderActiveReport()}
+      </div>
     </div>
   );
 };

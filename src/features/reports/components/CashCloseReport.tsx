@@ -6,18 +6,17 @@ import {
   ArrowDownRight,
   RotateCcw,
   Wallet,
-  Printer,
   Copy,
   CreditCard,
   Banknote,
   ArrowRightLeft,
   ChevronLeft,
   ChevronRight,
-  FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { KPICard } from "./KPICard";
 import type { CashCloseReportData } from "@/features/reports/types";
+import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 
 interface CashCloseReportProps {
   data: CashCloseReportData;
@@ -83,6 +82,9 @@ const ITEMS_PER_PAGE = 5;
 
 export const CashCloseReport = ({ data }: CashCloseReportProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const { session, closeCashBox } = useCashBox();
+
   const totalPages = Math.max(
     1,
     Math.ceil(data.movementLines.length / ITEMS_PER_PAGE),
@@ -108,10 +110,6 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     JSON.parse(localStorage.getItem("app_settings") || "{}").businessName ||
     "Dulces Momentos";
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const handleCopy = () => {
     const lines = [
       `═══ CIERRE DE CAJA ═══`,
@@ -136,6 +134,11 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
 
     navigator.clipboard.writeText(lines.join("\n"));
     toast.success("Resumen copiado al portapapeles");
+  };
+
+  const handleCloseBox = () => {
+    closeCashBox();
+    setIsConfirmOpen(false);
   };
 
   return (
@@ -820,20 +823,61 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handlePrint}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#593D31] text-white rounded-xl font-bold text-sm hover:bg-[#4a332a] transition-colors shadow-md active:scale-95"
-          >
-            <FileText size={18} /> Exportar PDF
-          </button>
+        <div className="flex flex-wrap gap-3 mt-4">
           <button
             onClick={handleCopy}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors active:scale-95"
           >
             <Copy size={18} /> Copiar Resumen
           </button>
+
+          <button
+            onClick={() => setIsConfirmOpen(true)}
+            disabled={!session?.isOpen}
+            title={!session?.isOpen ? "La caja ya está cerrada" : "Cerrar Caja"}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-colors shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+          >
+            <RotateCcw size={18} /> Cerrar Caja
+          </button>
         </div>
+
+        {isConfirmOpen && (
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setIsConfirmOpen(false)}
+            />
+            <div className="relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl shrink-0">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <RotateCcw size={32} />
+              </div>
+
+              <h2 className="text-2xl font-bold text-center text-[#2D2D2D] mb-2">
+                ¿Cerrar Caja?
+              </h2>
+              <p className="text-center text-gray-500 mb-8 text-sm">
+                Esta acción finalizará el turno actual. Todo se reiniciará a 0
+                para el día siguiente. Asegúrate de imprimir o guardar el cierre
+                antes de continuar.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsConfirmOpen(false)}
+                  className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCloseBox}
+                  className="flex-1 py-3 px-4 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200 text-sm"
+                >
+                  Sí, Cerrar Caja
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

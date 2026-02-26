@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useState,
   useEffect,
@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 interface CashBoxContextType {
   session: CashBoxSession | null;
   openCashBox: (amount: number) => void;
+  closeCashBox: () => void;
 }
 
 const CashBoxContext = createContext<CashBoxContextType | undefined>(undefined);
@@ -79,8 +80,20 @@ export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const closeCashBox = () => {
+    if (session) {
+      const closedSession: CashBoxSession = { ...session, isOpen: false };
+      localStorage.setItem(CASH_BOX_STORAGE_KEY, JSON.stringify(closedSession));
+
+      setSession(closedSession);
+      toast.success(
+        "Caja cerrada correctamente. Todo listo para el siguiente turno.",
+      );
+    }
+  };
+
   return (
-    <CashBoxContext.Provider value={{ session, openCashBox }}>
+    <CashBoxContext.Provider value={{ session, openCashBox, closeCashBox }}>
       {children}
       <OpenCashBoxModal
         isOpen={isModalOpen}
