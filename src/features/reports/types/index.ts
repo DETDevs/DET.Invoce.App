@@ -3,12 +3,10 @@ export type DateRangeType = "today" | "week" | "month" | "year" | "custom";
 
 export interface SalesReportData {
     totalSales: number;
-    totalOrders: number;
-    averageTicket: number;
-    theoreticalCash: number;
-    initialCash: number;
+    totalCashIncome: number;
+    totalProductsSold: number;
+    topProductName: string;
     salesByDate: { date: string; amount: number; orders: number }[];
-    salesByPaymentMethod: { method: string; amount: number }[];
 }
 
 export interface ProductsReportData {
@@ -35,13 +33,13 @@ export interface CashFlowReportData {
     netCash: number;
     movementsByType: { type: string; amount: number }[];
     movementsByCategory: { category: string; amount: number; type: "in" | "out" }[];
-    cashFlowByDate: { date: string; in: number; out: number }[];
+    cashFlowByDate: { date: string; in: number | null; out: number | null }[];
 }
 
 export interface OrdersReportData {
     totalOrders: number;
     completedOrders: number;
-    returnedOrders: number;
+    cancelledOrders: number;
     peakHours: { hour: number; orders: number; amount: number }[];
     averageItemsPerOrder: number;
 }

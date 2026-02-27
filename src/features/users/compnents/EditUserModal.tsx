@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { X, Save } from "lucide-react";
-import { ImageUploadField } from "@/shared/ui/ImageUploadField";
+import { X, Save, Loader2, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
+import userApi from "@/api/user/UserAPI";
 
 interface User {
   id: number;
   name: string;
-  email: string;
   role: string;
   status: string;
   image: string;
+  originalUsername: string;
 }
 
 interface EditUserModalProps {
@@ -25,35 +25,36 @@ export const EditUserModal = ({
   user,
   onSave,
 }: EditUserModalProps) => {
-  const [formData, setFormData] = useState<User | null>(null);
-  const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
-      setFormData(user);
-      setNewImageFile(null);
+      setNewPassword("");
+      setShowPassword(false);
     }
   }, [user]);
 
-  if (!isOpen || !formData) return null;
+  if (!isOpen || !user) return null;
 
-  const isFormValid =
-    formData.name.trim() !== "" &&
-    formData.email.trim() !== "" &&
-    formData.role.trim() !== "";
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isFormValid) {
-      toast.error("Todos los campos son obligatorios");
-      return;
-    }
-
-    if (formData) {
-      console.log("Actualizando usuario...", { ...formData, newImageFile });
-      onSave(formData);
-      toast.success("Usuario actualizado correctamente");
+    if (newPassword.trim() !== "") {
+      setIsSubmitting(true);
+      try {
+        await userApi.changePassword(user.id, newPassword);
+        toast.success("Contraseña actualizada correctamente");
+        onSave(user);
+        onClose();
+      } catch (error) {
+        toast.error("Hubo un error al cambiar la contraseña");
+        console.error(error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
       onClose();
     }
   };
@@ -73,74 +74,64 @@ export const EditUserModal = ({
 
         <div className="overflow-y-auto p-6 md:p-8">
           <form id="edit-user-form" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-6">
-              <ImageUploadField
-                label="Foto de Perfil"
-                currentImage={formData.image}
-                onImageSelected={setNewImageFile}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                  Nombre Completo
+                </label>
+                <input
+                  type="text"
+                  value={user.name}
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
+                />
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Nombre Completo
-                  </label>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                  Nueva Contraseña
+                </label>
+                <div className="relative">
                   <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Escriba la nueva contraseña"
+                    className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                   />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Correo Electrónico
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Rol
-                  </label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-[#E8BC6E] transition-colors p-1"
                   >
-                    <option value="Admin">Administrador</option>
-                    <option value="Vendedor">Vendedor</option>
-                    <option value="Pastelero">Pastelero</option>
-                  </select>
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                 </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  Dejar en blanco para mantener la contraseña actual.
+                </p>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Estado
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                  >
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                  Rol
+                </label>
+                <input
+                  value={user.role}
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                  Estado
+                </label>
+                <input
+                  value={user.status}
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
+                />
               </div>
             </div>
           </form>
@@ -157,15 +148,19 @@ export const EditUserModal = ({
           <button
             type="submit"
             form="edit-user-form"
-            disabled={!isFormValid}
+            disabled={isSubmitting}
             className={`flex items-center gap-2 px-6 py-3 font-bold rounded-xl shadow-md transition-all active:scale-95 ${
-              isFormValid
-                ? "bg-[#E8BC6E] hover:bg-[#dca34b] text-white cursor-pointer"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+              isSubmitting
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                : "bg-[#E8BC6E] hover:bg-[#dca34b] text-white cursor-pointer"
             }`}
           >
-            <Save size={20} />
-            Guardar Cambios
+            {isSubmitting ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <Save size={20} />
+            )}
+            {newPassword.trim() !== "" ? "Guardar Contraseña" : "Cerrar"}
           </button>
         </div>
       </div>

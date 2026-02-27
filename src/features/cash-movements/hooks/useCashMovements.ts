@@ -1,11 +1,48 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import type { CashMovement, MovementType, MovementTypeOption } from "@/features/cash-movements/types";
+import type { DateRangeType } from "@/features/reports/types";
 import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
 import type { TCashMovement } from "@/api/cash-register/types";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import toast from "react-hot-toast";
 
 const SYSTEM_TYPE_IDS = [1];
+
+function getDateRange(range: DateRangeType, customRange: { start: Date; end: Date } | null) {
+    const now = new Date();
+    let startDate = new Date();
+
+    now.setHours(23, 59, 59, 999);
+
+    switch (range) {
+        case "today":
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case "week":
+            startDate.setDate(now.getDate() - 7);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case "month":
+            startDate.setMonth(now.getMonth() - 1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case "year":
+            startDate.setFullYear(now.getFullYear() - 1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case "custom":
+            if (customRange) {
+                startDate = customRange.start;
+                now.setTime(customRange.end.getTime());
+            }
+            break;
+    }
+
+    return {
+        dateFrom: startDate.toISOString(),
+        dateTo: now.toISOString(),
+    };
+}
 
 export const useCashMovements = () => {
     const [movements, setMovements] = useState<CashMovement[]>([]);
@@ -14,6 +51,8 @@ export const useCashMovements = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [filterType, setFilterType] = useState<MovementType | "all">("all");
     const [filterCategoryId, setFilterCategoryId] = useState<number | "all">("all");
+    const [dateRange, setDateRange] = useState<DateRangeType>("today");
+    const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const user = useAuthStore((s) => s.user);
@@ -147,6 +186,10 @@ export const useCashMovements = () => {
     };
 
     const filteredMovements = useMemo(() => {
+        const { dateFrom, dateTo } = getDateRange(dateRange, customRange);
+        const start = new Date(dateFrom);
+        const end = new Date(dateTo);
+
         return movements.filter((movement) => {
             const matchesSearch = movement.description
                 .toLowerCase()
@@ -159,9 +202,12 @@ export const useCashMovements = () => {
                 filterCategoryId === "all" ||
                 movement.cashMovementTypeId === filterCategoryId;
 
-            return matchesSearch && matchesType && matchesCategory;
+            const md = new Date(movement.createdAt);
+            const matchesDate = md >= start && md <= end;
+
+            return matchesSearch && matchesType && matchesCategory && matchesDate;
         });
-    }, [movements, searchQuery, filterType, filterCategoryId]);
+    }, [movements, searchQuery, filterType, filterCategoryId, dateRange, customRange]);
 
     const paginatedMovements = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -172,11 +218,11 @@ export const useCashMovements = () => {
     const totalPages = Math.ceil(filteredMovements.length / itemsPerPage);
 
     const summary = useMemo(() => {
-        const totalCashIn = movements
+        const totalCashIn = filteredMovements
             .filter((m) => m.type === "cash-in")
             .reduce((sum, m) => sum + m.amount, 0);
 
-        const totalCashOut = movements
+        const totalCashOut = filteredMovements
             .filter((m) => m.type === "cash-out")
             .reduce((sum, m) => sum + m.amount, 0);
 
@@ -184,9 +230,9 @@ export const useCashMovements = () => {
             totalCashIn,
             totalCashOut,
             balance: totalCashIn - totalCashOut,
-            movementsCount: movements.length,
+            movementsCount: filteredMovements.length,
         };
-    }, [movements]);
+    }, [filteredMovements]);
 
     const handleFilterChange = (
         type: "search" | "type" | "category",
@@ -213,6 +259,16 @@ export const useCashMovements = () => {
         filterCategoryId,
         setFilterCategoryId: (id: number | "all") =>
             handleFilterChange("category", id),
+        dateRange,
+        setDateRange: (range: DateRangeType) => {
+            setCurrentPage(1);
+            setDateRange(range);
+        },
+        customRange,
+        setCustomRange: (range: { start: Date; end: Date } | null) => {
+            setCurrentPage(1);
+            setCustomRange(range);
+        },
         addMovement,
         currentPage,
         setCurrentPage,

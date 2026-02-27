@@ -48,13 +48,6 @@ export const CashFlowReport = ({ data }: CashFlowReportProps) => {
           color={data.netCash >= 0 ? "blue" : "red"}
           tooltip="Diferencia entre entradas y salidas. Indica el flujo neto de efectivo en el período."
         />
-        <KPICard
-          title="Efectivo en Caja (Est.)"
-          value={formatCurrency(data.totalIn - data.totalOut)}
-          icon={Wallet}
-          color="amber"
-          tooltip="Estimación del efectivo disponible en caja basado en entradas menos salidas del período."
-        />
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -103,6 +96,7 @@ export const CashFlowReport = ({ data }: CashFlowReportProps) => {
                 fill="#10B981"
                 radius={[4, 4, 0, 0]}
                 barSize={20}
+                minPointSize={3}
               />
               <Bar
                 dataKey="out"
@@ -110,6 +104,7 @@ export const CashFlowReport = ({ data }: CashFlowReportProps) => {
                 fill="#EF4444"
                 radius={[4, 4, 0, 0]}
                 barSize={20}
+                minPointSize={3}
               />
             </BarChart>
           </ResponsiveContainer>

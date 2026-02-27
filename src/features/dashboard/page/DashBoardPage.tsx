@@ -25,21 +25,12 @@ import { TopSellerCarousel } from "@/features/dashboard/components/TopSellerCaro
 import { LowStockProductsModal } from "@/features/dashboard/components/LowStockProductsModal";
 import { productApi } from "@/api/products";
 import dashboardApi from "@/api/dashboard/DashboardAPI";
+import reportApi from "@/api/report/ReportAPI";
 import type { TProduct } from "@/api/products/types";
 import type {
   TSalesByCategory,
   TTopProductByCategory,
 } from "@/api/dashboard/types";
-
-const salesData = [
-  { name: "Lun", value: 4000 },
-  { name: "Mar", value: 3000 },
-  { name: "Mie", value: 2000 },
-  { name: "Jue", value: 2780 },
-  { name: "Vie", value: 1890 },
-  { name: "Sab", value: 6390 },
-  { name: "Dom", value: 3490 },
-];
 
 const productsSoldMonthly = [
   { name: "Ene", value: 120 },
@@ -70,6 +61,50 @@ export const DashboardPage = () => {
 
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [loadingTopProducts, setLoadingTopProducts] = useState(true);
+
+  const [salesTrendRange, setSalesTrendRange] = useState("Esta Semana");
+  const [salesDataList, setSalesDataList] = useState<
+    { name: string; value: number | null }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchSalesTrend = async () => {
+      try {
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        const start = new Date();
+
+        if (salesTrendRange === "Esta Semana") {
+          start.setDate(today.getDate() - 7);
+        } else if (salesTrendRange === "Mes Pasado") {
+          start.setMonth(today.getMonth() - 1);
+        }
+
+        start.setHours(0, 0, 0, 0);
+
+        const data = await reportApi.getSalesTrend({
+          dateFrom: start.toISOString(),
+          dateTo: today.toISOString(),
+        });
+
+        if (Array.isArray(data)) {
+          setSalesDataList(
+            data.map((item) => ({
+              name: new Date(item.date).toLocaleDateString("es-NI", {
+                weekday: "short",
+                day: "numeric",
+              }),
+              value: item.totalSales === 0 ? null : item.totalSales,
+            })),
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching sales trend:", error);
+      }
+    };
+
+    fetchSalesTrend();
+  }, [salesTrendRange]);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -265,14 +300,18 @@ export const DashboardPage = () => {
               <h3 className="text-lg font-medium text-[#2D2D2D] p-5">
                 Flujo de Ingresos
               </h3>
-              <select className="bg-[#F9F1D8] text-[#593D31] text-sm rounded-lg px-3 py-1 m-4 outline-none border-none cursor-pointer">
-                <option>Esta Semana</option>
-                <option>Mes Pasado</option>
+              <select
+                value={salesTrendRange}
+                onChange={(e) => setSalesTrendRange(e.target.value)}
+                className="bg-[#F9F1D8] text-[#593D31] text-sm rounded-lg px-3 py-1 m-4 outline-none border-none cursor-pointer"
+              >
+                <option value="Esta Semana">Esta Semana</option>
+                <option value="Mes Pasado">Mes Pasado</option>
               </select>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart
-                data={salesData}
+                data={salesDataList}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>
@@ -322,6 +361,7 @@ export const DashboardPage = () => {
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorIngresos)"
+                  connectNulls
                 />
               </AreaChart>
             </ResponsiveContainer>

@@ -33,7 +33,7 @@ export const KPICard = ({
   };
 
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-2 relative overflow-hidden">
+    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-2 relative">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 mb-1">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">

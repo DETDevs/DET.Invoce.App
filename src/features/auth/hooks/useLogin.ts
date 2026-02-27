@@ -1,28 +1,73 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { findUserByPassword } from "@/features/auth/data/mockUsers";
+import { authApi } from "@/api/auth/AuthAPI";
+import userApi from "@/api/user/UserAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import type { UserRole } from "@/features/auth/data/mockUsers";
 
 export const useLogin = () => {
   const navigate = useNavigate();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuthStore();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!password) {
-      toast.error("La clave de seguridad no puede estar vacía.", {
+    if (!username || !password) {
+      toast.error("El nombre de usuario y la clave no pueden estar vacíos.", {
         style: { background: "#593D31", color: "#fff" },
       });
       return;
     }
 
-    const user = findUserByPassword(password);
+    setIsLoading(true);
+    try {
+      const token = await authApi.authenticate({ username, password });
 
-    if (!user) {
-      toast.error("Clave de seguridad incorrecta.", {
+      if (token) {
+        localStorage.setItem("authToken", token);
+      }
+
+      const userProfile = await userApi.getByUsername(username);
+
+      if (!userProfile) {
+        throw new Error("No se pudo obtener el perfil del usuario.");
+      }
+
+      const roleStr = userProfile.role?.toLowerCase() || "";
+      let mappedRole: UserRole = "mesero";
+      if (roleStr.includes("admin")) {
+        mappedRole = "admin";
+      } else if (roleStr.includes("vendedor") || roleStr.includes("cajero")) {
+        mappedRole = "cajero";
+      }
+
+      login({
+        id: (userProfile.userId || userProfile.id || "").toString(),
+        name: `${userProfile.firstName || ""} ${userProfile.lastName || ""}`.trim() || userProfile.username,
+        role: mappedRole,
+      });
+
+      toast.success(`¡Bienvenido, ${userProfile.firstName || userProfile.username}!`, {
+        style: { background: "#E8BC6E", color: "#fff", fontWeight: "bold" },
+        iconTheme: { primary: "#fff", secondary: "#E8BC6E" },
+      });
+
+      const defaultRoutes: Record<string, string> = {
+        mesero: "/ordenes",
+        cajero: "/ordenes",
+        admin: "/",
+      };
+
+      setTimeout(() => {
+        navigate(defaultRoutes[mappedRole] || "/");
+      }, 1500);
+    } catch (error) {
+      console.error("Login Error:", error);
+      toast.error("Credenciales incorrectas o error de conexión.", {
         duration: 4000,
         style: {
           background: "#593D31",
@@ -30,26 +75,10 @@ export const useLogin = () => {
           borderLeft: "5px solid #E8BC6E",
         },
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    login({ id: user.id, name: user.name, role: user.role });
-
-    toast.success(`¡Bienvenido, ${user.name}!`, {
-      style: { background: "#E8BC6E", color: "#fff", fontWeight: "bold" },
-      iconTheme: { primary: "#fff", secondary: "#E8BC6E" },
-    });
-
-    const defaultRoutes: Record<string, string> = {
-      mesero: "/ordenes",
-      cajero: "/ordenes",
-      admin: "/",
-    };
-
-    setTimeout(() => {
-      navigate(defaultRoutes[user.role] || "/");
-    }, 1500);
   };
 
-  return { password, setPassword, handleLogin };
+  return { username, setUsername, password, setPassword, handleLogin, isLoading };
 };

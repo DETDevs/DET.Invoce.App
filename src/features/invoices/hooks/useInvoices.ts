@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Invoice, InvoiceItem, InvoiceStatus, InvoiceReturn } from "@/features/invoices/types";
 import invoiceApi from "@/api/invoice/InvoiceAPI";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 export type DateFilterPreset = "all" | "today" | "week" | "month" | "custom";
 
@@ -38,7 +39,7 @@ function mapBackendInvoice(raw: any): Invoice {
     const details: any[] = raw.details ?? [];
     const items: InvoiceItem[] = details.map((d: any) => ({
         productId: d.productId ?? 0,
-        productName: d.productCode ?? d.productName ?? "Producto",
+        productName: d.productName || d.productCode || "Producto",
         quantity: d.quantity ?? 1,
         unitPrice: d.unitPrice ?? 0,
         subtotal: (d.quantity ?? 1) * (d.unitPrice ?? 0),
@@ -47,6 +48,11 @@ function mapBackendInvoice(raw: any): Invoice {
     const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
     const tax = subtotal * 0.15;
     const total = raw.total ?? subtotal + tax;
+
+    let mappedStatus: InvoiceStatus = "completed";
+    if (raw.status === "REFUND" || raw.status === "returned") {
+        mappedStatus = "returned";
+    }
 
     return {
         id: String(raw.invoiceId ?? raw.invoiceNumber ?? ""),
@@ -60,18 +66,19 @@ function mapBackendInvoice(raw: any): Invoice {
         subtotal,
         tax,
         total,
-        status: "completed" as InvoiceStatus,
+        status: mappedStatus,
         returns: [],
     };
 }
 
 export const useInvoices = () => {
+    const { user } = useAuthStore();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<InvoiceStatus | "all">("all");
-    const [dateFilter, setDateFilter] = useState<DateFilterPreset>("all");
+    const [dateFilter, setDateFilter] = useState<DateFilterPreset>("today");
     const [customDateFrom, setCustomDateFrom] = useState("");
     const [customDateTo, setCustomDateTo] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -98,32 +105,42 @@ export const useInvoices = () => {
         fetchInvoices();
     }, [fetchInvoices]);
 
-    const addReturn = (
+    const addReturn = async (
         invoiceId: string,
         returnData: { reason: string; notes?: string }
     ) => {
         const invoice = invoices.find((inv) => inv.id === invoiceId);
         if (!invoice) return;
 
-        const totalReturned = invoice.items.reduce((sum, item) => sum + item.subtotal, 0);
+        try {
+            await invoiceApi.refund({
+                invoiceId: Number(invoiceId),
+                cancelledBy: user?.name ?? "Sistema",
+            });
+            await fetchInvoices();
+        } catch (err) {
+            console.error("[useInvoices] Error al hacer devolución:", err);
 
-        const newReturn: InvoiceReturn = {
-            id: `RET-${Date.now()}`,
-            returnedAt: new Date().toISOString(),
-            returnedBy: "Usuario Actual",
-            reason: returnData.reason,
-            notes: returnData.notes,
-            items: invoice.items,
-            totalReturned,
-        };
+            const totalReturned = invoice.items.reduce((sum, item) => sum + item.subtotal, 0);
 
-        const updatedInvoice: Invoice = {
-            ...invoice,
-            status: "returned" as InvoiceStatus,
-            returns: [...(invoice.returns || []), newReturn],
-        };
+            const newReturn: InvoiceReturn = {
+                id: `RET-${Date.now()}`,
+                returnedAt: new Date().toISOString(),
+                returnedBy: user?.name ?? "Usuario Actual",
+                reason: returnData.reason,
+                notes: returnData.notes,
+                items: invoice.items,
+                totalReturned,
+            };
 
-        setInvoices((prev) => prev.map((inv) => inv.id === invoiceId ? updatedInvoice : inv));
+            const updatedInvoice: Invoice = {
+                ...invoice,
+                status: "returned" as InvoiceStatus,
+                returns: [...(invoice.returns || []), newReturn],
+            };
+
+            setInvoices((prev) => prev.map((inv) => inv.id === invoiceId ? updatedInvoice : inv));
+        }
     };
 
     const filteredInvoices = useMemo(() => {

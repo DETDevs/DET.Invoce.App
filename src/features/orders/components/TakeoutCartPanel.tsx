@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ShoppingBag,
   Trash2,
@@ -117,19 +118,11 @@ export const TakeoutCartPanel = ({
     paymentMethod === "tarjeta" ||
     (paymentMethod === "efectivo" && paidValue >= total);
 
+  const navigate = useNavigate();
+
   const handleSendOrder = async () => {
-    if (mode === "mesa" && !selectedTable) {
-      toast.error("Selecciona una mesa");
-      return;
-    }
     if (cart.length === 0) {
       toast.error("Agrega al menos un producto");
-      return;
-    }
-    if (!orderId) {
-      toast.error(
-        "El sistema aún está preparando la orden. Espere un momento e intente de nuevo.",
-      );
       return;
     }
 
@@ -143,6 +136,50 @@ export const TakeoutCartPanel = ({
     }));
 
     try {
+      if (isPreselected && preselectedCuentaId) {
+        const parts = preselectedCuentaId.split("-");
+        const orderAccountId = Number(parts[parts.length - 1]);
+
+        if (!orderAccountId || isNaN(orderAccountId)) {
+          toast.error(
+            "No se pudo identificar la cuenta. Regrese e intente de nuevo.",
+          );
+          return;
+        }
+
+        await orderApi.addProduct({
+          orderAccountId,
+          createdBy: userName,
+          details: cart.map((item) => ({
+            productCode: item.code,
+            quantity: item.quantity,
+            unitPrice: item.price,
+            discount: 0,
+            notes: "",
+          })),
+        });
+
+        addItemsToOrder(preselectedCuentaId, items);
+        toast.success(
+          `Productos agregados a Mesa ${preselectedTable} - Cuenta ${preselectedCuentaNumber}`,
+          { icon: "🍽️" },
+        );
+        onOrderSent();
+        navigate("/takeout");
+        return;
+      }
+
+      if (mode === "mesa" && !selectedTable) {
+        toast.error("Selecciona una mesa");
+        return;
+      }
+      if (!orderId) {
+        toast.error(
+          "El sistema aún está preparando la orden. Espere un momento e intente de nuevo.",
+        );
+        return;
+      }
+
       await orderApi.save({
         orderId,
         createdBy: userName,
@@ -156,8 +193,6 @@ export const TakeoutCartPanel = ({
           notes: "",
         })),
       });
-
-      console.log("[Order] Save OK, orderId:", orderId);
 
       if (mode === "llevar") {
         const cuentaNumber = getNextCuentaNumber(PARA_LLEVAR_TABLE);
@@ -573,11 +608,11 @@ export const TakeoutCartPanel = ({
             </button>
           )}
           <button
-            onClick={onCancel}
+            onClick={isPreselected ? () => navigate("/takeout") : onCancel}
             className="w-full py-3 bg-white border border-red-100 text-red-500 font-bold rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
           >
             <Trash2 size={18} />
-            Cancelar Orden
+            {isPreselected ? "Volver" : "Cancelar Orden"}
           </button>
         </div>
       </div>

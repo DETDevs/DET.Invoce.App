@@ -38,10 +38,11 @@ export const CashMovementsPage = () => {
     cashInTypes,
     cashOutTypes,
     allDisplayTypes,
+    dateRange,
+    setDateRange,
   } = useCashMovements();
 
-  const handlePrintTicket = (movementId: string) => {
-    console.log("Imprimir ticket para movimiento:", movementId);
+  const handlePrintTicket = (_movementId: string) => {
     toast.success("Solicitud de impresión enviada al servidor");
   };
 
@@ -79,7 +80,7 @@ export const CashMovementsPage = () => {
           <h3 className="font-bold text-gray-900">Filtros</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative">
             <Search
               size={18}
@@ -144,6 +145,20 @@ export const CashMovementsPage = () => {
               </optgroup>
             )}
           </select>
+
+          <div className="relative">
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value as any)}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm text-[#2D2D2D] appearance-none"
+            >
+              <option value="today">Hoy</option>
+              <option value="week">Esta Semana</option>
+              <option value="month">Este Mes</option>
+              <option value="year">Este Año</option>
+              <option value="all">Todo el tiempo</option>
+            </select>
+          </div>
         </div>
       </div>
 

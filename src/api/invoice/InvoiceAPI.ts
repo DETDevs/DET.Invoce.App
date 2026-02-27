@@ -1,5 +1,5 @@
 import api from '../api';
-import type { TSaveFromAccount, TCancelInvoice } from './types';
+import type { TSaveFromAccount, TCancelInvoice, TRefundInvoice } from './types';
 
 async function saveFromAccount(data: TSaveFromAccount) {
     return api.post<any>('/Invoice/SaveFromAccount', data);
@@ -31,6 +31,10 @@ async function cancel(data: TCancelInvoice) {
     return api.post<any>('/Invoice/Cancell', data);
 }
 
+async function refund(data: TRefundInvoice) {
+    return api.post<any>('/Invoice/Refund', data);
+}
+
 async function get(id: number) {
     return api.get<any>(`/Invoice/Get?id=${id}`);
 }
@@ -43,6 +47,7 @@ const invoiceApi = {
     saveFromAccount,
     saveFromReservationOrder,
     cancel,
+    refund,
     get,
     getAll,
 };

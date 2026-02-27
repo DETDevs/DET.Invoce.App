@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Save, ArrowLeft } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
@@ -16,8 +16,7 @@ export const AddProductPage = () => {
     handleBlur,
     handleSubmit,
   } = useAddProductForm({
-    onSubmitSuccess: (data) => {
-      console.log("Creando producto:", data);
+    onSubmitSuccess: (_data) => {
       toast.success("Producto creado exitosamente!");
       navigate("/productos");
     },

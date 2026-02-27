@@ -60,7 +60,7 @@ export const TakeoutDashboardPage = () => {
           const items = (account.orderAccountDetails || []).map((d: any) => ({
             productId: d.orderDetailId ?? 0,
             productCode: d.productCode ?? "",
-            name: d.productName ?? d.productCode ?? "Producto",
+            name: d.productName || d.productCode || "Producto",
             price: d.unitPrice ?? 0,
             quantity: d.quantity ?? 1,
             addedAt: order.orderDate,

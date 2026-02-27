@@ -12,6 +12,7 @@ import {
   ArrowRightLeft,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { KPICard } from "./KPICard";
@@ -43,12 +44,15 @@ const fmt = (n: number) =>
     currency: "NIO",
   }).format(n);
 
-const fmtTime = (iso: string) => {
+const fmtDateTime = (iso: string) => {
   const d = new Date(iso);
-  return d.toLocaleTimeString("es-NI", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const day = d.getDate().toString().padStart(2, "0");
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const ampm = d.getHours() >= 12 ? "PM" : "AM";
+  const hours = (d.getHours() % 12 || 12).toString().padStart(2, "0");
+  const minutes = d.getMinutes().toString().padStart(2, "0");
+
+  return `${day}/${month} ${hours}:${minutes} ${ampm}`;
 };
 
 const TYPE_CONFIG = {
@@ -141,31 +145,56 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     setIsConfirmOpen(false);
   };
 
+  const handlePrint = () => {
+    const el = document.getElementById("cash-close-print-area");
+    if (!el) return;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "none";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(`
+        <html>
+          <head>
+            <style>
+              @page { margin: 0; size: auto; }
+              body { 
+                font-family: system-ui, sans-serif; 
+                margin: 0; 
+                padding: 10mm; 
+                font-size: 11px;
+                color: #2D2D2D;
+              }
+            </style>
+          </head>
+          <body>
+            ${el.innerHTML}
+          </body>
+        </html>
+      `);
+      doc.close();
+
+      iframe.onload = () => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => iframe.remove(), 1000);
+      };
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          #cash-close-print-area,
-          #cash-close-print-area * { visibility: visible !important; }
-          #cash-close-print-area {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100%;
-            z-index: 99999;
-            background: white;
-            padding: 24px 32px;
-            font-size: 11px;
-          }
-          .no-print { display: none !important; }
-          @page { margin: 12mm 10mm; size: letter; }
-        }
-      `}</style>
-
       <div
         id="cash-close-print-area"
-        className="hidden print:!block"
+        className="hidden"
         style={{ fontFamily: "system-ui, sans-serif" }}
       >
         <div
@@ -245,7 +274,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                   fontSize: "12px",
                 }}
               >
-                {fmt(data.initialAmount)}
+                {fmtCompact(data.initialAmount)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
@@ -261,7 +290,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                   fontSize: "12px",
                 }}
               >
-                + {fmt(data.salesTotal)}
+                + {fmtCompact(data.salesTotal)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
@@ -277,7 +306,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                   fontSize: "12px",
                 }}
               >
-                + {fmt(data.cashInTotal)}
+                + {fmtCompact(data.cashInTotal)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
@@ -293,7 +322,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                   fontSize: "12px",
                 }}
               >
-                - {fmt(data.cashOutTotal)}
+                - {fmtCompact(data.cashOutTotal)}
               </td>
             </tr>
             <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
@@ -309,7 +338,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                   fontSize: "12px",
                 }}
               >
-                - {fmt(data.returnsTotal)}
+                - {fmtCompact(data.returnsTotal)}
               </td>
             </tr>
             <tr style={{ borderTop: "2px solid #593D31" }}>
@@ -332,7 +361,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                   color: "#593D31",
                 }}
               >
-                {fmt(data.expectedTotal)}
+                {fmtCompact(data.expectedTotal)}
               </td>
             </tr>
           </tbody>
@@ -432,7 +461,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                         fontWeight: 600,
                       }}
                     >
-                      {fmt(p.amount)}
+                      {fmtCompact(p.amount)}
                     </td>
                   </tr>
                 ))}
@@ -472,24 +501,12 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                       fontWeight: 600,
                       color: "#9ca3af",
                       textTransform: "uppercase",
-                      width: "60px",
-                    }}
-                  >
-                    Hora
-                  </th>
-                  <th
-                    style={{
-                      padding: "4px 0",
-                      textAlign: "left",
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      color: "#9ca3af",
-                      textTransform: "uppercase",
                       width: "80px",
                     }}
                   >
-                    Tipo
+                    Fecha/Hora
                   </th>
+
                   <th
                     style={{
                       padding: "4px 0",
@@ -521,12 +538,6 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                 {data.movementLines.map((line, idx) => {
                   const isPositive =
                     line.type === "venta" || line.type === "ingreso";
-                  const typeLabels = {
-                    venta: "Venta",
-                    ingreso: "Ingreso",
-                    egreso: "Egreso",
-                    devolucion: "Devolución",
-                  };
                   return (
                     <tr key={idx} style={{ borderBottom: "1px solid #f3f4f6" }}>
                       <td
@@ -537,17 +548,9 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                           fontFamily: "monospace",
                         }}
                       >
-                        {fmtTime(line.time)}
+                        {fmtDateTime(line.time)}
                       </td>
-                      <td
-                        style={{
-                          padding: "4px 0",
-                          fontSize: "11px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {typeLabels[line.type]}
-                      </td>
+
                       <td
                         style={{
                           padding: "4px 0",
@@ -567,7 +570,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                         }}
                       >
                         {isPositive ? "+" : "-"}
-                        {fmt(line.amount)}
+                        {fmtCompact(line.amount)}
                       </td>
                     </tr>
                   );
@@ -624,18 +627,6 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
             icon={ArrowDownRight}
             color="red"
             tooltip="Movimientos de salida: retiros, pagos, gastos."
-          />
-          <KPICard
-            title="Devoluciones"
-            value={fmtCompact(data.returnsTotal)}
-            subValue={
-              data.returnsCount > 0
-                ? `${data.returnsCount} devueltas`
-                : undefined
-            }
-            icon={RotateCcw}
-            color="amber"
-            tooltip="Facturas devueltas que reducen el efectivo esperado."
           />
           <KPICard
             title="Total Esperado"
@@ -726,7 +717,9 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                    <th className="text-left px-4 py-3 font-semibold">Hora</th>
+                    <th className="text-left px-4 py-3 font-semibold">
+                      Fecha y Hora
+                    </th>
                     <th className="text-left px-4 py-3 font-semibold">Tipo</th>
                     <th className="text-left px-4 py-3 font-semibold">
                       Descripción
@@ -745,7 +738,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
                         className="hover:bg-gray-50/50 transition-colors"
                       >
                         <td className="px-4 py-3 text-sm text-gray-500 font-mono whitespace-nowrap">
-                          {fmtTime(line.time)}
+                          {fmtDateTime(line.time)}
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -824,6 +817,13 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
         )}
 
         <div className="flex flex-wrap gap-3 mt-4">
+          <button
+            onClick={handlePrint}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors active:scale-95"
+          >
+            <Download size={18} /> Exportar PDF
+          </button>
+
           <button
             onClick={handleCopy}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors active:scale-95"

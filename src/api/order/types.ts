@@ -42,3 +42,9 @@ export type TOrder = {
     createdBy: string;
     details: TOrderDetail[] | null;
 };
+
+export type TAddProduct = {
+    orderAccountId: number;
+    createdBy: string;
+    details: TOrderDetail[];
+};

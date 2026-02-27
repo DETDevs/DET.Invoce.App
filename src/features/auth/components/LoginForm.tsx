@@ -2,10 +2,18 @@ import React, { useState } from "react";
 import { useLogin } from "@/features/auth/hooks/useLogin";
 import { LoginInput } from "./LoginInput";
 import lockIcon from "@/assets/password.svg";
-import { Eye, EyeOff } from "lucide-react";
+import userIcon from "@/assets/useradmin.svg";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export const LoginForm = () => {
-  const { password, setPassword, handleLogin } = useLogin();
+  const {
+    username,
+    setUsername,
+    password,
+    setPassword,
+    handleLogin,
+    isLoading,
+  } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -13,6 +21,17 @@ export const LoginForm = () => {
       className="space-y-5 flex flex-col justify-center items-center"
       onSubmit={handleLogin}
     >
+      <div className="relative w-full">
+        <LoginInput
+          type="text"
+          placeholder="Nombre de Usuario"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          icon={userIcon}
+          alt="username"
+        />
+      </div>
+
       <div className="relative w-full">
         <LoginInput
           type={showPassword ? "text" : "password"}
@@ -33,9 +52,18 @@ export const LoginForm = () => {
 
       <button
         type="submit"
-        className="w-1/2 py-3 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md hover:shadow-lg transform active:scale-[0.98] transition-all duration-200 mt-6 cursor-pointer"
+        disabled={isLoading}
+        className={`w-1/2 flex justify-center items-center py-3 font-bold rounded-xl shadow-md transition-all duration-200 mt-6 ${
+          isLoading
+            ? "bg-gray-400 text-white cursor-not-allowed"
+            : "bg-[#E8BC6E] hover:bg-[#dca34b] text-white hover:shadow-lg transform active:scale-[0.98] cursor-pointer"
+        }`}
       >
-        Ingresar
+        {isLoading ? (
+          <Loader2 size={24} className="animate-spin" />
+        ) : (
+          "Ingresar"
+        )}
       </button>
     </form>
   );

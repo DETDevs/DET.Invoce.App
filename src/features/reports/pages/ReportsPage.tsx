@@ -22,12 +22,13 @@ export const ReportsPage = () => {
     cashFlowReport,
     ordersReport,
     cashCloseReport,
+    isLoading,
   } = useReports();
 
   const [isExporting, setIsExporting] = useState(false);
 
   const handleDownloadPdf = async () => {
-    if (isExporting) return;
+    if (isExporting || isLoading) return;
     setIsExporting(true);
     try {
       await generateReportPdf("report-content", activeReport);
@@ -37,6 +38,15 @@ export const ReportsPage = () => {
   };
 
   const renderActiveReport = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 size={36} className="text-[#E8BC6E] animate-spin" />
+          <p className="text-gray-500 text-sm">Cargando reporte...</p>
+        </div>
+      );
+    }
+
     switch (activeReport) {
       case "sales":
         return <SalesReport data={salesReport} />;
@@ -74,7 +84,7 @@ export const ReportsPage = () => {
 
           <button
             onClick={handleDownloadPdf}
-            disabled={isExporting}
+            disabled={isExporting || isLoading}
             className="p-2 bg-[#593D31] text-white rounded-lg hover:bg-[#4a332a] flex items-center justify-center transition-colors disabled:opacity-60"
             title="Descargar PDF"
           >

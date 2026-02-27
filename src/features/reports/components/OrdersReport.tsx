@@ -32,8 +32,8 @@ export const OrdersReport = ({ data }: OrdersReportProps) => {
           color="green"
         />
         <KPICard
-          title="Devoluciones"
-          value={data.returnedOrders}
+          title="Canceladas"
+          value={data.cancelledOrders}
           icon={AlertCircle}
           color="red"
         />

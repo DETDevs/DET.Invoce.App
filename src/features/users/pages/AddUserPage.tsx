@@ -1,26 +1,28 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
-import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
+import userApi from "@/api/user/UserAPI";
 
 export const AddUserPage = () => {
   const navigate = useNavigate();
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    username: "",
+    firstName: "",
+    lastName: "",
     password: "",
-    role: "Vendedor",
+    role: "Cajero",
     status: "Activo",
   });
 
   const isFormValid =
-    formData.name.trim() !== "" &&
-    formData.email.trim() !== "" &&
-    formData.password.trim() !== "" &&
-    imageFile !== null;
+    formData.username.trim() !== "" &&
+    formData.firstName.trim() !== "" &&
+    formData.lastName.trim() !== "" &&
+    formData.password.trim() !== "";
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -36,15 +38,32 @@ export const AddUserPage = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) {
       toast.error("Por favor completa todos los campos requeridos");
       return;
     }
-    console.log("Creando usuario:", { ...formData, imageFile });
-    toast.success("Usuario creado exitosamente!");
-    navigate("/usuarios");
+
+    setIsSubmitting(true);
+    try {
+      await userApi.create({
+        username: formData.username,
+        passwordHash: formData.password,
+        email: `${formData.username.replace(/\s+/g, "").toLowerCase()}@dulcesmomentos.com`,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: formData.role,
+        isActive: formData.status === "Activo",
+      });
+      toast.success("Usuario creado exitosamente!");
+      navigate("/usuarios");
+    } catch (error) {
+      toast.error("Hubo un error al crear el usuario.");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -63,55 +82,74 @@ export const AddUserPage = () => {
         <form onSubmit={handleSubmit}>
           <Card className="p-6 md:p-8">
             <div className="grid grid-cols-1 gap-8">
-              <ImageUploadField
-                label="Foto de Perfil"
-                onImageSelected={setImageFile}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 pt-8">
-                <div className="md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="md:col-span-1">
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Nombre Completo <span className="text-red-400">*</span>
+                    Nombres <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
+                    name="firstName"
+                    value={formData.firstName}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    placeholder="Ej: Juan Pérez"
+                    placeholder="Ej: Juan"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                  />
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                    Apellidos <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    placeholder="Ej: Pérez"
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                   />
                 </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Correo Electrónico <span className="text-red-400">*</span>
+                    Nombre de Usuario <span className="text-red-400">*</span>
                   </label>
                   <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
+                    type="text"
+                    name="username"
+                    value={formData.username}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    placeholder="usuario@empresa.com"
+                    placeholder="Ej: juanperez1"
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                   />
                 </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Contraseña Temporal <span className="text-red-400">*</span>
+                    Contraseña <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    placeholder="••••••••"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-[#E8BC6E] transition-colors p-1"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -125,8 +163,8 @@ export const AddUserPage = () => {
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                   >
                     <option value="Admin">Administrador</option>
-                    <option value="Vendedor">Vendedor</option>
-                    <option value="Pastelero">Pastelero</option>
+                    <option value="Cajero">Cajero</option>
+                    <option value="Mesero">Mesero</option>
                   </select>
                 </div>
 
@@ -157,15 +195,19 @@ export const AddUserPage = () => {
               </button>
               <button
                 type="submit"
-                disabled={!isFormValid}
+                disabled={!isFormValid || isSubmitting}
                 className={`flex items-center gap-2 px-8 py-3 font-bold rounded-xl shadow-md transition-all active:scale-95 ${
-                  isFormValid
+                  isFormValid && !isSubmitting
                     ? "bg-[#E8BC6E] hover:bg-[#dca34b] text-white cursor-pointer"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                 }`}
               >
-                <Save size={20} />
-                Crear Usuario
+                {isSubmitting ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  <Save size={20} />
+                )}
+                {isSubmitting ? "Guardando..." : "Crear Usuario"}
               </button>
             </div>
           </Card>

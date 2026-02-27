@@ -1,13 +1,4 @@
-const PRINT_TAG = '[🖨️ PrintService]';
-
 export async function printThermalTicket(ticketText: string): Promise<boolean> {
-    console.log(`${PRINT_TAG} ========================================`);
-    console.log(`${PRINT_TAG} Iniciando impresión térmica...`);
-    console.log(`${PRINT_TAG} Longitud del ticket: ${ticketText.length} caracteres`);
-    console.log(`${PRINT_TAG} Preview del ticket:`);
-    console.log(ticketText);
-    console.log(`${PRINT_TAG} ========================================`);
-
     return new Promise((resolve) => {
         try {
             const existingFrame = document.getElementById('thermal-print-frame');
@@ -25,7 +16,6 @@ export async function printThermalTicket(ticketText: string): Promise<boolean> {
 
             const doc = iframe.contentDocument || iframe.contentWindow?.document;
             if (!doc) {
-                console.error(`${PRINT_TAG} ❌ No se pudo acceder al iframe`);
                 iframe.remove();
                 resolve(false);
                 return;
@@ -69,29 +59,19 @@ export async function printThermalTicket(ticketText: string): Promise<boolean> {
             doc.write(htmlContent);
             doc.close();
 
-            console.log(`${PRINT_TAG} ✅ Contenido HTML inyectado en iframe oculto`);
-
             iframe.onload = () => {
-                console.log(`${PRINT_TAG} ✅ iframe cargado, lanzando impresión...`);
-                console.log(`${PRINT_TAG} 💡 Tip: Usá Chrome con --kiosk-printing para impresión silenciosa`);
-
                 try {
                     iframe.contentWindow?.focus();
                     iframe.contentWindow?.print();
-                    console.log(`${PRINT_TAG} ✅ Proceso de impresión completado`);
-                } catch (e) {
-                    console.error(`${PRINT_TAG} ❌ Error al imprimir:`, e);
+                } catch (_) {
                 }
 
                 setTimeout(() => {
                     iframe.remove();
-                    console.log(`${PRINT_TAG} ✅ iframe de impresión removido`);
-                    console.log(`${PRINT_TAG} ========================================`);
                     resolve(true);
                 }, 1000);
             };
-        } catch (error) {
-            console.error(`${PRINT_TAG} ❌ Error inesperado:`, error);
+        } catch {
             resolve(false);
         }
     });

@@ -1,52 +1,71 @@
 import { useState, useEffect } from "react";
-import { Plus, Filter, Edit, Trash2, Search, Mail } from "lucide-react";
+import {
+  Plus,
+  Filter,
+  Edit,
+  Trash2,
+  Search,
+  Mail,
+  Loader2,
+} from "lucide-react";
 import { UserFilterPanel } from "@/features/users/compnents/UserFilterPanel";
 import { EditUserModal } from "@/features/users/compnents/EditUserModal";
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 
-const INITIAL_USERS = [
-  {
-    id: 1,
-    name: "Carlos Martínez",
-    email: "carlos@dulces.com",
-    role: "Admin",
-    status: "Activo",
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=75",
-  },
-  {
-    id: 2,
-    name: "Ana López",
-    email: "ana@dulces.com",
-    role: "Vendedor",
-    status: "Activo",
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=75",
-  },
-  {
-    id: 3,
-    name: "Jorge Ruiz",
-    email: "jorge@dulces.com",
-    role: "Pastelero",
-    status: "Inactivo",
-    image:
-      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=80&q=75",
-  },
-];
+import userApi from "@/api/user/UserAPI";
+import toast from "react-hot-toast";
+
+interface UserVM {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  image: string;
+  originalUsername: string;
+}
+
+const mapUserToVM = (u: any): UserVM => ({
+  id: u.userId || u.id,
+  name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.username,
+  email: u.email || "",
+  role: u.role || "Usuario",
+  status: u.isActive ? "Activo" : "Inactivo",
+  image: `https://api.dicebear.com/7.x/initials/svg?seed=${u.username}`,
+  originalUsername: u.username,
+});
 
 export const UsersPage = () => {
-  const [users, setUsers] = useState(INITIAL_USERS);
-  const [filteredUsers, setFilteredUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState<UserVM[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserVM[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState({ role: "", status: "" });
 
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<UserVM | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoading(true);
+      try {
+        const data = await userApi.getAll();
+        const mapped = data.map(mapUserToVM);
+        setUsers(mapped);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("Error al cargar los usuarios");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     let result = users;
@@ -85,6 +104,7 @@ export const UsersPage = () => {
   };
 
   const handleConfirmDelete = () => {
+    if (!selectedUser) return;
     setUsers(users.filter((u) => u.id !== selectedUser.id));
     setIsDeleteModalOpen(false);
   };
@@ -140,134 +160,141 @@ export const UsersPage = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Usuario
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Rol
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Acción
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-[#FDFBF7]">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-100">
-                        <img
-                          src={user.image}
-                          alt={user.name}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-bold text-[#2D2D2D]">
-                          {user.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#F3EFE0] text-[#593D31]">
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.status === "Activo"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleEditClick(user)}
-                        className="p-2 text-[#E8BC6E] hover:bg-[#F9F1D8] rounded-lg transition-colors"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(user)}
-                        className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 size={36} className="text-[#E8BC6E] animate-spin" />
+          <p className="text-gray-500 text-sm">Cargando usuarios...</p>
         </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Usuario
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Rol
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Acción
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-[#FDFBF7]">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full overflow-hidden border border-gray-100">
+                          <img
+                            src={user.image}
+                            alt={user.name}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-bold text-[#2D2D2D]">
+                            {user.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-[#F3EFE0] text-[#593D31]">
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          user.status === "Activo"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleEditClick(user)}
+                          className="p-2 text-[#E8BC6E] hover:bg-[#F9F1D8] rounded-lg transition-colors"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(user)}
+                          className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        <div className="md:hidden">
-          {filteredUsers.map((user) => (
-            <div
-              key={user.id}
-              className="p-4 border-b border-gray-100 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <img
-                  src={user.image}
-                  alt={user.name}
-                  className="h-12 w-12 rounded-full object-cover border border-gray-100"
-                  loading="lazy"
-                />
-                <div>
-                  <h3 className="font-bold text-[#2D2D2D]">{user.name}</h3>
-                  <div className="flex items-center text-xs text-gray-500 gap-1">
-                    <Mail size={12} /> {user.email}
-                  </div>
-                  <div className="flex gap-2 mt-1">
-                    <span className="text-xs bg-[#F3EFE0] text-[#593D31] px-2 py-0.5 rounded-full">
-                      {user.role}
-                    </span>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${user.status === "Activo" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}
-                    >
-                      {user.status}
-                    </span>
+          <div className="md:hidden">
+            {filteredUsers.map((user) => (
+              <div
+                key={user.id}
+                className="p-4 border-b border-gray-100 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={user.image}
+                    alt={user.name}
+                    className="h-12 w-12 rounded-full object-cover border border-gray-100"
+                    loading="lazy"
+                  />
+                  <div>
+                    <h3 className="font-bold text-[#2D2D2D]">{user.name}</h3>
+                    <div className="flex items-center text-xs text-gray-500 gap-1">
+                      <Mail size={12} /> {user.email}
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      <span className="text-xs bg-[#F3EFE0] text-[#593D31] px-2 py-0.5 rounded-full">
+                        {user.role}
+                      </span>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${user.status === "Activo" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}
+                      >
+                        {user.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => handleEditClick(user)}
+                    className="p-2 text-[#E8BC6E] bg-[#F9F1D8]/50 hover:bg-[#F9F1D8] rounded-lg"
+                  >
+                    <Edit size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(user)}
+                    className="p-2 text-red-400 bg-red-50 hover:bg-red-100 rounded-lg"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => handleEditClick(user)}
-                  className="p-2 text-[#E8BC6E] bg-[#F9F1D8]/50 hover:bg-[#F9F1D8] rounded-lg"
-                >
-                  <Edit size={18} />
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(user)}
-                  className="p-2 text-red-400 bg-red-50 hover:bg-red-100 rounded-lg"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <EditUserModal
         isOpen={isEditModalOpen}

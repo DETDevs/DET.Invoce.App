@@ -38,7 +38,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
                 const id = res?.orderId ?? res;
                 setOrderId(id);
                 setOrderNumber(id);
-                console.log("[Order] Creado orderId:", id);
+
             })
             .catch((err: unknown) => {
                 console.error("[Order] Error al crear:", err);
@@ -98,7 +98,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
                 const id = res?.orderId ?? res;
                 setOrderId(id);
                 setOrderNumber(id);
-                console.log("[Order] Nuevo orderId:", id);
+
             })
             .catch((err: unknown) => {
                 console.error("[Order] Error al refrescar:", err);

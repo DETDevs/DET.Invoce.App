@@ -16,10 +16,19 @@ async function getLowStock() {
     return api.post<TProduct[]>('/Product/GetLowStock', {});
 }
 
+async function getProductMovements(productId: number, dateFrom?: string, dateTo?: string) {
+    const qs = new URLSearchParams();
+    qs.append('productId', String(productId));
+    if (dateFrom) qs.append('dateFrom', dateFrom);
+    if (dateTo) qs.append('dateTo', dateTo);
+    return api.get<any[]>(`/Product/GetProductMovements?${qs.toString()}`);
+}
+
 const productApi = {
     getByCode,
     save,
     getLowStock,
+    getProductMovements,
 };
 
 export default productApi;

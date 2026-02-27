@@ -145,12 +145,6 @@ export const TakeoutDetailModal = ({
       }
 
       const orderAccountId: number = account.orderAccountId;
-      console.log(
-        "[Order] OrderAccountId obtenido:",
-        orderAccountId,
-        "| AccountNumber:",
-        account.accountNumber,
-      );
 
       const pm = paymentMethod === "tarjeta" ? "CARD" : "CASH";
       await handleInvoiceFlow({ orderAccountId, paymentmethod: pm });

@@ -14,10 +14,20 @@ async function updateStatus(orderId: number, statusId: number) {
     return api.post<any>(`/ReservationOrder/UpdateStatus?orderId=${orderId}&statusId=${statusId}`, {});
 }
 
+async function getAll() {
+    return api.get<any[]>('/ReservationOrder/GetAll');
+}
+
+async function cancell(orderId: number, cancelledBy: string, reason?: string) {
+    return api.post<any>('/ReservationOrder/Cancell', { orderId, cancelledBy, reason });
+}
+
 const reservationOrderApi = {
     get,
     save,
     updateStatus,
+    getAll,
+    cancell,
 };
 
 export default reservationOrderApi;

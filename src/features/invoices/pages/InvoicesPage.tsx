@@ -49,28 +49,14 @@ export const InvoicesPage = () => {
     totalPages,
   } = useInvoices();
 
-  const handlePrintInvoice = (invoiceId: string) => {
-    console.log("Imprimir factura:", invoiceId);
+  const handlePrintInvoice = (_invoiceId: string) => {
     toast.success("Solicitud de impresión enviada");
   };
 
   const handlePrintReturnInvoice = (
-    invoice: Invoice,
-    returnData: { reason: string; notes?: string },
+    _invoice: Invoice,
+    _returnData: { reason: string; notes?: string },
   ) => {
-    console.log("=== FACTURA DE DEVOLUCIÓN ===");
-    console.log("Factura original:", invoice.id);
-    console.log("Orden:", invoice.orderNumber);
-    console.log("Motivo:", returnData.reason);
-    if (returnData.notes) console.log("Notas:", returnData.notes);
-    console.log("Items devueltos:");
-    invoice.items.forEach((item) => {
-      console.log(
-        `  - ${item.productName} x${item.quantity} = C$${item.subtotal.toFixed(2)}`,
-      );
-    });
-    console.log("Total devuelto: C$" + invoice.total.toFixed(2));
-    console.log("============================");
     toast.success("Factura de devolución impresa");
   };
 
@@ -79,10 +65,13 @@ export const InvoicesPage = () => {
     setInvoiceToReturn(invoice);
   };
 
-  const handleConfirmReturn = (data: { reason: string; notes?: string }) => {
+  const handleConfirmReturn = async (data: {
+    reason: string;
+    notes?: string;
+  }) => {
     if (!invoiceToReturn) return;
 
-    addReturn(invoiceToReturn.id, data);
+    await addReturn(invoiceToReturn.id, data);
     handlePrintReturnInvoice(invoiceToReturn, data);
     toast.success("Devolución procesada correctamente");
     setInvoiceToReturn(null);

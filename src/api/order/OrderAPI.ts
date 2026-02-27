@@ -1,5 +1,5 @@
 import api from '../api';
-import type { TOrderSave, TOrderCreate, TAccountSplit, TOrder } from './types';
+import type { TOrderSave, TOrderCreate, TAccountSplit, TAddProduct, TOrder } from './types';
 
 async function save(data: TOrderSave) {
     return api.post<any>('/Order/Save', data);
@@ -11,6 +11,10 @@ async function create(data: TOrderCreate) {
 
 async function accountSplit(data: TAccountSplit) {
     return api.post<any>('/Order/AccountSplit', data);
+}
+
+async function addProduct(data: TAddProduct) {
+    return api.post<any>('/Order/AddProduct', data);
 }
 
 async function getOrderAccountWithDetails(orderId: number) {
@@ -40,6 +44,7 @@ const orderApi = {
     save,
     create,
     accountSplit,
+    addProduct,
     getOrderAccountWithDetails,
     accountMerge,
     getAll,

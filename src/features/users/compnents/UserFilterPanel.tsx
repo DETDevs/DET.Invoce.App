@@ -46,15 +46,13 @@ export const UserFilterPanel = ({
             </label>
             <select
               value={filters.role}
-              onChange={(e) =>
-                setFilters({ ...filters, role: e.target.value })
-              }
+              onChange={(e) => setFilters({ ...filters, role: e.target.value })}
               className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E8BC6E]"
             >
               <option value="">Todos</option>
               <option value="Admin">Administrador</option>
-              <option value="Vendedor">Vendedor</option>
-              <option value="Pastelero">Pastelero</option>
+              <option value="Cajero">Cajero</option>
+              <option value="Mesero">Mesero</option>
             </select>
           </div>
 

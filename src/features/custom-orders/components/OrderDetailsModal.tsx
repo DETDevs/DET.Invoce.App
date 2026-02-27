@@ -308,42 +308,40 @@ export const OrderDetailsModal = ({
         </div>
 
         <div className="p-4 md:p-5 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row items-center gap-3 md:gap-4 min-h-[80px] md:min-h-[88px]">
-          {!readOnly &&
-            onCancelOrder &&
-            (order.status === "pending" || order.status === "production") && (
-              <div className="w-full md:w-auto order-last md:order-first md:mr-auto">
-                {!showCancelConfirm ? (
+          {!readOnly && onCancelOrder && order.status === "pending" && (
+            <div className="w-full md:w-auto order-last md:order-first md:mr-auto">
+              {!showCancelConfirm ? (
+                <button
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-colors text-sm"
+                >
+                  <Ban size={16} />
+                  Cancelar Orden
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                  <span className="text-xs text-red-700 font-medium">
+                    ¿Seguro?
+                  </span>
                   <button
-                    onClick={() => setShowCancelConfirm(true)}
-                    className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-colors text-sm"
+                    onClick={() => {
+                      onCancelOrder(order.id);
+                      handleClose();
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors"
                   >
-                    <Ban size={16} />
-                    Cancelar Orden
+                    Sí, cancelar
                   </button>
-                ) : (
-                  <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-                    <span className="text-xs text-red-700 font-medium">
-                      ¿Seguro?
-                    </span>
-                    <button
-                      onClick={() => {
-                        onCancelOrder(order.id);
-                        handleClose();
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors"
-                    >
-                      Sí, cancelar
-                    </button>
-                    <button
-                      onClick={() => setShowCancelConfirm(false)}
-                      className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-100 transition-colors"
-                    >
-                      No
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  <button
+                    onClick={() => setShowCancelConfirm(false)}
+                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-100 transition-colors"
+                  >
+                    No
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {renderFooterActions()}
 
