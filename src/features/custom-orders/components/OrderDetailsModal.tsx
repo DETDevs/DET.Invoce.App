@@ -61,13 +61,11 @@ export const OrderDetailsModal = ({
   };
 
   const handleConfirmPayment = () => {
-    // Usar el valor convertido a córdobas (ya viene convertido del componente)
     const amount = convertedCordobaValue;
     if (amount <= 0) {
       toast.error("El monto debe ser mayor a 0");
       return;
     }
-    // Registrar solo lo que corresponde (si paga de más, solo registrar el pendiente)
     const toRegister = Math.min(amount, remaining);
     onRegisterPayment(order.id, toRegister);
     setPaymentAmount("");

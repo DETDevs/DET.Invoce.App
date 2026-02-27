@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Landmark,
   TrendingUp,
@@ -89,6 +90,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [closingAmount, setClosingAmount] = useState("");
   const { session, closeCashBox } = useCashBox();
+  const navigate = useNavigate();
 
   const totalPages = Math.max(
     1,
@@ -150,6 +152,8 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     await closeCashBox(closingNum);
     setIsConfirmOpen(false);
     setClosingAmount("");
+    navigate("/");
+    toast.success("🎉 Caja cerrada con éxito");
   };
 
   const handlePrint = () => {

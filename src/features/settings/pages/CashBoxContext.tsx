@@ -14,8 +14,10 @@ import toast from "react-hot-toast";
 
 interface CashBoxContextType {
   session: CashBoxSession | null;
+  isCashOpen: boolean;
   openCashBox: (amount: number) => void;
   closeCashBox: (closingAmount?: number) => Promise<void>;
+  triggerOpenModal: () => void;
 }
 
 const CashBoxContext = createContext<CashBoxContextType | undefined>(undefined);
@@ -27,7 +29,6 @@ export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { settings } = useSettings();
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
 
   useEffect(() => {
     const checkOpenCashBox = async () => {
@@ -92,25 +93,33 @@ export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
 
       localStorage.removeItem(CASH_BOX_STORAGE_KEY);
       setSession(null);
-
-      toast.success("Caja cerrada correctamente. Cerrando sesión...");
-
-      setTimeout(() => {
-        logout();
-        window.location.href = "/login";
-      }, 1500);
     } catch (error) {
       console.error("Error al cerrar caja:", error);
       toast.error("No se pudo cerrar la caja en el servidor");
     }
   };
 
+  const triggerOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const isCashOpen = session !== null;
+
   return (
-    <CashBoxContext.Provider value={{ session, openCashBox, closeCashBox }}>
+    <CashBoxContext.Provider
+      value={{
+        session,
+        isCashOpen,
+        openCashBox,
+        closeCashBox,
+        triggerOpenModal,
+      }}
+    >
       {children}
       <OpenCashBoxModal
         isOpen={isModalOpen}
         onSubmit={openCashBox}
+        onClose={() => setIsModalOpen(false)}
         defaultAmount={settings.initialCashBox}
       />
     </CashBoxContext.Provider>

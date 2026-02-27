@@ -15,8 +15,6 @@ export const CurrencySettings = ({ settings, onUpdate }: Props) => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Siempre guardamos NIO con la tasa porque USD es la base (rate = 1)
-      // y NIO es la moneda local cuya tasa relativa al USD se actualiza
       await settingsApi.saveCurrent({
         currencyCode: "NIO",
         rate: settings.dollarExchangeRate,

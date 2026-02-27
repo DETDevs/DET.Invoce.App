@@ -17,6 +17,7 @@ import { CashMovementsPage } from "@/features/cash-movements";
 import { InvoicesPage } from "@/features/invoices/pages/InvoicesPage";
 import { TakeoutDashboardPage } from "@/features/takeout/pages/TakeoutDashboardPage";
 import { RoleGuard } from "@/shared/ui/RoleGuard";
+import { CashBoxGuard } from "@/shared/ui/CashBoxGuard";
 
 function App() {
   return (
@@ -45,7 +46,9 @@ function App() {
               path="tablero"
               element={
                 <RoleGuard allowedRoles={["admin", "cajero", "mesero"]}>
-                  <OrdersBoardPage />
+                  <CashBoxGuard>
+                    <OrdersBoardPage />
+                  </CashBoxGuard>
                 </RoleGuard>
               }
             />
@@ -102,7 +105,9 @@ function App() {
               path="facturas"
               element={
                 <RoleGuard allowedRoles={["cajero", "admin"]}>
-                  <InvoicesPage />
+                  <CashBoxGuard>
+                    <InvoicesPage />
+                  </CashBoxGuard>
                 </RoleGuard>
               }
             />
@@ -110,7 +115,9 @@ function App() {
               path="movimientos-caja"
               element={
                 <RoleGuard allowedRoles={["cajero", "admin"]}>
-                  <CashMovementsPage />
+                  <CashBoxGuard>
+                    <CashMovementsPage />
+                  </CashBoxGuard>
                 </RoleGuard>
               }
             />
@@ -119,7 +126,9 @@ function App() {
               path="ordenes"
               element={
                 <RoleGuard allowedRoles={["mesero", "cajero", "admin"]}>
-                  <NewOrderPage />
+                  <CashBoxGuard>
+                    <NewOrderPage />
+                  </CashBoxGuard>
                 </RoleGuard>
               }
             />
@@ -127,7 +136,9 @@ function App() {
               path="takeout"
               element={
                 <RoleGuard allowedRoles={["mesero", "cajero", "admin"]}>
-                  <TakeoutDashboardPage />
+                  <CashBoxGuard>
+                    <TakeoutDashboardPage />
+                  </CashBoxGuard>
                 </RoleGuard>
               }
             />
@@ -135,7 +146,9 @@ function App() {
               path="realizar-pedido"
               element={
                 <RoleGuard allowedRoles={["mesero", "cajero", "admin"]}>
-                  <CreateCustomOrderPage />
+                  <CashBoxGuard>
+                    <CreateCustomOrderPage />
+                  </CashBoxGuard>
                 </RoleGuard>
               }
             />

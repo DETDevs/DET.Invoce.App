@@ -216,7 +216,6 @@ export const useReports = () => {
 
             const filteredOrders = allOrders.filter(order => {
                 const orderDateDate = new Date(order.orderDate);
-                // Usamos comparación de tiempo universal pero con el ajuste de rango correcto
                 return orderDateDate.getTime() >= fromDateDate.getTime() && orderDateDate.getTime() <= toDateDate.getTime();
             });
 
@@ -243,7 +242,6 @@ export const useReports = () => {
                 }
 
                 const orderDateObj = new Date(order.orderDate);
-                // Usamos toLocaleDateString con 'en-CA' para obtener YYYY-MM-DD en hora LOCAL
                 const orderDateStr = orderDateObj.toLocaleDateString('en-CA');
                 if (!daysMap.has(orderDateStr)) {
                     daysMap.set(orderDateStr, { orders: 0, amount: 0 });
@@ -350,7 +348,7 @@ export const useReports = () => {
             ]);
 
             const salesTotal = totalSalesRes?.totalSales || 0;
-            const cashInTotal = totalInRes?.totalIncome || 0;
+            const cashInTotal = totalInRes?.manualIncome || 0;
             const cashOutTotal = totalOutRes?.totalCashOut || 0;
             const initialAmount = session?.initialAmount ?? 0;
 

@@ -142,6 +142,7 @@ export const ProductsPage = () => {
         code: updatedProduct.code,
         categoryCode:
           updatedProduct.categoryCode ?? updatedProduct.category ?? "",
+        subCategoryId: updatedProduct.subCategoryId ?? undefined,
         name: updatedProduct.name,
         description: updatedProduct.description ?? "",
         price: updatedProduct.price,

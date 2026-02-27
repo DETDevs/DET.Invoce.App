@@ -4,10 +4,16 @@ import { PiggyBank } from "lucide-react";
 interface Props {
   isOpen: boolean;
   onSubmit: (amount: number) => void;
+  onClose?: () => void;
   defaultAmount: number;
 }
 
-export const OpenCashBoxModal = ({ isOpen, onSubmit, defaultAmount }: Props) => {
+export const OpenCashBoxModal = ({
+  isOpen,
+  onSubmit,
+  onClose,
+  defaultAmount,
+}: Props) => {
   const [amount, setAmount] = useState(String(defaultAmount));
 
   useEffect(() => {
@@ -43,11 +49,16 @@ export const OpenCashBoxModal = ({ isOpen, onSubmit, defaultAmount }: Props) => 
           </div>
 
           <div className="mt-8">
-            <label htmlFor="initialAmount" className="block text-sm font-medium text-gray-600 mb-1.5">
+            <label
+              htmlFor="initialAmount"
+              className="block text-sm font-medium text-gray-600 mb-1.5"
+            >
               Monto Inicial (C$)
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg font-bold">C$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg font-bold">
+                C$
+              </span>
               <input
                 type="number"
                 id="initialAmount"
@@ -62,7 +73,7 @@ export const OpenCashBoxModal = ({ isOpen, onSubmit, defaultAmount }: Props) => 
           </div>
         </div>
 
-        <div className="p-4 bg-gray-50 border-t border-gray-100">
+        <div className="p-4 bg-gray-50 border-t border-gray-100 flex flex-col gap-2">
           <button
             onClick={handleConfirm}
             disabled={!amount || parseFloat(amount) < 0}
@@ -70,6 +81,14 @@ export const OpenCashBoxModal = ({ isOpen, onSubmit, defaultAmount }: Props) => 
           >
             Iniciar Día
           </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="w-full h-10 text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
+            >
+              Continuar sin caja
+            </button>
+          )}
         </div>
       </div>
     </div>
