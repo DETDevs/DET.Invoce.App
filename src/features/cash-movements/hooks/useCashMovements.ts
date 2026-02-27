@@ -4,6 +4,7 @@ import type { DateRangeType } from "@/features/reports/types";
 import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
 import type { TCashMovement } from "@/api/cash-register/types";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 import toast from "react-hot-toast";
 
 const SYSTEM_TYPE_IDS = [1];
@@ -56,6 +57,7 @@ export const useCashMovements = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const user = useAuthStore((s) => s.user);
+    const { session } = useCashBox();
 
     const typesMap = useMemo(() => {
         const map = new Map<number, MovementTypeOption>();
@@ -103,7 +105,8 @@ export const useCashMovements = () => {
     const fetchMovements = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await cashRegisterApi.getMovement({});
+            const cashId = dateRange === "today" ? session?.cashRegisterId : undefined;
+            const data = await cashRegisterApi.getMovement({ cashRegisterId: cashId });
             if (Array.isArray(data)) {
                 const mapped = data
                     .filter((m) => !SYSTEM_TYPE_IDS.includes(m.cashMovementTypeId))
@@ -119,7 +122,7 @@ export const useCashMovements = () => {
         } finally {
             setLoading(false);
         }
-    }, [mapApiMovement]);
+    }, [mapApiMovement, dateRange, session?.cashRegisterId]);
 
     useEffect(() => {
         fetchTypes();

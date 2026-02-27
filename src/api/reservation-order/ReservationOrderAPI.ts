@@ -14,8 +14,9 @@ async function updateStatus(orderId: number, statusId: number) {
     return api.post<any>(`/ReservationOrder/UpdateStatus?orderId=${orderId}&statusId=${statusId}`, {});
 }
 
-async function getAll() {
-    return api.get<any[]>('/ReservationOrder/GetAll');
+async function getAll(cashRegisterId?: number) {
+    const params = cashRegisterId ? `?cashRegisterId=${cashRegisterId}` : '';
+    return api.get<any[]>(`/ReservationOrder/GetAll${params}`);
 }
 
 async function cancell(orderId: number, cancelledBy: string, reason?: string) {

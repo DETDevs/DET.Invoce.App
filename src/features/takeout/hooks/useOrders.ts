@@ -11,7 +11,13 @@ export const useOrders = () => {
         try {
             const data = await orderApi.getAll();
             if (Array.isArray(data)) {
-                setOrders(data.filter((o) => o.status === 'InProgress'));
+                const seen = new Set<number>();
+                const unique = data.filter((o) => {
+                    if (seen.has(o.orderId)) return false;
+                    seen.add(o.orderId);
+                    return true;
+                });
+                setOrders(unique.filter((o) => o.status === 'InProgress'));
             }
         } catch (err) {
             console.error('Error fetching orders:', err);

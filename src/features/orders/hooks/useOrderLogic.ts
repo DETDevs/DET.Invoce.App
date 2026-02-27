@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useNavigationBlocker } from "@/shared/context/NavigationBlockerContext";
@@ -28,6 +28,26 @@ export const useOrderLogic = (isAddingToExisting = false) => {
     });
     const [isCartOpen, setIsCartOpen] = useState(false);
 
+    const orderIdRef = useRef<number | null>(null);
+    const wasCheckedOut = useRef(false);
+
+    useEffect(() => {
+        orderIdRef.current = orderId;
+    }, [orderId]);
+
+    const cancelCurrentOrder = useCallback(async () => {
+        const id = orderIdRef.current;
+        if (id) {
+            try {
+                await orderApi.cancel(id, user?.name || "Caja");
+            } catch (err) {
+                console.error("[Order] Error al cancelar orden:", err);
+            }
+            orderIdRef.current = null;
+            setOrderId(null);
+        }
+    }, [user]);
+
     useEffect(() => {
         if (isAddingToExisting) return;
         let cancelled = false;
@@ -38,15 +58,27 @@ export const useOrderLogic = (isAddingToExisting = false) => {
                 const id = res?.orderId ?? res;
                 setOrderId(id);
                 setOrderNumber(id);
-
             })
             .catch((err: unknown) => {
                 console.error("[Order] Error al crear:", err);
                 toast.error("No se pudo iniciar la sesión de orden. Verifique la conexión e intente de nuevo.");
             })
             .finally(() => setIsCreatingOrder(false));
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, []);
+
+    useEffect(() => {
+        if (isAddingToExisting) return;
+        return () => {
+            if (!wasCheckedOut.current && orderIdRef.current) {
+                const id = orderIdRef.current;
+                const name = user?.name || "Caja";
+                orderApi.cancel(id, name).catch(() => { });
+            }
+        };
+    }, [isAddingToExisting, user]);
 
     useEffect(() => {
         if (isAddingToExisting) return;
@@ -91,14 +123,16 @@ export const useOrderLogic = (isAddingToExisting = false) => {
 
     const refreshOrder = useCallback(() => {
         clearCart();
+        wasCheckedOut.current = true;
         setOrderId(null);
+        orderIdRef.current = null;
         setIsCreatingOrder(true);
         orderApi.create({ createdBy: user?.name || "Caja" })
             .then((res: any) => {
                 const id = res?.orderId ?? res;
                 setOrderId(id);
                 setOrderNumber(id);
-
+                wasCheckedOut.current = false;
             })
             .catch((err: unknown) => {
                 console.error("[Order] Error al refrescar:", err);
@@ -109,34 +143,6 @@ export const useOrderLogic = (isAddingToExisting = false) => {
 
     const handleCheckout = () => {
         if (cart.length > 0) {
-            if (!isAddingToExisting) {
-                const invoice = {
-                    id: `FAC-VD-${orderNumber}`,
-                    orderNumber: `VD-${orderNumber}`,
-                    items: cart.map(item => ({
-                        productId: item.id,
-                        productName: item.name,
-                        quantity: item.quantity,
-                        unitPrice: item.price,
-                        subtotal: item.price * item.quantity
-                    })),
-                    subtotal: total,
-                    tax: 0,
-                    total: total,
-                    status: 'completed' as const,
-                    createdAt: new Date().toISOString(),
-                    createdBy: 'Usuario Actual'
-                };
-
-                try {
-                    const stored = localStorage.getItem('invoices');
-                    const invoices = stored ? JSON.parse(stored) : [];
-                    invoices.unshift(invoice);
-                    localStorage.setItem('invoices', JSON.stringify(invoices));
-                } catch (error) {
-                    console.error('Error al guardar factura:', error);
-                }
-            }
 
             toast.success(isAddingToExisting ? "Productos agregados correctamente" : "Orden Tomada correctamente");
             refreshOrder();
@@ -165,8 +171,9 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         }
     };
 
-    const handleConfirmDialog = () => {
+    const handleConfirmDialog = async () => {
         setIsManualCancelOpen(false);
+        await cancelCurrentOrder();
         if (pendingPath) {
             setBlocker(null)
             navigate(pendingPath);

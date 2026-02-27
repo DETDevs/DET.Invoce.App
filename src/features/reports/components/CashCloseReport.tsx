@@ -87,6 +87,7 @@ const ITEMS_PER_PAGE = 5;
 export const CashCloseReport = ({ data }: CashCloseReportProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [closingAmount, setClosingAmount] = useState("");
   const { session, closeCashBox } = useCashBox();
 
   const totalPages = Math.max(
@@ -140,9 +141,15 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     toast.success("Resumen copiado al portapapeles");
   };
 
-  const handleCloseBox = () => {
-    closeCashBox();
+  const closingNum = parseFloat(closingAmount) || 0;
+  const difference = closingNum - data.expectedTotal;
+  const hasFaltante = closingAmount !== "" && difference < 0;
+
+  const handleCloseBox = async () => {
+    if (hasFaltante) return;
+    await closeCashBox(closingNum);
     setIsConfirmOpen(false);
+    setClosingAmount("");
   };
 
   const handlePrint = () => {
@@ -845,9 +852,12 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
           <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
             <div
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-              onClick={() => setIsConfirmOpen(false)}
+              onClick={() => {
+                setIsConfirmOpen(false);
+                setClosingAmount("");
+              }}
             />
-            <div className="relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl shrink-0">
+            <div className="relative bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl shrink-0">
               <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <RotateCcw size={32} />
               </div>
@@ -855,22 +865,94 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
               <h2 className="text-2xl font-bold text-center text-[#2D2D2D] mb-2">
                 ¿Cerrar Caja?
               </h2>
-              <p className="text-center text-gray-500 mb-8 text-sm">
-                Esta acción finalizará el turno actual. Todo se reiniciará a 0
-                para el día siguiente. Asegúrate de imprimir o guardar el cierre
-                antes de continuar.
+              <p className="text-center text-gray-500 mb-6 text-sm">
+                Ingresá el monto real que hay en caja para verificar el cierre.
               </p>
+
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+                  <span className="text-sm font-medium text-gray-500">
+                    Total Esperado
+                  </span>
+                  <span className="text-lg font-bold text-[#2D2D2D]">
+                    C$ {data.expectedTotal.toFixed(2)}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">
+                    Monto Real en Caja
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">
+                      C$
+                    </span>
+                    <input
+                      type="number"
+                      value={closingAmount}
+                      onChange={(e) => setClosingAmount(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" &&
+                        !hasFaltante &&
+                        closingAmount !== "" &&
+                        handleCloseBox()
+                      }
+                      className="w-full pl-8 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] focus:border-transparent text-lg font-bold text-[#2D2D2D]"
+                      placeholder={data.expectedTotal.toFixed(2)}
+                      min="0"
+                      step="0.01"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                {closingAmount !== "" && (
+                  <div
+                    className={`flex items-center justify-between rounded-xl px-4 py-3 ${
+                      difference >= 0
+                        ? "bg-green-50 border border-green-200"
+                        : "bg-red-50 border border-red-200"
+                    }`}
+                  >
+                    <span
+                      className={`text-sm font-bold ${
+                        difference >= 0 ? "text-green-700" : "text-red-700"
+                      }`}
+                    >
+                      {difference >= 0 ? "✅ Sobrante" : "⚠️ Faltante"}
+                    </span>
+                    <span
+                      className={`text-lg font-bold ${
+                        difference >= 0 ? "text-green-800" : "text-red-800"
+                      }`}
+                    >
+                      C$ {Math.abs(difference).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {hasFaltante && (
+                  <p className="text-xs text-red-600 font-medium text-center">
+                    No se puede cerrar la caja con faltante. Verificá el dinero
+                    en caja.
+                  </p>
+                )}
+              </div>
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => setIsConfirmOpen(false)}
+                  onClick={() => {
+                    setIsConfirmOpen(false);
+                    setClosingAmount("");
+                  }}
                   className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleCloseBox}
-                  className="flex-1 py-3 px-4 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200 text-sm"
+                  disabled={closingAmount === "" || hasFaltante}
+                  className="flex-1 py-3 px-4 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sí, Cerrar Caja
                 </button>

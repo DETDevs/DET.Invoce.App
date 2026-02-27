@@ -6,11 +6,13 @@ import type { Order, OrderItem, ProductOption } from "@/shared/types";
 import { useOrdersStore } from "../store/useOrdersStore";
 import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 
 export const useCreateOrder = () => {
   const navigate = useNavigate();
   const { addOrder } = useOrdersStore();
   const { user } = useAuthStore();
+  const { session } = useCashBox();
   const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState<CreateOrderFormData>({
@@ -64,7 +66,7 @@ export const useCreateOrder = () => {
   const addCustomItem = (name: string, quantity: number, price: number) => {
     const newItem: OrderItem = {
       productId: 0,
-      productCode: "CUSTOM",
+      productCode: "PERSONALIZADO",
       name,
       price,
       quantity,
@@ -108,13 +110,21 @@ export const useCreateOrder = () => {
         total,
         notes: formData.comments?.trim() || null,
         createdBy: user?.name || "Sistema",
-        details: formData.items.map((item) => ({
-          productCode: item.productCode,
-          quantity: item.quantity,
-          unitPrice: item.price,
-          discount: 0,
-          notes: item.description || null,
-        })),
+        cashRegisterId: session?.cashRegisterId ?? null,
+        details: formData.items.map((item) => {
+          let itemNotes = item.description || "";
+          if (item.productCode === "PERSONALIZADO") {
+            itemNotes = item.name + (item.description ? ` - ${item.description}` : "");
+          }
+
+          return {
+            productCode: item.productCode,
+            quantity: item.quantity,
+            unitPrice: item.price,
+            discount: 0,
+            notes: itemNotes || null,
+          };
+        }),
       };
 
       const result = await reservationOrderApi.save(payload);

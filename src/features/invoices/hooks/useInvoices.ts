@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Invoice, InvoiceItem, InvoiceStatus, InvoiceReturn } from "@/features/invoices/types";
 import invoiceApi from "@/api/invoice/InvoiceAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 
 export type DateFilterPreset = "all" | "today" | "week" | "month" | "custom";
 
@@ -73,6 +74,7 @@ function mapBackendInvoice(raw: any): Invoice {
 
 export const useInvoices = () => {
     const { user } = useAuthStore();
+    const { session } = useCashBox();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -88,7 +90,8 @@ export const useInvoices = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await invoiceApi.getAll();
+            const cashId = dateFilter === "today" ? session?.cashRegisterId : undefined;
+            const data = await invoiceApi.getAll(cashId);
             const mapped = (Array.isArray(data) ? data : [])
                 .map(mapBackendInvoice)
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -99,7 +102,7 @@ export const useInvoices = () => {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [dateFilter, session?.cashRegisterId]);
 
     useEffect(() => {
         fetchInvoices();

@@ -13,11 +13,17 @@ export const CartItemRow = ({
   hidePrice?: boolean;
 }) => (
   <div className="flex gap-3 items-center p-2 hover:bg-gray-50 rounded-xl group">
-    <img
-      src={item.image}
-      className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-cover border border-gray-100"
-      alt={item.name}
-    />
+    {item.image ? (
+      <img
+        src={item.image}
+        className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-cover border border-gray-100"
+        alt={item.name}
+      />
+    ) : (
+      <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-300 text-xs">
+        N/A
+      </div>
+    )}
     <div className="flex-1 min-w-0">
       <h4 className="font-bold text-[#2D2D2D] text-sm truncate">{item.name}</h4>
       {!hidePrice && (

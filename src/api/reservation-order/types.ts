@@ -11,6 +11,7 @@ export type TReservationOrder = {
     notes?: string | null;
     createdBy?: string | null;
     createdAt?: string | null;
+    cashRegisterId?: number | null;
     details?: TReservationOrderDetail[] | null;
 };
 

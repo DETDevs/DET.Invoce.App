@@ -71,12 +71,18 @@ export const ProductCarousel = ({ title, products, onAdd }: Props) => {
                   className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm cursor-pointer hover:border-[#E8BC6E] hover:shadow-md transition-all group/card h-full flex flex-col"
                 >
                   <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-3 bg-gray-50 flex-shrink-0">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="h-full w-full object-cover group-hover/card:scale-105 transition-transform duration-500"
-                      draggable={false}
-                    />
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="h-full w-full object-cover group-hover/card:scale-105 transition-transform duration-500"
+                        draggable={false}
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-gray-300 text-xs">
+                        Sin imagen
+                      </div>
+                    )}
                     <div className="absolute bottom-1 right-1 bg-white/90 p-1.5 rounded-lg shadow-sm text-[#593D31] opacity-0 group-hover/card:opacity-100 transition-opacity">
                       <Plus size={14} />
                     </div>

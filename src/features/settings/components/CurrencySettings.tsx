@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Save, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { type Settings } from "@/features/settings/types";
+import settingsApi from "@/api/settings/SettingsAPI";
 
 interface Props {
   settings: Settings;
@@ -9,35 +10,25 @@ interface Props {
 }
 
 export const CurrencySettings = ({ settings, onUpdate }: Props) => {
-  const [originalCurrency, setOriginalCurrency] = useState(
-    settings.mainCurrency,
-  );
-  const [originalRate, setOriginalRate] = useState(settings.dollarExchangeRate);
-  const [isSavingCurrency, setIsSavingCurrency] = useState(false);
-  const [isSavingRate, setIsSavingRate] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const currencyDirty = settings.mainCurrency !== originalCurrency;
-  const rateDirty = settings.dollarExchangeRate !== originalRate;
-
-  const handleSaveCurrency = async () => {
-    setIsSavingCurrency(true);
+  const handleSave = async () => {
+    setIsSaving(true);
     try {
-      setOriginalCurrency(settings.mainCurrency);
+      // Siempre guardamos NIO con la tasa porque USD es la base (rate = 1)
+      // y NIO es la moneda local cuya tasa relativa al USD se actualiza
+      await settingsApi.saveCurrent({
+        currencyCode: "NIO",
+        rate: settings.dollarExchangeRate,
+      });
       localStorage.setItem("app-settings", JSON.stringify(settings));
-      toast.error("Endpoint de moneda principal pendiente en el backend");
+      toast.success("Configuración de moneda guardada");
+    } catch (error: any) {
+      console.error("Error al guardar configuración:", error);
+      const msg = error?.message || "No se pudo guardar en el servidor";
+      toast.error(msg);
     } finally {
-      setIsSavingCurrency(false);
-    }
-  };
-
-  const handleSaveRate = async () => {
-    setIsSavingRate(true);
-    try {
-      setOriginalRate(settings.dollarExchangeRate);
-      localStorage.setItem("app-settings", JSON.stringify(settings));
-      toast.error("Endpoint de tasa de cambio pendiente en el backend");
-    } finally {
-      setIsSavingRate(false);
+      setIsSaving(false);
     }
   };
 
@@ -66,21 +57,6 @@ export const CurrencySettings = ({ settings, onUpdate }: Props) => {
           Esta será la moneda por defecto para mostrar precios y registrar
           transacciones.
         </p>
-        <button
-          onClick={handleSaveCurrency}
-          disabled={!currencyDirty || isSavingCurrency}
-          className="w-full mt-3 inline-flex items-center justify-center gap-2 h-9 px-4 rounded-xl bg-[#E8BC6E] text-white text-sm font-bold shadow-md hover:bg-[#dca34b] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {isSavingCurrency ? (
-            <>
-              <Loader2 size={14} className="animate-spin" /> Guardando...
-            </>
-          ) : (
-            <>
-              <Save size={14} /> Guardar Moneda
-            </>
-          )}
-        </button>
       </div>
 
       <div>
@@ -88,7 +64,7 @@ export const CurrencySettings = ({ settings, onUpdate }: Props) => {
           htmlFor="dollarExchangeRate"
           className="block text-sm font-medium text-gray-600 mb-1.5"
         >
-          Tasa de Cambio (1 USD a C$)
+          Tasa de Cambio (1 USD = ? C$)
         </label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -107,24 +83,25 @@ export const CurrencySettings = ({ settings, onUpdate }: Props) => {
           />
         </div>
         <p className="text-xs text-gray-400 mt-2">
-          Tasa de cambio oficial o de venta para conversiones.
+          Cuántos córdobas equivale 1 dólar americano.
         </p>
-        <button
-          onClick={handleSaveRate}
-          disabled={!rateDirty || isSavingRate}
-          className="w-full mt-3 inline-flex items-center justify-center gap-2 h-9 px-4 rounded-xl bg-[#E8BC6E] text-white text-sm font-bold shadow-md hover:bg-[#dca34b] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {isSavingRate ? (
-            <>
-              <Loader2 size={14} className="animate-spin" /> Guardando...
-            </>
-          ) : (
-            <>
-              <Save size={14} /> Guardar Tasa
-            </>
-          )}
-        </button>
       </div>
+
+      <button
+        onClick={handleSave}
+        disabled={isSaving}
+        className="w-full inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-[#E8BC6E] text-white text-sm font-bold shadow-md hover:bg-[#dca34b] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {isSaving ? (
+          <>
+            <Loader2 size={16} className="animate-spin" /> Guardando...
+          </>
+        ) : (
+          <>
+            <Save size={16} /> Guardar Cambios
+          </>
+        )}
+      </button>
     </div>
   );
 };

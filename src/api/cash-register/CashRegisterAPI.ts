@@ -23,6 +23,7 @@ async function getMovement(params: TGetMovementParams = {}) {
     return api.post<TCashMovement[]>('/CashRegister/GetMovement', {
         cashMovementId: params.cashMovementId ?? null,
         flow: params.flow ?? null,
+        cashRegisterId: params.cashRegisterId ?? null,
     });
 }
 
@@ -37,8 +38,8 @@ async function getSummary(params: { dateFrom?: string; dateTo?: string } = {}) {
     return api.get<any>(`/CashRegister/GetSummary?${qs.toString()}`);
 }
 
-async function closeCashRegister(data: { initialAmount?: number; expectedAmount?: number; finalAmount: number; closedBy: string; notes?: string }) {
-    return api.post<any>('/CashRegister/Close', data);
+async function closeCashRegister(sessionId: number, closingAmount: number) {
+    return api.post<any>(`/CashRegister/Close?sessionId=${sessionId}&closingAmount=${closingAmount}`, {});
 }
 
 async function getOpen() {

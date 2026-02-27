@@ -80,7 +80,8 @@ export const OrdersBoardPage = () => {
         amountPaid: order.deposit,
         details: (order.rawItems ?? []).map((item) => ({
           invoiceId: 0,
-          productCode: item.productCode,
+          productCode: item.productCode || "",
+          productName: item.name || "Producto personalizado",
           quantity: item.quantity,
           unitPrice: item.price,
         })),

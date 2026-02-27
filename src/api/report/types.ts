@@ -1,6 +1,7 @@
 export interface TReportDateRange {
     dateFrom: string;
     dateTo: string;
+    cashRegisterId?: number;
 }
 
 export interface TTotalSales {

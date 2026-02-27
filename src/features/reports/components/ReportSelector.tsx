@@ -4,6 +4,7 @@ import {
   DollarSign,
   ClipboardList,
   Landmark,
+  Calendar,
 } from "lucide-react";
 import type { ReportType } from "@/features/reports/types";
 
@@ -21,6 +22,7 @@ export const ReportSelector = ({
     { id: "products", label: "Productos", icon: Package },
     { id: "cash", label: "Flujo de Caja", icon: DollarSign },
     { id: "orders", label: "Órdenes", icon: ClipboardList },
+    { id: "reservations", label: "Pedidos", icon: Calendar },
     { id: "cashClose", label: "Cierre de Caja", icon: Landmark },
   ];
 

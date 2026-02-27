@@ -22,6 +22,7 @@ import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { handleInvoiceFlow } from "@/services/invoiceService";
 import orderApi from "@/api/order/OrderAPI";
+import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -42,6 +43,7 @@ export const TakeoutDetailModal = ({
     "efectivo",
   );
   const [amountPaid, setAmountPaid] = useState("");
+  const [paidInCordobas, setPaidInCordobas] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const navigate = useNavigate();
@@ -100,11 +102,9 @@ export const TakeoutDetailModal = ({
   );
   const tax = subtotal * 0.15;
   const total = subtotal + tax;
-  const paidValue = parseFloat(amountPaid) || 0;
-  const change = paidValue - total;
   const isPaymentSufficient =
     paymentMethod === "tarjeta" ||
-    (paymentMethod === "efectivo" && paidValue >= total);
+    (paymentMethod === "efectivo" && paidInCordobas >= total);
 
   const handleInvoice = async () => {
     if (!isPaymentSufficient) {
@@ -151,14 +151,18 @@ export const TakeoutDetailModal = ({
 
       completeOrder(selectedCuenta.id);
 
-      if (paymentMethod === "efectivo" && change > 0) {
-        toast.success(`Factura generada. Cambio: C$ ${change.toFixed(2)}`, {
-          icon: "\uD83E\uDDFE",
-          duration: 5000,
-        });
+      if (paymentMethod === "efectivo" && paidInCordobas > total) {
+        const changeAmount = paidInCordobas - total;
+        toast.success(
+          `Factura generada. Cambio: C$ ${changeAmount.toFixed(2)}`,
+          {
+            icon: "🧾",
+            duration: 5000,
+          },
+        );
       } else {
         toast.success("Factura generada correctamente", {
-          icon: "\uD83E\uDDFE",
+          icon: "🧾",
         });
       }
 
@@ -734,33 +738,14 @@ export const TakeoutDetailModal = ({
                 </div>
 
                 {paymentMethod === "efectivo" && (
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap">
-                      Recibido
-                    </label>
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                        C$
-                      </span>
-                      <input
-                        type="number"
-                        value={amountPaid}
-                        onChange={(e) => setAmountPaid(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleInvoice()}
-                        className="w-full pl-8 pr-4 h-9 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm font-bold"
-                        placeholder={total.toFixed(2)}
-                        min="0"
-                      />
-                    </div>
-                    {amountPaid !== "" && (
-                      <div
-                        className={`h-9 px-3 flex items-center rounded-lg font-bold text-sm whitespace-nowrap ${change >= 0 ? "bg-green-100 text-green-800" : "bg-red-50 text-red-700"}`}
-                      >
-                        {change >= 0 ? "Cambio" : "Falta"}: C${" "}
-                        {Math.abs(change).toFixed(2)}
-                      </div>
-                    )}
-                  </div>
+                  <CurrencyAmountInput
+                    totalInCordobas={total}
+                    amountPaid={amountPaid}
+                    onAmountPaidChange={setAmountPaid}
+                    onConvertedValueChange={setPaidInCordobas}
+                    onEnter={handleInvoice}
+                    compact
+                  />
                 )}
 
                 <button

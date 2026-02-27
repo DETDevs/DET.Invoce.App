@@ -36,6 +36,7 @@ export type TCashMovementType = {
 export type TGetMovementParams = {
     cashMovementId?: number | null;
     flow?: string | null;
+    cashRegisterId?: number | null;
 };
 
 export type TGetMovementTypeParams = {

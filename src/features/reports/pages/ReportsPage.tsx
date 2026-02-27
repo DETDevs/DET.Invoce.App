@@ -6,6 +6,7 @@ import { SalesReport } from "@/features/reports/components/SalesReport";
 import { ProductsReport } from "@/features/reports/components/ProductsReport";
 import { CashFlowReport } from "@/features/reports/components/CashFlowReport";
 import { OrdersReport } from "@/features/reports/components/OrdersReport";
+import { ReservationsReport } from "@/features/reports/components/ReservationsReport";
 import { CashCloseReport } from "@/features/reports/components/CashCloseReport";
 import { useReports } from "@/features/reports/hooks/useReports";
 import { generateReportPdf } from "@/features/reports/utils/generateReportPdf";
@@ -21,6 +22,7 @@ export const ReportsPage = () => {
     productsReport,
     cashFlowReport,
     ordersReport,
+    reservationsReport,
     cashCloseReport,
     isLoading,
   } = useReports();
@@ -56,6 +58,8 @@ export const ReportsPage = () => {
         return <CashFlowReport data={cashFlowReport} />;
       case "orders":
         return <OrdersReport data={ordersReport} />;
+      case "reservations":
+        return <ReservationsReport data={reservationsReport} />;
       case "cashClose":
         return <CashCloseReport data={cashCloseReport} />;
       default:

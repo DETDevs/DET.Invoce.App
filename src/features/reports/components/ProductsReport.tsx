@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -8,6 +9,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ProductsReportData } from "@/features/reports/types";
 
 interface ProductsReportProps {
@@ -24,6 +26,14 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
 
   const COLORS = ["#E8BC6E", "#593D31", "#D4A373", "#FAEDCD", "#CCD5AE"];
 
+  const ITEMS_PER_PAGE = 8;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(data.topProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = data.topProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -35,7 +45,7 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
             {data.topProducts.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={data.topProducts}
+                  data={data.topProducts.slice(0, 10)}
                   layout="vertical"
                   margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
                 >
@@ -64,7 +74,7 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
                     ]}
                   />
                   <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={32}>
-                    {data.topProducts.map((_, index) => (
+                    {data.topProducts.slice(0, 10).map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
@@ -81,15 +91,15 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+          <div className="p-6 border-b border-gray-100 shrink-0">
             <h3 className="text-lg font-bold text-[#2D2D2D]">
               Detalle de Productos
             </h3>
           </div>
-          <div className="overflow-x-auto">
+          <div className="flex-1 overflow-x-auto min-h-[400px]">
             <table className="w-full text-left">
-              <thead className="bg-[#FDFBF7] text-gray-500 text-xs uppercase font-semibold">
+              <thead className="bg-[#FDFBF7] text-gray-500 text-xs uppercase font-semibold sticky top-0">
                 <tr>
                   <th className="px-6 py-4">Producto</th>
                   <th className="px-6 py-4 text-center">Cantidad</th>
@@ -97,7 +107,7 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {data.topProducts.map((product) => (
+                {paginatedProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {product.name}
@@ -123,6 +133,33 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-white shrink-0">
+              <span className="text-sm text-gray-500">
+                Página <span className="font-medium">{currentPage}</span> de{" "}
+                {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-gray-600 border border-gray-200"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-gray-600 border border-gray-200"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

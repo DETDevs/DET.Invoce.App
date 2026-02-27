@@ -1,5 +1,5 @@
 const environments = {
-    BASE_API_URI: 'https://localhost:7074/api',
+    BASE_API_URI: '/api',
 };
 
 export default environments;

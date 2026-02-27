@@ -12,6 +12,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { CartItemRow } from "@/features/orders/components/CartItemRow";
+import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
 import type { CartItem } from "@/features/orders/types/index";
 import type { TakeoutItem } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
@@ -112,11 +113,10 @@ export const TakeoutCartPanel = ({
   );
   const tax = subtotal * 0.15;
   const total = subtotal + tax;
-  const paidValue = parseFloat(amountPaid) || 0;
-  const change = paidValue - total;
+  const [paidInCordobas, setPaidInCordobas] = useState(0);
   const isPaymentSufficient =
     paymentMethod === "tarjeta" ||
-    (paymentMethod === "efectivo" && paidValue >= total);
+    (paymentMethod === "efectivo" && paidInCordobas >= total);
 
   const navigate = useNavigate();
 
@@ -275,8 +275,9 @@ export const TakeoutCartPanel = ({
       const pm = paymentMethod === "tarjeta" ? "CARD" : "CASH";
       await handleInvoiceFlow({ orderAccountId, paymentmethod: pm });
 
-      if (paymentMethod === "efectivo" && change > 0) {
-        toast.success(`Facturado. Cambio: C$ ${change.toFixed(2)}`, {
+      if (paymentMethod === "efectivo" && paidInCordobas > total) {
+        const changeAmount = paidInCordobas - total;
+        toast.success(`Facturado. Cambio: C$ ${changeAmount.toFixed(2)}`, {
           icon: "\uD83D\uDECD\uFE0F",
           duration: 5000,
         });
@@ -544,39 +545,13 @@ export const TakeoutCartPanel = ({
             </div>
 
             {paymentMethod === "efectivo" && (
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-gray-500 uppercase">
-                  Monto Recibido
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                    C$
-                  </span>
-                  <input
-                    type="number"
-                    value={amountPaid}
-                    onChange={(e) => setAmountPaid(e.target.value)}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && handleCajeroParaLlevarInvoice()
-                    }
-                    className="w-full pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm font-bold"
-                    placeholder={total.toFixed(2)}
-                    min="0"
-                  />
-                </div>
-                {amountPaid !== "" && (
-                  <div
-                    className={`flex justify-between items-center p-2.5 rounded-lg ${change >= 0 ? "bg-green-100 text-green-800" : "bg-red-50 text-red-700"}`}
-                  >
-                    <span className="font-bold text-sm">
-                      {change >= 0 ? "Cambio" : "Faltante"}
-                    </span>
-                    <span className="font-bold text-sm">
-                      C$ {Math.abs(change).toFixed(2)}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <CurrencyAmountInput
+                totalInCordobas={total}
+                amountPaid={amountPaid}
+                onAmountPaidChange={setAmountPaid}
+                onConvertedValueChange={setPaidInCordobas}
+                onEnter={handleCajeroParaLlevarInvoice}
+              />
             )}
           </>
         )}

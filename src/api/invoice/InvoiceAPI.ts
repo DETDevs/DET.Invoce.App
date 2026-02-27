@@ -20,6 +20,7 @@ async function saveFromReservationOrder(data: {
     details: {
         invoiceId: number;
         productCode: string;
+        productName: string;
         quantity: number;
         unitPrice: number;
     }[];
@@ -39,8 +40,9 @@ async function get(id: number) {
     return api.get<any>(`/Invoice/Get?id=${id}`);
 }
 
-async function getAll() {
-    return api.get<any>('/Invoice/GetAll');
+async function getAll(cashRegisterId?: number) {
+    const params = cashRegisterId ? `?cashRegisterId=${cashRegisterId}` : '';
+    return api.get<any>(`/Invoice/GetAll${params}`);
 }
 
 const invoiceApi = {

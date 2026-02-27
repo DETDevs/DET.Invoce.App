@@ -1,4 +1,5 @@
 export interface Settings {
+  currencyId?: number;
   businessName: string;
   businessAddress: string;
   businessPhone: string;
@@ -10,6 +11,7 @@ export interface Settings {
 }
 
 export interface CashBoxSession {
+  cashRegisterId: number;
   initialAmount: number;
   openedAt: string;
   isOpen: boolean;

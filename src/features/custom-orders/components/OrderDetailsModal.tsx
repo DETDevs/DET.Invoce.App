@@ -17,6 +17,7 @@ import {
 
 import type { Order, OrderStatus } from "@/shared/types";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
 
 interface Props {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export const OrderDetailsModal = ({
   isInvoicing = false,
 }: Props) => {
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [convertedCordobaValue, setConvertedCordobaValue] = useState(0);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const { user } = useAuthStore();
   const canInvoice = user?.role === "cajero" || user?.role === "admin";
@@ -53,18 +55,23 @@ export const OrderDetailsModal = ({
 
   const handleClose = () => {
     setPaymentAmount("");
+    setConvertedCordobaValue(0);
     setShowCancelConfirm(false);
     onClose();
   };
 
   const handleConfirmPayment = () => {
-    const amount = Number(paymentAmount);
+    // Usar el valor convertido a córdobas (ya viene convertido del componente)
+    const amount = convertedCordobaValue;
     if (amount <= 0) {
       toast.error("El monto debe ser mayor a 0");
       return;
     }
-    onRegisterPayment(order.id, amount);
+    // Registrar solo lo que corresponde (si paga de más, solo registrar el pendiente)
+    const toRegister = Math.min(amount, remaining);
+    onRegisterPayment(order.id, toRegister);
     setPaymentAmount("");
+    setConvertedCordobaValue(0);
   };
 
   const inputValue = Number(paymentAmount) || 0;
@@ -85,17 +92,14 @@ export const OrderDetailsModal = ({
     const paymentControls = !isPaid && (
       <div className="flex flex-col items-end gap-2 w-full md:w-auto mt-3 md:mt-0 border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
         <div className="flex gap-2 items-center w-full md:w-auto">
-          <div className="relative w-full md:w-32">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">
-              C$
-            </span>
-            <input
-              type="number"
-              className="w-full pl-8 pr-2 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] focus:border-transparent text-sm font-bold text-[#2D2D2D]"
-              placeholder={remaining.toFixed(2)}
-              value={paymentAmount}
-              onChange={(e) => setPaymentAmount(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleConfirmPayment()}
+          <div className="w-full md:w-48">
+            <CurrencyAmountInput
+              totalInCordobas={remaining}
+              amountPaid={paymentAmount}
+              onAmountPaidChange={setPaymentAmount}
+              onConvertedValueChange={setConvertedCordobaValue}
+              onEnter={handleConfirmPayment}
+              compact
             />
           </div>
           <button

@@ -1,4 +1,4 @@
-export type ReportType = "sales" | "products" | "cash" | "orders" | "cashClose";
+export type ReportType = "sales" | "products" | "cash" | "orders" | "reservations" | "cashClose";
 export type DateRangeType = "today" | "week" | "month" | "year" | "custom";
 
 export interface SalesReportData {
@@ -40,7 +40,7 @@ export interface OrdersReportData {
     totalOrders: number;
     completedOrders: number;
     cancelledOrders: number;
-    peakHours: { hour: number; orders: number; amount: number }[];
+    ordersByDate: { date: string; orders: number; amount: number }[];
     averageItemsPerOrder: number;
 }
 
@@ -60,5 +60,15 @@ export interface CashCloseReportData {
         description: string;
         amount: number;
     }[];
+}
+
+export interface ReservationsReportData {
+    totalReservations: number;
+    pendingTotal: number;
+    activeTotal: number;
+    completedTotal: number;
+    cancelledTotal: number;
+    reservationsByDate: { date: string; reservations: number; amount: number }[];
+    totalDepositAmount: number;
 }
 

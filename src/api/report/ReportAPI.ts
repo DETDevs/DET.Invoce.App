@@ -11,7 +11,11 @@ import type {
 } from './types';
 
 function buildDateQuery(params: TReportDateRange) {
-    return `?dateFrom=${encodeURIComponent(params.dateFrom)}&dateTo=${encodeURIComponent(params.dateTo)}`;
+    let qs = `?dateFrom=${encodeURIComponent(params.dateFrom)}&dateTo=${encodeURIComponent(params.dateTo)}`;
+    if (params.cashRegisterId) {
+        qs += `&cashRegisterId=${params.cashRegisterId}`;
+    }
+    return qs;
 }
 
 async function getTotalSales(params: TReportDateRange) {

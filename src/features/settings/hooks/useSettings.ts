@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { type Settings } from "@/features/settings/types";
+import settingsApi from "@/api/settings/SettingsAPI";
 
 const SETTINGS_STORAGE_KEY = "app-settings";
 
@@ -34,6 +35,32 @@ export const useSettings = () => {
   const [settings, setSettings] = useState<Settings>(loadSettingsFromStorage);
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setIsLoading(true);
+        const currentCurrency = settings.mainCurrency || "NIO";
+        const response = await settingsApi.getCurrent(currentCurrency);
+        if (response && response.currencyCode && response.rate != null) {
+          const apiSettings: Partial<Settings> = {
+            currencyId: response.currencyId,
+            mainCurrency: response.currencyCode as "NIO" | "USD",
+            dollarExchangeRate: response.rate,
+          };
+          setSettings((prev) => ({ ...prev, ...apiSettings }));
+          setOriginalSettings((prev) => ({ ...prev, ...apiSettings }));
+        }
+      } catch (error) {
+        console.error("Error fetching settings from backend:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const hasChanges =

@@ -21,7 +21,7 @@ const ProductCardComponent = ({
       className="bg-white rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:border-[#E8BC6E] hover:shadow-md transition-all group overflow-hidden"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-        {!imgError ? (
+        {!imgError && product.image ? (
           <img
             src={product.image}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

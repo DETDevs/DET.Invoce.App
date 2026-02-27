@@ -15,47 +15,48 @@ import toast from "react-hot-toast";
 interface CashBoxContextType {
   session: CashBoxSession | null;
   openCashBox: (amount: number) => void;
-  closeCashBox: () => void;
+  closeCashBox: (closingAmount?: number) => Promise<void>;
 }
 
 const CashBoxContext = createContext<CashBoxContextType | undefined>(undefined);
 
 const CASH_BOX_STORAGE_KEY = "cash-box-session";
 
-const isSameDay = (date1: Date, date2: Date) => {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
-};
-
 export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<CashBoxSession | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { settings } = useSettings();
   const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
 
   useEffect(() => {
-    try {
-      const storedSession = localStorage.getItem(CASH_BOX_STORAGE_KEY);
-      if (storedSession) {
-        const parsedSession: CashBoxSession = JSON.parse(storedSession);
-        const sessionDate = new Date(parsedSession.openedAt);
-        const today = new Date();
+    const checkOpenCashBox = async () => {
+      try {
+        const response = await cashRegisterApi.getOpen();
 
-        if (isSameDay(sessionDate, today) && parsedSession.isOpen) {
-          setSession(parsedSession);
+        if (response && response.cashRegisterId) {
+          const newSession: CashBoxSession = {
+            cashRegisterId: response.cashRegisterId,
+            initialAmount: response.openingAmount || 0,
+            openedAt: response.openingDate || new Date().toISOString(),
+            isOpen: true,
+          };
+          setSession(newSession);
+          localStorage.setItem(
+            CASH_BOX_STORAGE_KEY,
+            JSON.stringify(newSession),
+          );
+          setIsModalOpen(false);
         } else {
           setIsModalOpen(true);
         }
-      } else {
+      } catch (error) {
+        console.error("Error al consultar caja abierta:", error);
         setIsModalOpen(true);
       }
-    } catch (error) {
-      console.error("Error al cargar la sesión de caja:", error);
-      setIsModalOpen(true);
-    }
+    };
+
+    checkOpenCashBox();
   }, []);
 
   const openCashBox = async (amount: number) => {
@@ -65,7 +66,11 @@ export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
         openedBy: user?.name ?? "Sistema",
       });
 
+      const openResponse = await cashRegisterApi.getOpen();
+      const cashRegisterId = openResponse?.cashRegisterId ?? 0;
+
       const newSession: CashBoxSession = {
+        cashRegisterId,
         initialAmount: amount,
         openedAt: new Date().toISOString(),
         isOpen: true,
@@ -80,15 +85,23 @@ export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const closeCashBox = () => {
-    if (session) {
-      const closedSession: CashBoxSession = { ...session, isOpen: false };
-      localStorage.setItem(CASH_BOX_STORAGE_KEY, JSON.stringify(closedSession));
+  const closeCashBox = async (closingAmount?: number) => {
+    if (!session) return;
+    try {
+      await cashRegisterApi.close(session.cashRegisterId, closingAmount ?? 0);
 
-      setSession(closedSession);
-      toast.success(
-        "Caja cerrada correctamente. Todo listo para el siguiente turno.",
-      );
+      localStorage.removeItem(CASH_BOX_STORAGE_KEY);
+      setSession(null);
+
+      toast.success("Caja cerrada correctamente. Cerrando sesión...");
+
+      setTimeout(() => {
+        logout();
+        window.location.href = "/login";
+      }, 1500);
+    } catch (error) {
+      console.error("Error al cerrar caja:", error);
+      toast.error("No se pudo cerrar la caja en el servidor");
     }
   };
 

@@ -23,7 +23,10 @@ export const useAuthStore = create<AuthState>()(
 
             login: (user) => set({ user }),
 
-            logout: () => set({ user: null }),
+            logout: () => {
+                localStorage.removeItem("authToken");
+                set({ user: null });
+            },
 
             isRole: (role) => get().user?.role === role,
 

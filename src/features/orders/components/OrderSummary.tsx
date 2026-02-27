@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingBag, Trash2, Wallet, CreditCard } from "lucide-react";
 import { CartItemRow } from "@/features/orders/components/CartItemRow";
+import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
 import type { CartItem } from "@/features/orders/types/index";
 
 type OrderSummaryProps = {
@@ -33,11 +34,10 @@ export const OrderSummary = ({
 
   const tax = subtotal * 0.15;
   const total = subtotal + tax;
-  const paidValue = parseFloat(amountPaid) || 0;
-  const change = paidValue - total;
+  const [paidInCordobas, setPaidInCordobas] = useState(0);
   const isPaymentSufficient =
     paymentMethod === "tarjeta" ||
-    (paymentMethod === "efectivo" && paidValue >= total);
+    (paymentMethod === "efectivo" && paidInCordobas >= total);
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
   useEffect(() => {
@@ -128,34 +128,12 @@ export const OrderSummary = ({
         </div>
 
         {paymentMethod === "efectivo" && (
-          <div className="space-y-2 animate-fade-in">
-            <label className="block text-xs font-bold text-gray-500 uppercase">
-              Monto Recibido
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                C$
-              </span>
-              <input
-                type="number"
-                value={amountPaid}
-                onChange={(e) => setAmountPaid(e.target.value)}
-                className="w-full pl-8 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E]"
-                placeholder="0.00"
-                min="0"
-              />
-            </div>
-            {amountPaid !== "" && (
-              <div
-                className={`flex justify-between items-center p-3 rounded-lg mt-2 ${change >= 0 ? "bg-green-100 text-green-800" : "bg-red-50 text-red-700"}`}
-              >
-                <span className="font-bold text-sm">
-                  {change >= 0 ? "Cambio" : "Faltante"}
-                </span>
-                <span className="font-bold">C$ {change.toFixed(2)}</span>
-              </div>
-            )}
-          </div>
+          <CurrencyAmountInput
+            totalInCordobas={total}
+            amountPaid={amountPaid}
+            onAmountPaidChange={setAmountPaid}
+            onConvertedValueChange={setPaidInCordobas}
+          />
         )}
 
         <div className="space-y-3 pt-2">

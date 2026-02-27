@@ -7,46 +7,52 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { CheckCircle, AlertCircle, ShoppingCart } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Wallet } from "lucide-react";
 import { KPICard } from "./KPICard";
-import type { OrdersReportData } from "@/features/reports/types";
+import type { ReservationsReportData } from "@/features/reports/types";
 
-interface OrdersReportProps {
-  data: OrdersReportData;
+interface ReservationsReportProps {
+  data: ReservationsReportData;
 }
 
-export const OrdersReport = ({ data }: OrdersReportProps) => {
+export const ReservationsReport = ({ data }: ReservationsReportProps) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Total Órdenes"
-          value={data.totalOrders}
-          icon={ShoppingCart}
+          title="Total Pedidos"
+          value={data.totalReservations}
+          icon={Calendar}
           color="blue"
         />
         <KPICard
-          title="Completadas"
-          value={data.completedOrders}
+          title="Pendientes/Activos"
+          value={data.pendingTotal + data.activeTotal}
+          icon={Clock}
+          color="amber"
+        />
+        <KPICard
+          title="Completados"
+          value={data.completedTotal}
           icon={CheckCircle}
           color="green"
         />
         <KPICard
-          title="Canceladas"
-          value={data.cancelledOrders}
-          icon={AlertCircle}
-          color="red"
+          title="Depósitos Recibidos"
+          value={`C$ ${data.totalDepositAmount.toLocaleString()}`}
+          icon={Wallet}
+          color="green"
         />
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h3 className="text-lg font-bold text-[#2D2D2D] mb-6">
-          Órdenes por Día
+          Pedidos Especiales por Día
         </h3>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={data.ordersByDate}
+              data={data.reservationsByDate}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
               <CartesianGrid
@@ -75,23 +81,23 @@ export const OrdersReport = ({ data }: OrdersReportProps) => {
                 labelFormatter={(date) => `Fecha: ${date}`}
                 formatter={(value, name) => [
                   value,
-                  name === "orders" ? "Órdenes" : "Total",
+                  name === "reservations" ? "Pedidos" : "Total",
                 ]}
               />
               <Line
                 type="monotone"
-                dataKey="orders"
-                stroke="#593D31"
+                dataKey="reservations"
+                stroke="#E8BC6E"
                 strokeWidth={3}
-                dot={{ fill: "#593D31", r: 4 }}
+                dot={{ fill: "#E8BC6E", r: 4 }}
                 activeDot={{ r: 6 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
         <p className="text-sm text-gray-500 mt-4 text-center">
-          Muestra el número de órdenes por día para identificar tendencias de
-          venta.
+          Muestra el volumen de pedidos personalizados y reservaciones recibidas
+          por día.
         </p>
       </div>
     </div>
