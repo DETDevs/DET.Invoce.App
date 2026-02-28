@@ -129,7 +129,7 @@ export const Sidebar = () => {
 
   return (
     <>
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#593D31] text-[#F9F7F0] flex items-center justify-between px-4 z-40 shadow-md">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#593D31] text-[#F9F7F0] flex items-center justify-between px-4 z-40 shadow-md">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileMenuOpen(true)}
@@ -145,7 +145,7 @@ export const Sidebar = () => {
 
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 z-50 md:hidden backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
@@ -153,42 +153,42 @@ export const Sidebar = () => {
       <aside
         className={`
           fixed top-0 left-0 h-screen bg-[#593D31] text-[#F9F7F0] 
-          flex flex-col z-50 shadow-2xl
+          flex flex-col z-50 shadow-2xl overflow-x-clip
           ${isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"} 
-          lg:translate-x-0 lg:shadow-none
-          ${isCollapsed ? "lg:w-[72px]" : "lg:w-64"}
+          md:translate-x-0 md:shadow-none md:overflow-x-visible
+          ${isCollapsed ? "md:w-[72px]" : "md:w-64"}
         `}
       >
-        <div className="shrink-0 p-4 flex flex-col items-center relative">
+        <div className="shrink-0 p-3 flex flex-col items-center relative">
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="lg:hidden absolute top-0 right-0 text-[#E8BC6E] hover:text-white transition-colors"
+            className="md:hidden absolute top-0 right-0 text-[#E8BC6E] hover:text-white transition-colors"
           >
             <X size={28} />
           </button>
 
           <div
-            className={`w-full flex justify-center mt-4 lg:mt-0 ${isCollapsed ? "lg:px-0" : ""}`}
+            className={`w-full flex justify-center mt-3 md:mt-0 ${isCollapsed ? "md:px-0" : ""}`}
           >
             <img
               src={logo}
               alt="Dulces Momentos"
-              className={`object-contain ${isCollapsed ? "lg:h-10 lg:w-10" : "h-28 w-auto"}`}
+              className={`object-contain ${isCollapsed ? "md:h-10 md:w-10" : "h-20 w-auto"}`}
             />
           </div>
         </div>
 
         <nav
-          className={`flex-1 px-4 lg:px-2 py-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#E8BC6E]/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#E8BC6E]/50 ${isCollapsed ? "lg:overflow-visible overflow-y-auto" : "overflow-y-auto"}`}
+          className={`flex-1 min-h-0 px-4 md:px-2 py-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#E8BC6E]/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#E8BC6E]/50 ${isCollapsed ? "md:overflow-visible overflow-y-auto" : "overflow-y-auto"}`}
         >
           {menuGroups.map((group, groupIndex) => (
-            <div key={groupIndex} className="mb-4">
+            <div key={groupIndex} className="mb-2">
               {isCollapsed ? (
-                <div className="hidden lg:block h-px bg-white/10 my-3 mx-2" />
+                <div className="hidden md:block h-px bg-white/10 my-3 mx-2" />
               ) : (
                 <button
                   onClick={() => toggleGroup(groupIndex)}
-                  className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-[#E8BC6E] uppercase tracking-wider hover:bg-white/5 rounded-lg transition-colors mb-2"
+                  className="w-full flex items-center justify-between px-4 py-1.5 text-xs font-semibold text-[#E8BC6E] uppercase tracking-wider hover:bg-white/5 rounded-lg transition-colors mb-1"
                 >
                   <span>{group.title}</span>
                   <ChevronDown
@@ -221,9 +221,9 @@ export const Sidebar = () => {
                     <div key={itemIndex} className="relative group/tooltip">
                       <button
                         onClick={() => handleNavigation(item.path)}
-                        className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors duration-150 group ${
+                        className={`w-full flex items-center px-4 py-2.5 rounded-lg transition-colors duration-150 group ${
                           isCollapsed
-                            ? "lg:justify-center lg:px-0"
+                            ? "md:justify-center md:px-0"
                             : "space-x-3"
                         } ${
                           isActive
@@ -247,7 +247,7 @@ export const Sidebar = () => {
                       </button>
 
                       {isCollapsed && (
-                        <div className="hidden lg:block absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 bg-[#2D2D2D] text-white text-xs font-medium rounded-lg shadow-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-opacity duration-150 whitespace-nowrap z-100 pointer-events-none">
+                        <div className="hidden md:block absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 bg-[#2D2D2D] text-white text-xs font-medium rounded-lg shadow-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-opacity duration-150 whitespace-nowrap z-100 pointer-events-none">
                           {item.label}
                           <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-[#2D2D2D]" />
                         </div>
@@ -264,7 +264,7 @@ export const Sidebar = () => {
           ))}
         </nav>
 
-        <div className="shrink-0 p-4 lg:p-2 mt-auto border-t border-white/10">
+        <div className="shrink-0 px-4 py-3 md:px-2 md:py-2 mt-auto border-t border-white/10">
           {user && !isCollapsed && (
             <div className="flex items-center gap-3 mb-3 px-2">
               <div className="w-9 h-9 rounded-full bg-[#E8BC6E]/20 flex items-center justify-center shrink-0">
@@ -282,7 +282,7 @@ export const Sidebar = () => {
           )}
 
           {user && isCollapsed && (
-            <div className="hidden lg:flex justify-center mb-3 relative group/user">
+            <div className="hidden md:flex justify-center mb-3 relative group/user">
               <div className="w-9 h-9 rounded-full bg-[#E8BC6E]/20 flex items-center justify-center">
                 <User size={18} className="text-[#E8BC6E]" />
               </div>
@@ -296,8 +296,8 @@ export const Sidebar = () => {
           <div className="relative group/logout">
             <button
               onClick={handleLogoutClick}
-              className={`w-full flex items-center justify-center bg-[#E8BC6E] hover:bg-[#dca34b] text-white py-3 rounded-lg transition-colors duration-150 shadow-md font-medium ${
-                isCollapsed ? "lg:py-2.5 lg:px-0" : "space-x-2"
+              className={`w-full flex items-center justify-center bg-[#E8BC6E] hover:bg-[#dca34b] text-white py-2.5 rounded-lg transition-colors duration-150 shadow-md font-medium ${
+                isCollapsed ? "md:py-2.5 md:px-0" : "space-x-2"
               }`}
             >
               {!isCollapsed && <span>Cerrar Sesión</span>}
@@ -305,7 +305,7 @@ export const Sidebar = () => {
             </button>
 
             {isCollapsed && (
-              <div className="hidden lg:block absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 bg-[#2D2D2D] text-white text-xs font-medium rounded-lg shadow-lg opacity-0 invisible group-hover/logout:opacity-100 group-hover/logout:visible transition-opacity duration-150 whitespace-nowrap z-100 pointer-events-none">
+              <div className="hidden md:block absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 bg-[#2D2D2D] text-white text-xs font-medium rounded-lg shadow-lg opacity-0 invisible group-hover/logout:opacity-100 group-hover/logout:visible transition-opacity duration-150 whitespace-nowrap z-100 pointer-events-none">
                 Cerrar Sesión
                 <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-[#2D2D2D]" />
               </div>
@@ -314,7 +314,7 @@ export const Sidebar = () => {
 
           <button
             onClick={toggleSidebar}
-            className="hidden lg:flex w-full items-center justify-center gap-2 mt-3 py-2 text-[#E8BC6E]/70 hover:text-[#E8BC6E] hover:bg-white/5 rounded-lg transition-colors duration-150 text-xs font-medium"
+            className="hidden md:flex w-full items-center justify-center gap-2 mt-2 py-1.5 text-[#E8BC6E]/70 hover:text-[#E8BC6E] hover:bg-white/5 rounded-lg transition-colors duration-150 text-xs font-medium"
           >
             {isCollapsed ? (
               <ChevronsRight size={18} />

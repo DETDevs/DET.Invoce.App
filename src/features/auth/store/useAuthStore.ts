@@ -25,6 +25,8 @@ export const useAuthStore = create<AuthState>()(
 
             logout: () => {
                 localStorage.removeItem("authToken");
+                localStorage.removeItem("auth-storage");
+                localStorage.removeItem("cash-box-session");
                 set({ user: null });
             },
 
@@ -40,3 +42,4 @@ export const useAuthStore = create<AuthState>()(
         }
     )
 );
+
