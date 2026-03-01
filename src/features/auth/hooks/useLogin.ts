@@ -25,10 +25,13 @@ export const useLogin = () => {
 
     setIsLoading(true);
     try {
-      const token = await authApi.authenticate({ username, password });
+      const authResponse = await authApi.authenticate({ username, password });
 
-      if (token) {
-        localStorage.setItem("authToken", token);
+      if (authResponse.token) {
+        localStorage.setItem("authToken", authResponse.token);
+      }
+      if (authResponse.refreshToken) {
+        localStorage.setItem("refreshToken", authResponse.refreshToken);
       }
 
       const userProfile = await userApi.getByUsername(username);

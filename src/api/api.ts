@@ -10,6 +10,62 @@ const getDeviceLanguage = (): string => {
     }
 };
 
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
+async function doRefreshToken(): Promise<string | null> {
+    const storedRefreshToken = localStorage.getItem('refreshToken');
+    if (!storedRefreshToken) return null;
+
+    try {
+        const url = `${environments.BASE_API_URI}/Authentication/RefreshToken?refreshToken=${encodeURIComponent(storedRefreshToken)}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'user-language': getDeviceLanguage(),
+            },
+        });
+
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        if (data.token) {
+            localStorage.setItem('authToken', data.token);
+        }
+        if (data.refreshToken) {
+            localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        return data.token || null;
+    } catch {
+        return null;
+    }
+}
+
+async function refreshTokenIfNeeded(): Promise<string | null> {
+    if (isRefreshing && refreshPromise) {
+        return refreshPromise;
+    }
+
+    isRefreshing = true;
+    refreshPromise = doRefreshToken().finally(() => {
+        isRefreshing = false;
+        refreshPromise = null;
+    });
+
+    return refreshPromise;
+}
+
+function clearAuthAndRedirect() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('auth-storage');
+    localStorage.removeItem('cash-box-session');
+    if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+    }
+}
+
 async function apiCall<T>(url: string, options: RequestInit): Promise<T> {
     if (!url.startsWith('http')) {
         url = `${environments.BASE_API_URI}${url.startsWith('/') ? url : `/${url}`}`;
@@ -19,7 +75,7 @@ async function apiCall<T>(url: string, options: RequestInit): Promise<T> {
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
-    const response = await fetch(url, {
+    let response = await fetch(url, {
         ...options,
         headers: {
             ...options.headers,
@@ -28,6 +84,24 @@ async function apiCall<T>(url: string, options: RequestInit): Promise<T> {
             ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
     });
+
+    if (response.status === 401) {
+        const newToken = await refreshTokenIfNeeded();
+        if (newToken) {
+            response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'user-language': userLanguage,
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${newToken}`,
+                },
+            });
+        } else {
+            clearAuthAndRedirect();
+            throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        }
+    }
 
     if (!response.ok) {
         const errorText = await response.text();
@@ -88,7 +162,7 @@ async function getText(url: string): Promise<string> {
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
-    const response = await fetch(url, {
+    let response = await fetch(url, {
         method: 'GET',
         headers: {
             'user-language': userLanguage,
@@ -96,6 +170,23 @@ async function getText(url: string): Promise<string> {
             ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
     });
+
+    if (response.status === 401) {
+        const newToken = await refreshTokenIfNeeded();
+        if (newToken) {
+            response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'user-language': userLanguage,
+                    'Accept': 'text/plain',
+                    'Authorization': `Bearer ${newToken}`,
+                },
+            });
+        } else {
+            clearAuthAndRedirect();
+            throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        }
+    }
 
     if (!response.ok) {
         const errorText = await response.text();
@@ -116,7 +207,7 @@ async function postText(url: string, body?: any): Promise<string> {
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
-    const response = await fetch(url, {
+    let response = await fetch(url, {
         method: 'POST',
         headers: {
             'user-language': userLanguage,
@@ -126,6 +217,25 @@ async function postText(url: string, body?: any): Promise<string> {
         },
         ...(hasBody ? { body: JSON.stringify(body) } : {}),
     });
+
+    if (response.status === 401) {
+        const newToken = await refreshTokenIfNeeded();
+        if (newToken) {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'user-language': userLanguage,
+                    'Accept': 'text/plain',
+                    'Authorization': `Bearer ${newToken}`,
+                    ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+                },
+                ...(hasBody ? { body: JSON.stringify(body) } : {}),
+            });
+        } else {
+            clearAuthAndRedirect();
+            throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        }
+    }
 
     if (!response.ok) {
         const errorText = await response.text();
@@ -146,3 +256,4 @@ const api = {
 };
 
 export default api;
+
