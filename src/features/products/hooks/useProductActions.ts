@@ -16,6 +16,7 @@ export const useProductActions = () => {
         category: "",
         minPrice: "",
         maxPrice: "",
+        showInactive: false,
     });
 
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -50,6 +51,10 @@ export const useProductActions = () => {
 
     useEffect(() => {
         let result = products;
+
+        if (!filters.showInactive) {
+            result = result.filter((product) => product.isActive);
+        }
 
         if (searchTerm) {
             result = result.filter((product) =>
@@ -172,8 +177,32 @@ export const useProductActions = () => {
 
     const handleConfirmDelete = async () => {
         if (!selectedProduct) return;
-        toast.error("Endpoint de inactivar producto pendiente en el backend");
-        setIsDeleteModalOpen(false);
+        setIsSaving(true);
+        try {
+            await productApi.save({
+                productId: selectedProduct.productId,
+                code: selectedProduct.code,
+                categoryCode: selectedProduct.categoryCode ?? "",
+                subCategoryId: selectedProduct.subCategoryId ?? undefined,
+                name: selectedProduct.name,
+                description: selectedProduct.description ?? "",
+                price: selectedProduct.price,
+                trackInventory: selectedProduct.trackInventory ?? true,
+                unitId: selectedProduct.unitId ?? 0,
+                divideQuantityBy: selectedProduct.divideQuantityBy ?? 0,
+                isActive: false,
+                quantity: selectedProduct.quantity ?? 0,
+                stockMinimum: selectedProduct.stockMinimum ?? 0,
+            });
+            toast.success(`"${selectedProduct.name}" inactivado correctamente`);
+            setIsDeleteModalOpen(false);
+            await fetchProducts();
+        } catch (err) {
+            console.error("Error inactivating product:", err);
+            toast.error("No se pudo inactivar el producto");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return {

@@ -1,4 +1,4 @@
-import { Plus, Filter, Edit, Trash2, Search, Boxes } from "lucide-react";
+import { Plus, Filter, Edit, Ban, Search, Boxes } from "lucide-react";
 import { FilterPanel } from "@/features/products/components/FilterPanel";
 import { EditProductModal } from "@/features/products/components/EditProductModal";
 import { StockAdjustmentModal } from "@/features/products/components/StockAdjustmentModal";
@@ -124,7 +124,12 @@ export const ProductsPage = () => {
             setFilters={setFilters}
             onApply={() => setIsFilterOpen(false)}
             onReset={() =>
-              setFilters({ category: "", minPrice: "", maxPrice: "" })
+              setFilters({
+                category: "",
+                minPrice: "",
+                maxPrice: "",
+                showInactive: false,
+              })
             }
           />
         </div>
@@ -160,7 +165,7 @@ export const ProductsPage = () => {
                 paginatedProducts.map((product) => (
                   <tr
                     key={product.productId}
-                    className="hover:bg-[#FDFBF7] group"
+                    className={`hover:bg-[#FDFBF7] group ${!product.isActive ? "opacity-50" : ""}`}
                   >
                     <td className="px-4 lg:px-6 py-3">
                       <div className="h-10 w-10 lg:h-12 lg:w-12 rounded-lg overflow-hidden border border-gray-100">
@@ -176,8 +181,15 @@ export const ProductsPage = () => {
                       </div>
                     </td>
                     <td className="py-3">
-                      <div className="text-sm font-bold text-[#2D2D2D] truncate max-w-[150px] lg:max-w-none">
-                        {product.name}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-[#2D2D2D] truncate max-w-[150px] lg:max-w-none">
+                          {product.name}
+                        </span>
+                        {!product.isActive && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-500 border border-gray-200 shrink-0">
+                            Inactivo
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 lg:px-6 py-3">
@@ -225,10 +237,10 @@ export const ProductsPage = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteClick(product)}
-                          className="p-1.5 lg:p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                          title="Eliminar"
+                          className="p-1.5 lg:p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-200"
+                          title="Inactivar"
                         >
-                          <Trash2 size={18} />
+                          <Ban size={18} />
                         </button>
                       </div>
                     </td>
@@ -255,7 +267,7 @@ export const ProductsPage = () => {
               return (
                 <div
                   key={product.productId}
-                  className="p-4 border-b border-gray-100 last:border-none flex items-center gap-4 hover:bg-gray-50"
+                  className={`p-4 border-b border-gray-100 last:border-none flex items-center gap-4 hover:bg-gray-50 ${!product.isActive ? "opacity-50" : ""}`}
                 >
                   <div className="h-16 w-16 shrink-0 rounded-xl overflow-hidden border border-gray-100">
                     <img
@@ -271,6 +283,11 @@ export const ProductsPage = () => {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-[#2D2D2D] truncate">
                       {product.name}
+                      {!product.isActive && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-500 border border-gray-200">
+                          Inactivo
+                        </span>
+                      )}
                     </h3>
                     <div className="flex flex-wrap gap-2 mt-1">
                       <span className="text-xs bg-[#F3EFE0] text-[#593D31] px-2 py-0.5 rounded-full font-medium">
@@ -305,9 +322,9 @@ export const ProductsPage = () => {
                     </button>
                     <button
                       onClick={() => handleDeleteClick(product)}
-                      className="p-2 text-red-400 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                      className="p-2 text-amber-500 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors"
                     >
-                      <Trash2 size={18} />
+                      <Ban size={18} />
                     </button>
                   </div>
                 </div>
@@ -370,9 +387,9 @@ export const ProductsPage = () => {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Eliminar Producto"
-        message={`¿Estás seguro que deseas eliminar "${selectedProduct?.name}"?`}
-        confirmText="Sí, eliminar"
+        title="Inactivar Producto"
+        message={`¿Estás seguro que deseas inactivar "${selectedProduct?.name}"?`}
+        confirmText="Sí, inactivar"
         variant="danger"
       />
     </div>

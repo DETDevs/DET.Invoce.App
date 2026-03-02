@@ -1,10 +1,10 @@
-import React from "react";
 import { X } from "lucide-react";
 
 interface FilterState {
   category: string;
   minPrice: string;
   maxPrice: string;
+  showInactive: boolean;
 }
 
 interface FilterPanelProps {
@@ -84,6 +84,27 @@ export const FilterPanel = ({
                 className="w-1/2 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E8BC6E]"
               />
             </div>
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <label className="text-xs font-semibold text-gray-500 uppercase">
+              Mostrar inactivos
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                setFilters({ ...filters, showInactive: !filters.showInactive })
+              }
+              className={`relative w-10 h-5 rounded-full transition-colors ${
+                filters.showInactive ? "bg-[#E8BC6E]" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  filters.showInactive ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
 
           <div className="flex gap-2 pt-2 border-t border-gray-100 mt-4">

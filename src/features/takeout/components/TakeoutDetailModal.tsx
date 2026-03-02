@@ -11,7 +11,6 @@ import {
   Minus,
   Scissors,
   Check,
-  XCircle,
   AlertTriangle,
   Loader2,
 } from "lucide-react";
@@ -131,21 +130,13 @@ export const TakeoutDetailModal = ({
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowCancelConfirm(true)}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-              title="Cancelar orden"
-            >
-              <XCircle size={20} />
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
+            title="Cerrar"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {cuentas.length > 1 && (
@@ -276,35 +267,44 @@ export const TakeoutDetailModal = ({
           </div>
 
           {!isSplitMode && (
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={handleAddProducts}
-                className="flex-1 py-2.5 bg-white border-2 border-dashed border-[#E8BC6E] text-[#593D31] font-bold rounded-xl hover:bg-[#FDF8EE] transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
-              >
-                <Plus size={16} />
-                Agregar Productos
-              </button>
-              {selectedCuenta.cuentaNumber === 1 ? (
-                selectedCuenta.items.length > 1 && (
-                  <button
-                    onClick={() => setIsSplitMode(true)}
-                    className="flex-1 py-2.5 bg-white border-2 border-dashed border-violet-300 text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
-                  >
-                    <Scissors size={16} />
-                    Dividir Cuenta
-                  </button>
-                )
-              ) : (
+            <>
+              <div className="flex gap-2 mt-3">
                 <button
-                  onClick={handleCancelCuenta}
-                  disabled={isProcessing}
-                  className="flex-1 py-2.5 bg-white border-2 border-dashed border-red-300 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={handleAddProducts}
+                  className="flex-1 py-2.5 bg-white border-2 border-dashed border-[#E8BC6E] text-[#593D31] font-bold rounded-xl hover:bg-[#FDF8EE] transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
                 >
-                  <X size={16} />
-                  Cancelar Cuenta
+                  <Plus size={16} />
+                  Agregar Productos
                 </button>
-              )}
-            </div>
+                {selectedCuenta.cuentaNumber === 1 ? (
+                  selectedCuenta.items.length > 1 && (
+                    <button
+                      onClick={() => setIsSplitMode(true)}
+                      className="flex-1 py-2.5 bg-white border-2 border-dashed border-violet-300 text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+                    >
+                      <Scissors size={16} />
+                      Dividir Cuenta
+                    </button>
+                  )
+                ) : (
+                  <button
+                    onClick={handleCancelCuenta}
+                    disabled={isProcessing}
+                    className="flex-1 py-2.5 bg-white border-2 border-dashed border-red-300 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <X size={16} />
+                    Cancelar Cuenta
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setShowCancelConfirm(true)}
+                className="w-full py-2 text-sm text-red-500 hover:text-red-700 font-semibold transition-colors flex items-center justify-center gap-1.5"
+              >
+                <AlertTriangle size={14} />
+                Cancelar Orden
+              </button>
+            </>
           )}
         </div>
 

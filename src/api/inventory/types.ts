@@ -9,3 +9,8 @@ export type TInventoryOutput = {
     productCode: string;
     quantityInStock: number;
 };
+
+export type TValidateAvailability = {
+    code: string;
+    quantity: number;
+};
