@@ -17,6 +17,7 @@ import {
 import type { TakeoutOrder } from "@/shared/types";
 import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
 import { useTakeoutDetail } from "@/features/takeout/hooks/useTakeoutDetail";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 
 interface Props {
   isOpen: boolean;
@@ -248,15 +249,19 @@ export const TakeoutDetailModal = ({
                         )}
                       </td>
                       <td className="px-4 py-2.5 text-right text-gray-600">
-                        C$ {item.price.toFixed(2)}
+                        {getCurrencySymbol()} {item.price.toFixed(2)}
                       </td>
                       <td className="px-4 py-2.5 text-right font-medium">
                         {isSplitMode && isSelected ? (
                           <span className="text-violet-700 font-bold">
-                            C$ {(item.price * splitQty).toFixed(2)}
+                            {getCurrencySymbol()}{" "}
+                            {(item.price * splitQty).toFixed(2)}
                           </span>
                         ) : (
-                          <>C$ {(item.price * item.quantity).toFixed(2)}</>
+                          <>
+                            {getCurrencySymbol()}{" "}
+                            {(item.price * item.quantity).toFixed(2)}
+                          </>
                         )}
                       </td>
                     </tr>
@@ -319,7 +324,7 @@ export const TakeoutDetailModal = ({
                     {splitItemCount > 1 ? "s" : ""}
                   </span>
                   <span className="text-violet-800 font-bold">
-                    C$ {splitSubtotal.toFixed(2)}
+                    {getCurrencySymbol()} {splitSubtotal.toFixed(2)}
                   </span>
                 </div>
               )}
@@ -351,17 +356,19 @@ export const TakeoutDetailModal = ({
                 <span>
                   Sub:
                   <strong className="text-gray-700">
-                    C$ {subtotal.toFixed(2)}
+                    {getCurrencySymbol()} {subtotal.toFixed(2)}
                   </strong>
                 </span>
                 <span>
                   IVA 15%:
-                  <strong className="text-gray-700">C$ {tax.toFixed(2)}</strong>
+                  <strong className="text-gray-700">
+                    {getCurrencySymbol()} {tax.toFixed(2)}
+                  </strong>
                 </span>
               </div>
               <div className="text-right">
                 <span className="text-xl font-bold text-[#2D2D2D]">
-                  C$ {total.toFixed(2)}
+                  {getCurrencySymbol()} {total.toFixed(2)}
                 </span>
               </div>
             </div>

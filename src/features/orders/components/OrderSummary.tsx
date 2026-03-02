@@ -3,6 +3,7 @@ import { ShoppingBag, Trash2, Wallet, CreditCard } from "lucide-react";
 import { CartItemRow } from "@/features/orders/components/CartItemRow";
 import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
 import type { CartItem } from "@/features/orders/types/index";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 
 type OrderSummaryProps = {
   cart: CartItem[];
@@ -83,16 +84,20 @@ export const OrderSummary = ({
         <div className="space-y-2">
           <div className="flex justify-between text-gray-500 text-sm">
             <span>Subtotal</span>
-            <span>C$ {subtotal.toFixed(2)}</span>
+            <span>
+              {getCurrencySymbol()} {subtotal.toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between text-gray-500 text-sm">
             <span>IVA (15%)</span>
-            <span>C$ {tax.toFixed(2)}</span>
+            <span>
+              {getCurrencySymbol()} {tax.toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-gray-200">
             <span className="text-xl font-bold text-[#2D2D2D]">Total</span>
             <span className="text-2xl font-bold text-[#2D2D2D]">
-              C$ {total.toFixed(2)}
+              {getCurrencySymbol()} {total.toFixed(2)}
             </span>
           </div>
         </div>

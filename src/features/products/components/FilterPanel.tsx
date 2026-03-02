@@ -7,6 +7,11 @@ interface FilterState {
   showInactive: boolean;
 }
 
+interface CategoryOption {
+  code: string;
+  name: string;
+}
+
 interface FilterPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,6 +19,7 @@ interface FilterPanelProps {
   setFilters: (filters: FilterState) => void;
   onApply: () => void;
   onReset: () => void;
+  categories?: CategoryOption[];
 }
 
 export const FilterPanel = ({
@@ -23,6 +29,7 @@ export const FilterPanel = ({
   setFilters,
   onApply,
   onReset,
+  categories = [],
 }: FilterPanelProps) => {
   if (!isOpen) return null;
 
@@ -53,10 +60,11 @@ export const FilterPanel = ({
               className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E8BC6E]"
             >
               <option value="">Todas</option>
-              <option value="Cake">Pasteles</option>
-              <option value="Panes">Panes</option>
-              <option value="Pastry">Repostería</option>
-              <option value="Bebidas">Bebidas</option>
+              {categories.map((cat) => (
+                <option key={cat.code} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
           </div>
 

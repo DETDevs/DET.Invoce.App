@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { productApi } from "@/api/products";
 import inventoryApi from "@/api/inventory/InventoryAPI";
+import categoryApi from "@/api/category/CategoryAPI";
 import type { TProduct } from "@/api/products/types";
+import type { TCategory } from "@/api/category/types";
 import toast from "react-hot-toast";
 
 export const useProductActions = () => {
@@ -28,13 +30,19 @@ export const useProductActions = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
+    const [categories, setCategories] = useState<TCategory[]>([]);
+
     const fetchProducts = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await productApi.getByCode();
+            const [data, cats] = await Promise.all([
+                productApi.getByCode(),
+                categoryApi.getAll(),
+            ]);
             setProducts(data);
             setFilteredProducts(data);
+            setCategories(cats.filter((c) => c.isActive));
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Error al cargar productos",
@@ -228,6 +236,7 @@ export const useProductActions = () => {
         setCurrentPage,
         totalPages,
         itemsPerPage,
+        categories,
         getStockStatus,
         handleEditClick,
         handleDeleteClick,

@@ -1,5 +1,6 @@
 import { Clock, Package, UtensilsCrossed, User } from "lucide-react";
 import type { TOrder } from "@/api/order/types";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 
 interface Props {
   tableId: number | null;
@@ -72,7 +73,7 @@ export const OrderCard = ({ tableId, orders, onClick }: Props) => {
         <div className="flex items-center gap-1">
           {isParaLlevar ? <Package size={12} /> : <UtensilsCrossed size={12} />}
           <span>
-            C$ {totalAmount.toFixed(2)} · {orders.length}{" "}
+            {getCurrencySymbol()} {totalAmount.toFixed(2)} · {orders.length}{" "}
             {isParaLlevar
               ? orders.length === 1
                 ? "orden"

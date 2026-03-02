@@ -42,8 +42,10 @@ const fmtDateTime = (iso: string) => {
   });
 };
 
+import { getCurrencySymbol } from "@/shared/utils/currency";
+
 const fmt = (n: number) =>
-  `C$ ${n.toLocaleString("es-NI", {
+  `${getCurrencySymbol()} ${n.toLocaleString("es-NI", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;

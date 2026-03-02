@@ -5,6 +5,7 @@ import { StockAdjustmentModal } from "@/features/products/components/StockAdjust
 import { ConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import { useProductActions } from "@/features/products/hooks/useProductActions";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 
 export const ProductsPage = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export const ProductsPage = () => {
     setCurrentPage,
     totalPages,
     itemsPerPage,
+    categories,
     getStockStatus,
     handleEditClick,
     handleDeleteClick,
@@ -38,6 +40,8 @@ export const ProductsPage = () => {
     handleSaveStock,
     handleConfirmDelete,
   } = useProductActions();
+
+  const cs = getCurrencySymbol();
 
   if (loading) {
     return (
@@ -131,6 +135,10 @@ export const ProductsPage = () => {
                 showInactive: false,
               })
             }
+            categories={categories.map((c) => ({
+              code: c.categoryCode,
+              name: c.categoryName,
+            }))}
           />
         </div>
       </div>
@@ -194,7 +202,8 @@ export const ProductsPage = () => {
                     </td>
                     <td className="px-4 lg:px-6 py-3">
                       <div className="text-sm font-medium text-gray-900">
-                        C${product.price}
+                        {cs}
+                        {product.price}
                       </div>
                     </td>
                     <td className="px-4 lg:px-6 py-3">
@@ -296,7 +305,8 @@ export const ProductsPage = () => {
                     </div>
                     <div className="flex items-center gap-3 mt-2 text-sm">
                       <span className="font-bold text-[#E8BC6E]">
-                        C${product.price}
+                        {cs}
+                        {product.price}
                       </span>
                       <span className="text-gray-300">|</span>
                       <span

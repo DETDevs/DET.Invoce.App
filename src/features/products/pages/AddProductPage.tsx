@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/shared/ui/Card";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 import { useAddProductForm } from "@/features/products/hooks/useAddProductForm";
 import { productApi } from "@/api/products";
 
@@ -106,7 +107,7 @@ export const AddProductPage = () => {
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-gray-400">
-                      C$
+                      {getCurrencySymbol()}
                     </span>
                     <input
                       type="number"

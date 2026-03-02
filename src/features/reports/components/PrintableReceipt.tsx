@@ -1,7 +1,8 @@
 import type { CashCloseReportData } from "@/features/reports/types";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 
 const fmtCompact = (n: number) =>
-  `C$ ${n.toLocaleString("es-NI", {
+  `${getCurrencySymbol()} ${n.toLocaleString("es-NI", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;

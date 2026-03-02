@@ -3,6 +3,7 @@ import { X, Save, Loader2 } from "lucide-react";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
 import type { TProduct } from "@/api/products/types";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 import type { TCategory, TSubCategory } from "@/api/category/types";
 import categoryApi from "@/api/category/CategoryAPI";
 
@@ -168,7 +169,7 @@ export const EditProductModal = ({
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-gray-400">
-                      C$
+                      {getCurrencySymbol()}
                     </span>
                     <input
                       type="number"
