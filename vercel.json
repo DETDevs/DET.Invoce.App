@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://pruebasdet1-001-site1.ltempurl.com/api/:path*"
+    }
+  ]
+}
