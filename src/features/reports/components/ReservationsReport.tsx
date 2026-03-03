@@ -7,7 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Calendar, CheckCircle, Clock, Wallet } from "lucide-react";
+import { Calendar, CheckCircle, Clock, XCircle } from "lucide-react";
 import { KPICard } from "./KPICard";
 import type { ReservationsReportData } from "@/features/reports/types";
 
@@ -38,10 +38,10 @@ export const ReservationsReport = ({ data }: ReservationsReportProps) => {
           color="green"
         />
         <KPICard
-          title="Depósitos Recibidos"
-          value={`C$ ${data.totalDepositAmount.toLocaleString()}`}
-          icon={Wallet}
-          color="green"
+          title="Cancelados"
+          value={data.cancelledTotal}
+          icon={XCircle}
+          color="red"
         />
       </div>
 

@@ -52,7 +52,7 @@ export const CashFlowReport = ({ data }: CashFlowReportProps) => {
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h3 className="text-lg font-bold text-[#2D2D2D] mb-6">
-          Flujo de Caja Diario
+          Movimientos Diarios
         </h3>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">

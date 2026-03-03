@@ -13,6 +13,7 @@ import { CartItemRow } from "@/features/orders/components/CartItemRow";
 import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
 import type { CartItem } from "@/features/orders/types/index";
 import { useCartActions } from "@/features/orders/hooks/useCartActions";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 
 type TakeoutCartPanelProps = {
   cart: CartItem[];
@@ -62,7 +63,6 @@ export const TakeoutCartPanel = ({
     apiTables,
     totalItems,
     subtotal,
-    tax,
     total,
     isPaymentSufficient,
     handleSendOrder,
@@ -261,18 +261,10 @@ export const TakeoutCartPanel = ({
         {mode === "llevar" && isCajero && cart.length > 0 && (
           <>
             <div className="space-y-2 bg-white p-3 rounded-xl border border-gray-100">
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>Subtotal</span>
-                <span>C$ {subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>IVA (15%)</span>
-                <span>C$ {tax.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+              <div className="flex justify-between items-center">
                 <span className="text-lg font-bold text-[#2D2D2D]">Total</span>
                 <span className="text-xl font-bold text-[#2D2D2D]">
-                  C$ {total.toFixed(2)}
+                  {getCurrencySymbol()} {total.toFixed(2)}
                 </span>
               </div>
             </div>

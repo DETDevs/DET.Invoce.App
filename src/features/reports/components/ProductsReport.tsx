@@ -39,7 +39,7 @@ export const ProductsReport = ({ data }: ProductsReportProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold text-[#2D2D2D] mb-6">
-            Top 5 Productos Vendidos
+            Productos Más Vendidos
           </h3>
           <div className="h-[350px] w-full">
             {data.topProducts.length > 0 ? (

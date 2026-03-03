@@ -81,8 +81,7 @@ export const useTakeoutDetail = ({
             0,
         )
         : 0;
-    const tax = subtotal * 0.15;
-    const total = subtotal + tax;
+    const total = subtotal;
     const isPaymentSufficient =
         paymentMethod === "tarjeta" ||
         (paymentMethod === "efectivo" && paidInCordobas >= total);
@@ -402,7 +401,6 @@ export const useTakeoutDetail = ({
         isParaLlevar,
         canInvoice,
         subtotal,
-        tax,
         total,
         isPaymentSufficient,
         isSplitMode,

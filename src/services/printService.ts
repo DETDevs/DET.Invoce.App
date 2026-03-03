@@ -38,16 +38,28 @@ export async function printThermalTicket(ticketText: string): Promise<boolean> {
         }
         body {
             font-family: 'Courier New', 'Consolas', monospace;
-            font-size: 12px;
-            line-height: 1.4;
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 1.5;
             width: 80mm;
-            padding: 2mm;
+            padding: 3mm;
             white-space: pre;
             word-wrap: break-word;
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: unset;
+            text-rendering: geometricPrecision;
+            color: #000;
+            letter-spacing: 0.3px;
         }
         @media print {
             body {
                 width: 80mm;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            @page {
+                size: 80mm auto;
+                margin: 0;
             }
         }
     </style>

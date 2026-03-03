@@ -15,6 +15,7 @@ export type ProductOption = { id: number; code: string; name: string; price: num
 export interface Order {
     id: string;
     reservationOrderId?: number;
+    invoiceNumber?: string;
     customer: string;
     identificationCustomer?: string;
     items: string[];

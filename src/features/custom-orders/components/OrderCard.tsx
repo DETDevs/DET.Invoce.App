@@ -65,8 +65,11 @@ const getDueDateInfo = (
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [year, month, day] = dueDate.split("-").map(Number);
-  const due = new Date(year, month - 1, day);
+  const due = new Date(dueDate);
+  if (isNaN(due.getTime())) {
+    return { text: "Sin fecha", color: "text-gray-400", urgent: false };
+  }
+  due.setHours(0, 0, 0, 0);
 
   const diffTime = due.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

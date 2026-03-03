@@ -18,6 +18,8 @@ import { Pagination } from "@/features/invoices/components/Pagination";
 import { InvoiceDetailsModal } from "@/features/invoices/components/InvoiceDetailsModal";
 import { ReturnInvoiceModal } from "@/features/invoices/components/ReturnInvoiceModal";
 import type { Invoice, InvoiceStatus } from "@/features/invoices/types";
+import thermalTicketAPI from "@/api/thermal-ticket/ThermalTicketAPI";
+import { printThermalTicket } from "@/services/printService";
 
 export const InvoicesPage = () => {
   const navigate = useNavigate();
@@ -49,8 +51,24 @@ export const InvoicesPage = () => {
     totalPages,
   } = useInvoices();
 
-  const handlePrintInvoice = (_invoiceId: string) => {
-    toast.success("Solicitud de impresión enviada");
+  const handlePrintInvoice = async (invoiceId: string) => {
+    const toastId = toast.loading("Reimprimiendo factura...");
+    try {
+      const numericId = Number(invoiceId);
+      if (isNaN(numericId)) {
+        toast.error("ID de factura inválido", { id: toastId });
+        return;
+      }
+      const ticketText = await thermalTicketAPI.getThermalTicket(numericId);
+      await printThermalTicket(ticketText);
+      toast.success("Factura enviada a impresión", { id: toastId });
+    } catch (error) {
+      console.error("[Reprint] Error:", error);
+      toast.error("No se pudo reimprimir la factura. Intente de nuevo.", {
+        id: toastId,
+        duration: 5000,
+      });
+    }
   };
 
   const handlePrintReturnInvoice = (
@@ -145,7 +163,7 @@ export const InvoicesPage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por factura o cliente..."
+              placeholder="Buscar por factura o usuario..."
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm"
             />
           </div>
@@ -159,7 +177,7 @@ export const InvoicesPage = () => {
           >
             <option value="all">Todos los estados</option>
             <option value="completed">Completadas</option>
-            <option value="returned">Devueltas</option>
+            <option value="returned">Devoluciones</option>
           </select>
 
           <select

@@ -42,6 +42,34 @@ function getDateRange(range: DateRangeType, customRange: { start: Date; end: Dat
     };
 }
 
+const MONTH_NAMES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+function getMonthKey(dateStr: string): string {
+    const d = new Date(dateStr);
+    return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function groupByMonth<T extends Record<string, any>>(
+    items: T[],
+    dateKey: string,
+    sumKeys: string[]
+): T[] {
+    const monthMap = new Map<string, T>();
+    items.forEach(item => {
+        const mk = getMonthKey(item[dateKey]);
+        if (!monthMap.has(mk)) {
+            const base = { ...item, [dateKey]: mk } as T;
+            sumKeys.forEach(k => { (base as any)[k] = 0; });
+            monthMap.set(mk, base);
+        }
+        const entry = monthMap.get(mk)!;
+        sumKeys.forEach(k => {
+            (entry as any)[k] = ((entry as any)[k] || 0) + ((item as any)[k] || 0);
+        });
+    });
+    return Array.from(monthMap.values());
+}
+
 const emptySalesReport: SalesReportData = {
     totalSales: 0,
     totalCashIncome: 0,
@@ -102,7 +130,7 @@ export const useReports = () => {
         paymentBreakdown: [], movementLines: [],
     });
 
-    const fetchSalesReport = useCallback(async (dateFrom: string, dateTo: string, cashRegisterId?: number) => {
+    const fetchSalesReport = useCallback(async (dateFrom: string, dateTo: string, cashRegisterId?: number, isYearly = false) => {
         try {
             const [totalSalesRes, cashIncomeRes, topProductsRes, salesTrend] = await Promise.all([
                 reportApi.getTotalSales({ dateFrom, dateTo, cashRegisterId }),
@@ -118,16 +146,22 @@ export const useReports = () => {
             const topName = topProducts.length > 0 ? topProducts[0].name : "-";
             const trend = Array.isArray(salesTrend) ? salesTrend : [];
 
+            let salesByDate = trend.map(item => ({
+                date: isYearly ? item.date : new Date(item.date).toLocaleDateString("es-NI"),
+                amount: item.totalSales,
+                orders: 0,
+            }));
+
+            if (isYearly) {
+                salesByDate = groupByMonth(salesByDate, "date", ["amount", "orders"]);
+            }
+
             setSalesReport({
                 totalSales: sales,
                 totalCashIncome: cashIncome,
                 totalProductsSold: productsSold,
                 topProductName: topName,
-                salesByDate: trend.map(item => ({
-                    date: new Date(item.date).toLocaleDateString("es-NI"),
-                    amount: item.totalSales,
-                    orders: 0,
-                })),
+                salesByDate,
             });
         } catch (error) {
             console.error("[useReports] Error fetching sales:", error);
@@ -154,19 +188,12 @@ export const useReports = () => {
         }
     }, []);
 
-    const fetchCashFlowReport = useCallback(async (dateFrom: string, dateTo: string, cashRegisterId?: number) => {
+    const fetchCashFlowReport = useCallback(async (dateFrom: string, dateTo: string, _cashRegisterId?: number) => {
         try {
-            const [totalInRes, totalOutRes, dailyFlow, movementsRes, movementTypesRes] = await Promise.all([
-                reportApi.getTotalCashIncome({ dateFrom, dateTo, cashRegisterId }),
-                reportApi.getTotalCashOut({ dateFrom, dateTo, cashRegisterId }),
-                reportApi.getDailyCashFlow({ dateFrom, dateTo, cashRegisterId }),
+            const [movementsRes, movementTypesRes] = await Promise.all([
                 cashRegisterApi.getMovement(),
                 cashRegisterApi.getMovementType()
             ]);
-
-            const cashIn = totalInRes?.totalIncome || 0;
-            const cashOut = totalOutRes?.totalCashOut || 0;
-            const flow = Array.isArray(dailyFlow) ? dailyFlow : [];
 
             const types = Array.isArray(movementTypesRes) ? movementTypesRes : [];
             const movements = (Array.isArray(movementsRes) ? movementsRes : []).filter(m => {
@@ -176,16 +203,33 @@ export const useReports = () => {
                 return md >= from && md <= to;
             });
 
+            let cashIn = 0;
+            let cashOut = 0;
+
             const categoryMap = new Map<string, { type: "in" | "out", amount: number, category: string }>();
+            const dailyMap = new Map<string, { in: number, out: number }>();
+
             movements.forEach(m => {
                 const t = types.find(x => x.cashMovementTypeId === m.cashMovementTypeId);
                 const type = m.flow === "IN" ? "in" : "out";
                 const catName = t ? t.name : "General";
                 const key = `${type}-${catName}`;
+
+                if (type === "in") cashIn += m.amount;
+                else cashOut += m.amount;
+
                 if (!categoryMap.has(key)) {
                     categoryMap.set(key, { type, amount: 0, category: catName });
                 }
                 categoryMap.get(key)!.amount += m.amount;
+
+                const dateStr = new Date(m.createdDate).toLocaleDateString("es-NI");
+                if (!dailyMap.has(dateStr)) {
+                    dailyMap.set(dateStr, { in: 0, out: 0 });
+                }
+                const day = dailyMap.get(dateStr)!;
+                if (type === "in") day.in += m.amount;
+                else day.out += m.amount;
             });
 
             setCashFlowReport({
@@ -197,10 +241,10 @@ export const useReports = () => {
                     { type: "Salidas", amount: cashOut },
                 ],
                 movementsByCategory: Array.from(categoryMap.values()),
-                cashFlowByDate: flow.map(item => ({
-                    date: new Date(item.date).toLocaleDateString("es-NI"),
-                    in: item.totalIn === 0 ? null : item.totalIn,
-                    out: item.totalOut === 0 ? null : item.totalOut,
+                cashFlowByDate: Array.from(dailyMap.entries()).map(([date, vals]) => ({
+                    date,
+                    in: vals.in === 0 ? null : vals.in,
+                    out: vals.out === 0 ? null : vals.out,
                 })),
             });
         } catch (error) {
@@ -208,7 +252,7 @@ export const useReports = () => {
         }
     }, []);
 
-    const fetchOrdersReport = useCallback(async (dateFrom: string, dateTo: string) => {
+    const fetchOrdersReport = useCallback(async (dateFrom: string, dateTo: string, isYearly = false) => {
         try {
             const allOrders = await orderApi.getAll();
             const fromDateDate = new Date(dateFrom);
@@ -251,16 +295,19 @@ export const useReports = () => {
                 dayStats.amount += order.total;
             });
 
-            const ordersByDate = Array.from(daysMap.entries())
+            let ordersByDate = Array.from(daysMap.entries())
                 .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
                 .map(([dateStr, stats]) => {
-                    const [y, m, d] = dateStr.split('-');
                     return {
-                        date: `${d}/${m}/${y}`,
+                        date: isYearly ? dateStr : (() => { const [y, m, d] = dateStr.split('-'); return `${d}/${m}/${y}`; })(),
                         orders: stats.orders,
                         amount: stats.amount,
                     };
                 });
+
+            if (isYearly) {
+                ordersByDate = groupByMonth(ordersByDate, "date", ["orders", "amount"]);
+            }
 
             setOrdersReport({
                 totalOrders: filteredOrders.length,
@@ -274,9 +321,9 @@ export const useReports = () => {
         }
     }, []);
 
-    const fetchReservationsReport = useCallback(async (dateFrom: string, dateTo: string, cashRegisterId?: number) => {
+    const fetchReservationsReport = useCallback(async (dateFrom: string, dateTo: string, _cashRegisterId?: number, isYearly = false) => {
         try {
-            const allReservations = await reservationOrderApi.getAll(cashRegisterId);
+            const allReservations = await reservationOrderApi.getAll();
             const fromDateDate = new Date(dateFrom);
             const toDateDate = new Date(dateTo);
 
@@ -296,8 +343,8 @@ export const useReports = () => {
             filtered.forEach(res => {
                 const status = (res.status || "").toLowerCase();
                 if (status.includes("pending") || status.includes("pendiente")) pending++;
-                else if (status.includes("ready") || status.includes("listo") || status.includes("proceso")) active++;
-                else if (status.includes("delivered") || status.includes("pagado") || status.includes("entregado")) completed++;
+                else if (status.includes("ready") || status.includes("listo") || status.includes("proceso") || status.includes("inprogress")) active++;
+                else if (status.includes("delivered") || status.includes("pagado") || status.includes("entregado") || status.includes("completed") || status.includes("completado")) completed++;
                 else if (status.includes("cancelled") || status.includes("cancelado")) cancelled++;
 
                 totalDeposit += res.deposit || 0;
@@ -312,16 +359,19 @@ export const useReports = () => {
                 dayStats.amount += res.total;
             });
 
-            const reservationsByDate = Array.from(daysMap.entries())
+            let reservationsByDate = Array.from(daysMap.entries())
                 .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
                 .map(([dateStr, stats]) => {
-                    const [y, m, d] = dateStr.split('-');
                     return {
-                        date: `${d}/${m}/${y}`,
+                        date: isYearly ? dateStr : (() => { const [y, m, d] = dateStr.split('-'); return `${d}/${m}/${y}`; })(),
                         reservations: stats.reservations,
                         amount: stats.amount,
                     };
                 });
+
+            if (isYearly) {
+                reservationsByDate = groupByMonth(reservationsByDate, "date", ["reservations", "amount"]);
+            }
 
             setReservationsReport({
                 totalReservations: filtered.length,
@@ -403,9 +453,11 @@ export const useReports = () => {
         setIsLoading(true);
 
         const fetch = async () => {
+            const isYearly = dateRange === "year";
+
             switch (activeReport) {
                 case "sales":
-                    await fetchSalesReport(dateFrom, dateTo, cashRegisterId);
+                    await fetchSalesReport(dateFrom, dateTo, cashRegisterId, isYearly);
                     break;
                 case "products":
                     await fetchProductsReport(dateFrom, dateTo, cashRegisterId);
@@ -414,10 +466,10 @@ export const useReports = () => {
                     await fetchCashFlowReport(dateFrom, dateTo, cashRegisterId);
                     break;
                 case "orders":
-                    await fetchOrdersReport(dateFrom, dateTo);
+                    await fetchOrdersReport(dateFrom, dateTo, isYearly);
                     break;
                 case "reservations":
-                    await fetchReservationsReport(dateFrom, dateTo, cashRegisterId);
+                    await fetchReservationsReport(dateFrom, dateTo, cashRegisterId, isYearly);
                     break;
                 case "cashClose":
                     await fetchCashCloseReport(dateFrom, dateTo, cashRegisterId);

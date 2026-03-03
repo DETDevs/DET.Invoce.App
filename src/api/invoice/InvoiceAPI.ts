@@ -6,24 +6,9 @@ async function saveFromAccount(data: TSaveFromAccount) {
 }
 
 async function saveFromReservationOrder(data: {
-    invoiceId: number;
-    invoiceNumber: string | null;
-    orderNumber: string | null;
-    orderAccountId: number;
     reservationOrderId: number;
-    invoiceDate: string;
-    status: string;
-    customerId: number;
-    createdBy: string;
-    paymentMethod: string;
+    paymentmethod: string;
     amountPaid: number;
-    details: {
-        invoiceId: number;
-        productCode: string;
-        productName: string;
-        quantity: number;
-        unitPrice: number;
-    }[];
 }) {
     return api.post<any>('/Invoice/SaveFromReservationOrder', data);
 }

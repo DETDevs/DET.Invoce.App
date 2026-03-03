@@ -33,8 +33,7 @@ export const OrderSummary = ({
     setAmountPaid("");
   }, [orderNumber]);
 
-  const tax = subtotal * 0.15;
-  const total = subtotal + tax;
+  const total = subtotal;
   const [paidInCordobas, setPaidInCordobas] = useState(0);
   const isPaymentSufficient =
     paymentMethod === "tarjeta" ||
@@ -82,19 +81,7 @@ export const OrderSummary = ({
 
       <div className="p-6 bg-gray-50 border-t border-gray-100 space-y-4">
         <div className="space-y-2">
-          <div className="flex justify-between text-gray-500 text-sm">
-            <span>Subtotal</span>
-            <span>
-              {getCurrencySymbol()} {subtotal.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-gray-500 text-sm">
-            <span>IVA (15%)</span>
-            <span>
-              {getCurrencySymbol()} {tax.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+          <div className="flex justify-between items-center">
             <span className="text-xl font-bold text-[#2D2D2D]">Total</span>
             <span className="text-2xl font-bold text-[#2D2D2D]">
               {getCurrencySymbol()} {total.toFixed(2)}

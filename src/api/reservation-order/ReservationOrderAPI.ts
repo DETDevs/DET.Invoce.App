@@ -19,8 +19,8 @@ async function getAll(cashRegisterId?: number) {
     return api.get<any[]>(`/ReservationOrder/GetAll${params}`);
 }
 
-async function cancell(orderId: number, cancelledBy: string, reason?: string) {
-    return api.post<any>('/ReservationOrder/Cancell', { orderId, cancelledBy, reason });
+async function cancell(reservationOrderId: number, createdBy: string, reason?: string) {
+    return api.post<any>('/ReservationOrder/Cancell', { reservationOrderId, createdBy, reason });
 }
 
 const reservationOrderApi = {

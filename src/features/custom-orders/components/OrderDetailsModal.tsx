@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import {
   Coins,
@@ -13,23 +13,46 @@ import {
   CheckCircle2,
   Package,
   Ban,
+  Banknote,
+  CreditCard,
 } from "lucide-react";
 
 import type { Order, OrderStatus } from "@/shared/types";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
+import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   order: Order | null;
-  onInvoice: (orderId: string) => void;
+  onInvoice: (orderId: string, paymentMethod: string) => void;
   onMoveStatus: (orderId: string, newStatus: OrderStatus) => void;
   onRegisterPayment: (orderId: string, amount: number) => void;
   onCancelOrder?: (orderId: string) => void;
+  onReprint?: (orderId: string) => void;
   readOnly?: boolean;
   isInvoicing?: boolean;
 }
+
+const STATUS_LABELS: Record<OrderStatus, { label: string; color: string }> = {
+  pending: {
+    label: "Pendiente",
+    color: "bg-orange-100 text-orange-700 border-orange-200",
+  },
+  production: {
+    label: "En Proceso",
+    color: "bg-blue-100 text-blue-700 border-blue-200",
+  },
+  ready: {
+    label: "Listo",
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  },
+  delivered: {
+    label: "Entregado",
+    color: "bg-green-100 text-green-700 border-green-200",
+  },
+};
 
 export const OrderDetailsModal = ({
   isOpen,
@@ -39,19 +62,55 @@ export const OrderDetailsModal = ({
   onMoveStatus,
   onRegisterPayment,
   onCancelOrder,
+  onReprint,
   readOnly = false,
   isInvoicing = false,
 }: Props) => {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [convertedCordobaValue, setConvertedCordobaValue] = useState(0);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD">("CASH");
+  const [fetchedItems, setFetchedItems] = useState<string[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const { user } = useAuthStore();
   const canInvoice = user?.role === "cajero" || user?.role === "admin";
 
+  useEffect(() => {
+    if (!isOpen || !order) {
+      setFetchedItems([]);
+      return;
+    }
+    if (order.items.length > 0) {
+      setFetchedItems(order.items);
+      return;
+    }
+    const fetchDetails = async () => {
+      setLoadingDetails(true);
+      try {
+        const res = await reservationOrderApi.get(order.id);
+        const details = Array.isArray(res?.details) ? res.details : [];
+        const items = details.map(
+          (d: any) =>
+            `${d.quantity}x ${d.productName || d.notes || d.productCode || "Producto"}`,
+        );
+        setFetchedItems(
+          items.length > 0 ? items : ["Sin productos registrados"],
+        );
+      } catch {
+        setFetchedItems(["Error al cargar productos"]);
+      } finally {
+        setLoadingDetails(false);
+      }
+    };
+    fetchDetails();
+  }, [isOpen, order]);
+
   if (!isOpen || !order) return null;
 
+  const displayItems = fetchedItems.length > 0 ? fetchedItems : order.items;
   const remaining = order.total - order.deposit;
   const isPaid = remaining <= 0;
+  const statusInfo = STATUS_LABELS[order.status];
 
   const handleClose = () => {
     setPaymentAmount("");
@@ -75,125 +134,56 @@ export const OrderDetailsModal = ({
   const inputValue = Number(paymentAmount) || 0;
   const change = inputValue > remaining ? inputValue - remaining : 0;
 
-  const renderFooterActions = () => {
-    if (readOnly) return null;
-
-    if (order.status === "delivered") {
-      return (
-        <button className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors ml-auto cursor-default text-sm md:text-base w-full md:w-auto">
-          <CheckCircle2 size={18} />
-          Pedido Completado
-        </button>
-      );
-    }
-
-    const paymentControls = !isPaid && (
-      <div className="flex flex-col items-end gap-2 w-full md:w-auto mt-3 md:mt-0 border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
-        <div className="flex gap-2 items-center w-full md:w-auto">
-          <div className="w-full md:w-48">
-            <CurrencyAmountInput
-              totalInCordobas={remaining}
-              amountPaid={paymentAmount}
-              onAmountPaidChange={setPaymentAmount}
-              onConvertedValueChange={setConvertedCordobaValue}
-              onEnter={handleConfirmPayment}
-              compact
-            />
-          </div>
-          <button
-            onClick={handleConfirmPayment}
-            disabled={!paymentAmount || Number(paymentAmount) <= 0}
-            className="px-4 py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 font-bold text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <Coins size={16} />
-            <span className="hidden sm:inline">Cobrar</span>
-          </button>
-        </div>
-      </div>
-    );
-
-    switch (order.status) {
-      case "pending":
-        return (
-          <button
-            onClick={() => onMoveStatus(order.id, "production")}
-            className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#593D31] text-white font-bold hover:bg-[#4a332a] transition-colors shadow-md ml-auto text-sm md:text-base w-full md:w-auto justify-center"
-          >
-            Iniciar Proceso <ArrowRight size={18} />
-          </button>
-        );
-
-      case "production":
-        return (
-          <button
-            onClick={() => onMoveStatus(order.id, "ready")}
-            className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors shadow-md ml-auto text-sm md:text-base w-full md:w-auto justify-center"
-          >
-            <PackageCheck size={18} /> Marcar como Listo
-          </button>
-        );
-
-      case "ready":
-        return (
-          <div className="flex flex-col md:flex-row gap-3 w-full items-center justify-end">
-            {canInvoice ? (
-              <>
-                {paymentControls}
-
-                <button
-                  onClick={() => onInvoice(order.id)}
-                  disabled={!isPaid || isInvoicing}
-                  className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
-                  title={
-                    !isPaid ? "Debe saldar la cuenta antes de facturar" : ""
-                  }
-                >
-                  {isInvoicing ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" />{" "}
-                      Facturando...
-                    </>
-                  ) : (
-                    <>
-                      <FileText size={18} /> Facturar y Entregar
-                    </>
-                  )}
-                </button>
-              </>
-            ) : (
-              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 w-full">
-                <Package size={20} className="text-amber-600 shrink-0" />
-                <p className="text-sm text-amber-800">
-                  Solo un <strong>Cajero</strong> puede facturar este pedido.
-                </p>
-              </div>
-            )}
-          </div>
-        );
-
-      default:
-        return null;
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString("es-NI", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      });
+    } catch {
+      return dateStr;
     }
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/50 backdrop-blur-sm"
       onClick={handleClose}
+      style={{ animation: "fadeIn 0.2s ease-out" }}
     >
       <div
-        className="bg-white w-[95%] md:w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
+        style={{ animation: "slideUp 0.25s ease-out" }}
       >
-        <div className="flex justify-between items-start p-4 md:p-6 border-b border-gray-100 bg-[#FDFBF7]">
-          <div>
-            <div className="flex items-center gap-2 md:gap-3 mb-1">
-              <h2 className="text-xl md:text-2xl font-bold text-[#2D2D2D]">
-                Orden #{order.id}
-              </h2>
+        {/* ═══════════════════ HEADER ═══════════════════ */}
+        <div className="relative p-5 pb-4 border-b border-gray-100">
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <X size={18} />
+          </button>
 
+          <div className="pr-8">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+              Pedido
+            </p>
+            <h2 className="text-xl font-bold text-[#2D2D2D] mb-2">
+              #{order.id}
+            </h2>
+
+            <div className="flex flex-wrap items-center gap-2">
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] md:text-xs font-bold uppercase border ${
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusInfo.color}`}
+              >
+                {statusInfo.label}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
                   order.paymentStatus === "Pagado"
                     ? "bg-green-100 text-green-700 border-green-200"
                     : order.paymentStatus === "Abonado"
@@ -204,124 +194,137 @@ export const OrderDetailsModal = ({
                 {order.paymentStatus}
               </span>
             </div>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs md:text-sm text-gray-500">
+          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+            <span className="flex items-center gap-1">
+              <User size={13} className="text-gray-400" />
+              {order.customer}
+            </span>
+            {order.dueDate && (
               <span className="flex items-center gap-1">
-                <User size={14} /> {order.customer}
+                <Calendar size={13} className="text-gray-400" />
+                {formatDate(order.dueDate)}
               </span>
-              {order.status !== "delivered" ? (
-                <span className="flex items-center gap-1">
-                  <Calendar size={14} />{" "}
-                  {order.dueDate
-                    ? new Date(
-                        order.dueDate.replace(/-/g, "/"),
-                      ).toLocaleDateString("es-NI", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                      })
-                    : "Sin fecha"}
-                </span>
+            )}
+          </div>
+        </div>
+
+        {/* ═══════════════════ BODY (scrollable) ═══════════════════ */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          {/* Products */}
+          <div>
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+              Productos
+            </h3>
+            <div className="rounded-xl border border-gray-100 overflow-hidden">
+              {loadingDetails ? (
+                <div className="px-4 py-6 text-center text-gray-400 text-sm">
+                  <Loader2 className="inline animate-spin mr-2" size={14} />
+                  Cargando productos...
+                </div>
+              ) : displayItems.length > 0 ? (
+                <ul className="divide-y divide-gray-50">
+                  {displayItems.map((item, idx) => (
+                    <li
+                      key={idx}
+                      className="px-4 py-2.5 text-sm text-[#2D2D2D] flex items-center justify-between hover:bg-gray-50/50 transition-colors"
+                    >
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               ) : (
-                <span className="flex items-center gap-1 text-green-600 font-medium">
-                  <CheckCircle2 size={14} /> Entregado
-                </span>
+                <p className="px-4 py-4 text-center text-gray-400 italic text-sm">
+                  Sin productos registrados
+                </p>
               )}
             </div>
           </div>
 
-          <button
-            onClick={handleClose}
-            className="p-1.5 md:p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="p-4 md:p-6 overflow-y-auto flex-1 min-h-0">
-          <div className="mb-6 md:mb-8">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
-              Productos
-            </h3>
-
-            <div className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 text-gray-600 font-medium">
-                  <tr>
-                    <th className="px-4 py-2">Descripción</th>
-                    <th className="px-4 py-2 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {order.items.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="px-4 py-3 text-[#2D2D2D]">{item}</td>
-                      <td className="px-4 py-3 text-right font-medium">--</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          {/* Notes */}
+          {order.status !== "delivered" && (
             <div>
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
                 Notas
               </h3>
-              <p className="text-sm text-gray-500 italic bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+              <p className="text-sm text-gray-500 italic bg-amber-50/60 p-3 rounded-lg border border-amber-100/80">
                 Sin notas adicionales para este pedido.
               </p>
             </div>
+          )}
 
-            <div className="space-y-3 bg-gray-50/50 p-4 rounded-xl md:bg-transparent md:p-0">
-              <div className="flex justify-between text-gray-600">
-                <span>Total Pedido:</span>
-                <span className="font-bold text-[#2D2D2D] text-lg">
-                  C$ {order.total.toFixed(2)}
+          {/* Payment Summary */}
+          <div className="bg-gray-50 rounded-xl p-4 space-y-2.5">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>Total Pedido</span>
+              <span className="font-bold text-[#2D2D2D] text-base">
+                C$ {order.total.toFixed(2)}
+              </span>
+            </div>
+
+            {order.deposit > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>
+                  {order.status === "delivered" ? "Pagado" : "Abonado"}
+                </span>
+                <span className="font-medium">
+                  - C$ {order.deposit.toFixed(2)}
                 </span>
               </div>
+            )}
 
-              <div className="flex justify-between text-green-600">
-                <span>Abonado:</span>
-                <span>- C$ {order.deposit.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between pt-3 border-t border-gray-200">
-                <span className="font-bold text-gray-900">
-                  Pendiente a Pagar:
-                </span>
-                <span
-                  className={`font-bold text-xl ${isPaid ? "text-green-600" : "text-red-500"}`}
-                >
-                  C$ {remaining.toFixed(2)}
-                </span>
-              </div>
-              {change > 0 && (
-                <div className="flex justify-between pt-2 border-t border-dashed border-gray-200 animate-pulse">
-                  <span className="font-bold text-blue-600">Su Cambio:</span>
-                  <span className="font-bold text-xl text-blue-600">
-                    C$ {change.toFixed(2)}
+            {!isPaid && (
+              <>
+                <div className="border-t border-gray-200 pt-2.5 flex justify-between">
+                  <span className="font-bold text-gray-800 text-sm">
+                    Pendiente
+                  </span>
+                  <span className="font-bold text-lg text-red-500">
+                    C$ {remaining.toFixed(2)}
                   </span>
                 </div>
-              )}
-            </div>
+                {change > 0 && paymentMethod === "CASH" && (
+                  <div className="flex justify-between pt-1">
+                    <span className="font-bold text-blue-600 text-sm">
+                      Cambio
+                    </span>
+                    <span className="font-bold text-blue-600">
+                      C$ {change.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {isPaid && order.status !== "delivered" && (
+              <div className="border-t border-gray-200 pt-2.5 flex justify-between items-center">
+                <span className="font-bold text-gray-800 text-sm">
+                  Pendiente
+                </span>
+                <span className="font-bold text-green-600 text-lg">
+                  C$ 0.00
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="p-4 md:p-5 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row items-center gap-3 md:gap-4 min-h-[80px] md:min-h-[88px]">
+        {/* ═══════════════════ FOOTER ═══════════════════ */}
+        <div className="border-t border-gray-100 bg-gray-50/80">
+          {/* Cancel bar (only pending) */}
           {!readOnly && onCancelOrder && order.status === "pending" && (
-            <div className="w-full md:w-auto order-last md:order-first md:mr-auto">
+            <div className="px-5 pt-3">
               {!showCancelConfirm ? (
                 <button
                   onClick={() => setShowCancelConfirm(true)}
-                  className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-colors text-sm"
+                  className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
                 >
-                  <Ban size={16} />
+                  <Ban size={13} />
                   Cancelar Orden
                 </button>
               ) : (
-                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                   <span className="text-xs text-red-700 font-medium">
                     ¿Seguro?
                   </span>
@@ -330,13 +333,13 @@ export const OrderDetailsModal = ({
                       onCancelOrder(order.id);
                       handleClose();
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors"
+                    className="px-3 py-1 rounded-md bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors"
                   >
                     Sí, cancelar
                   </button>
                   <button
                     onClick={() => setShowCancelConfirm(false)}
-                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-100 transition-colors"
+                    className="px-3 py-1 rounded-md border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-100 transition-colors"
                   >
                     No
                   </button>
@@ -345,17 +348,142 @@ export const OrderDetailsModal = ({
             </div>
           )}
 
-          {renderFooterActions()}
+          {/* Payment input row (only ready + not paid + cash) */}
+          {!readOnly &&
+            order.status === "ready" &&
+            canInvoice &&
+            !isPaid &&
+            paymentMethod === "CASH" && (
+              <div className="px-5 pt-4 pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <CurrencyAmountInput
+                      totalInCordobas={remaining}
+                      amountPaid={paymentAmount}
+                      onAmountPaidChange={setPaymentAmount}
+                      onConvertedValueChange={setConvertedCordobaValue}
+                      onEnter={handleConfirmPayment}
+                      compact
+                    />
+                  </div>
+                  <button
+                    onClick={handleConfirmPayment}
+                    disabled={!paymentAmount || Number(paymentAmount) <= 0}
+                    className="px-4 py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 font-bold text-sm shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    <Coins size={15} />
+                    Cobrar
+                  </button>
+                </div>
+              </div>
+            )}
 
-          {order.status === "delivered" && (
-            <button className="w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-100 transition-colors">
-              <Printer size={18} />
-              <span className="md:hidden">Reimprimir</span>
-              <span className="hidden md:inline">Reimprimir Factura</span>
-            </button>
-          )}
+          {/* Action buttons */}
+          <div className="px-5 py-4 flex items-center gap-3">
+            {readOnly ? null : order.status === "pending" ? (
+              <button
+                onClick={() => onMoveStatus(order.id, "production")}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#593D31] text-white font-bold hover:bg-[#4a332a] transition-colors shadow-md ml-auto text-sm"
+              >
+                Iniciar Proceso <ArrowRight size={16} />
+              </button>
+            ) : order.status === "production" ? (
+              <button
+                onClick={() => onMoveStatus(order.id, "ready")}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors shadow-md ml-auto text-sm"
+              >
+                <PackageCheck size={16} /> Marcar como Listo
+              </button>
+            ) : order.status === "ready" ? (
+              canInvoice ? (
+                <>
+                  {/* Payment method toggle */}
+                  <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-0.5">
+                    <button
+                      onClick={() => setPaymentMethod("CASH")}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                        paymentMethod === "CASH"
+                          ? "bg-white text-[#593D31] shadow-sm"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      <Banknote size={14} />
+                      Efectivo
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod("CARD")}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                        paymentMethod === "CARD"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      <CreditCard size={14} />
+                      Tarjeta
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => onInvoice(order.id, paymentMethod)}
+                    disabled={
+                      (paymentMethod === "CASH" && !isPaid) || isInvoicing
+                    }
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#E8BC6E] text-white font-bold hover:bg-[#dca34b] transition-colors shadow-md text-sm disabled:opacity-40 disabled:cursor-not-allowed ml-auto"
+                    title={
+                      paymentMethod === "CASH" && !isPaid
+                        ? "Debe saldar la cuenta antes de facturar"
+                        : ""
+                    }
+                  >
+                    {isInvoicing ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Facturando...
+                      </>
+                    ) : (
+                      <>
+                        <FileText size={16} /> Facturar y Entregar
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 w-full">
+                  <Package size={18} className="text-amber-600 shrink-0" />
+                  <p className="text-xs text-amber-800">
+                    Solo un <strong>Cajero</strong> puede facturar este pedido.
+                  </p>
+                </div>
+              )
+            ) : order.status === "delivered" ? (
+              <>
+                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-green-200 bg-green-50 text-green-700 font-bold cursor-default text-sm">
+                  <CheckCircle2 size={16} />
+                  Entregado
+                </button>
+                <button
+                  onClick={() => onReprint?.(order.id)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-100 transition-colors ml-auto text-sm"
+                >
+                  <Printer size={16} />
+                  Reimprimir Factura
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(12px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   );
 };

@@ -20,7 +20,7 @@ export const ReportSelector = ({
   const reports = [
     { id: "sales", label: "Ventas", icon: TrendingUp },
     { id: "products", label: "Productos", icon: Package },
-    { id: "cash", label: "Flujo de Caja", icon: DollarSign },
+    { id: "cash", label: "Movimientos", icon: DollarSign },
     { id: "orders", label: "Órdenes", icon: ClipboardList },
     { id: "reservations", label: "Pedidos", icon: Calendar },
     { id: "cashClose", label: "Cierre de Caja", icon: Landmark },

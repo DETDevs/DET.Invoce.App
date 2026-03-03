@@ -47,8 +47,8 @@ function mapBackendInvoice(raw: any): Invoice {
     }));
 
     const subtotal = items.reduce((s, i) => s + i.subtotal, 0);
-    const tax = subtotal * 0.15;
-    const total = raw.total ?? subtotal + tax;
+    const tax = 0;
+    const total = raw.total ?? subtotal;
 
     let mappedStatus: InvoiceStatus = "completed";
     if (raw.status === "REFUND" || raw.status === "returned") {
@@ -58,7 +58,7 @@ function mapBackendInvoice(raw: any): Invoice {
     return {
         id: String(raw.invoiceId ?? raw.invoiceNumber ?? ""),
         orderNumber: raw.invoiceNumber ?? raw.invoiceId ?? "",
-        customerName: raw.customer ?? raw.createdBy ?? "",
+        customerName: raw.customer ?? "",
         createdAt: raw.invoiceDate ?? raw.createdAt ?? new Date().toISOString(),
         createdBy: raw.createdBy ?? "",
         paymentMethod: raw.paymentMethod ?? "",
@@ -153,7 +153,7 @@ export const useInvoices = () => {
             const matchesSearch =
                 invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 String(invoice.orderNumber).toLowerCase().includes(searchQuery.toLowerCase()) ||
-                invoice.customerName?.toLowerCase().includes(searchQuery.toLowerCase());
+                invoice.createdBy?.toLowerCase().includes(searchQuery.toLowerCase());
 
             const matchesStatus = filterStatus === "all" || invoice.status === filterStatus;
 

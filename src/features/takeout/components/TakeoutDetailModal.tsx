@@ -45,7 +45,6 @@ export const TakeoutDetailModal = ({
     isParaLlevar,
     canInvoice,
     subtotal,
-    tax,
     total,
     isPaymentSufficient,
     isSplitMode,
@@ -352,25 +351,10 @@ export const TakeoutDetailModal = ({
         ) : (
           <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50">
             <div className="px-5 py-3 flex items-center justify-between gap-6 border-b border-gray-100">
-              <div className="flex gap-6 text-sm text-gray-500">
-                <span>
-                  Sub:
-                  <strong className="text-gray-700">
-                    {getCurrencySymbol()} {subtotal.toFixed(2)}
-                  </strong>
-                </span>
-                <span>
-                  IVA 15%:
-                  <strong className="text-gray-700">
-                    {getCurrencySymbol()} {tax.toFixed(2)}
-                  </strong>
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-xl font-bold text-[#2D2D2D]">
-                  {getCurrencySymbol()} {total.toFixed(2)}
-                </span>
-              </div>
+              <span className="text-sm text-gray-500">Total</span>
+              <span className="text-xl font-bold text-[#2D2D2D]">
+                {getCurrencySymbol()} {total.toFixed(2)}
+              </span>
             </div>
 
             {canInvoice ? (

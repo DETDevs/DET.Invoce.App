@@ -4,6 +4,9 @@ echo ========================================
 echo   DET Invoice POS - Impresion Silenciosa
 echo ========================================
 echo.
+echo Cerrando instancias de Chrome existentes...
+taskkill /F /IM chrome.exe >nul 2>&1
+timeout /t 2 /nobreak >nul
 echo Abriendo Chrome con impresion directa...
 echo Impresora predeterminada: MUNBYN_USB
 echo.

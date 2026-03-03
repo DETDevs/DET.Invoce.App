@@ -1,20 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 import invoiceApi from "@/api/invoice/InvoiceAPI";
+import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
+import thermalTicketAPI from "@/api/thermal-ticket/ThermalTicketAPI";
+import { printThermalTicket } from "@/services/printService";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useOrdersBoard } from "@/features/custom-orders/hooks/useOrdersBoard";
 import { KanbanColumn } from "@/features/custom-orders/components/KanbanColumn";
 import { OrderDetailsModal } from "@/features/custom-orders/components/OrderDetailsModal";
 import { type Order, type OrderStatus } from "@/shared/types";
+import { useOrdersStore } from "@/features/custom-orders/store/useOrdersStore";
 
 export const OrdersBoardPage = () => {
   const { orders, onDragEnd, moveOrder, registerPayment, removeOrder } =
     useOrdersBoard();
+  const { fetchOrders } = useOrdersStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,7 +60,10 @@ export const OrdersBoardPage = () => {
     });
   };
 
-  const handleInvoice = async (orderId: string) => {
+  const handleInvoice = async (
+    orderId: string,
+    paymentMethod: string = "CASH",
+  ) => {
     if (readOnly) return;
     const order = orders.find((o) => o.id === orderId);
     if (!order) return;
@@ -66,26 +78,51 @@ export const OrdersBoardPage = () => {
 
     setIsInvoicing(true);
     try {
-      await invoiceApi.saveFromReservationOrder({
-        invoiceId: 0,
-        invoiceNumber: null,
-        orderNumber: order.id,
-        orderAccountId: 0,
+      const remaining = order.total - order.deposit;
+      const response = await invoiceApi.saveFromReservationOrder({
         reservationOrderId: order.reservationOrderId ?? 0,
-        invoiceDate: new Date().toISOString(),
-        status: "1",
-        customerId: 0,
-        createdBy: user?.name ?? "Sistema",
-        paymentMethod: "Efectivo",
-        amountPaid: order.deposit,
-        details: (order.rawItems ?? []).map((item) => ({
-          invoiceId: 0,
-          productCode: item.productCode || "",
-          productName: item.name || "Producto personalizado",
-          quantity: item.quantity,
-          unitPrice: item.price,
-        })),
+        paymentmethod: paymentMethod,
+        amountPaid: remaining > 0 ? remaining : order.total,
       });
+
+      const invoiceNumber =
+        typeof response === "string"
+          ? response
+          : response?.invoiceNumber || response?.data;
+
+      // Print thermal ticket — search by invoiceNumber which IS returned by Invoice_GetAll
+      try {
+        const allInvoices = await invoiceApi.getAll();
+        const match = allInvoices.find(
+          (inv: any) => inv.invoiceNumber === invoiceNumber,
+        );
+        if (match?.invoiceId) {
+          const ticketText = await thermalTicketAPI.getThermalTicket(
+            match.invoiceId,
+          );
+          await printThermalTicket(ticketText);
+          try {
+            await thermalTicketAPI.openCashDrawer();
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch (printErr) {
+        console.warn("[handleInvoice] No se pudo imprimir:", printErr);
+      }
+
+      // Store invoiceNumber for reprinting
+      setSelectedOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              invoiceNumber,
+              status: "delivered" as OrderStatus,
+              paymentStatus: "Pagado" as const,
+              deposit: prev.total,
+            }
+          : null,
+      );
 
       moveOrder(orderId, "delivered");
       setIsModalOpen(false);
@@ -101,11 +138,56 @@ export const OrdersBoardPage = () => {
     }
   };
 
-  const handleCancelOrder = (orderId: string) => {
+  const handleCancelOrder = async (orderId: string) => {
     if (readOnly) return;
+    const order = orders.find((o) => o.id === orderId);
+
+    if (order?.reservationOrderId) {
+      try {
+        await reservationOrderApi.cancell(
+          order.reservationOrderId,
+          user?.name ?? "Sistema",
+        );
+      } catch (err) {
+        console.error("[handleCancelOrder] Error al cancelar:", err);
+        toast.error("No se pudo cancelar el pedido en el servidor.");
+        return;
+      }
+    }
+
     removeOrder(orderId);
     setIsModalOpen(false);
     toast.success(`Pedido #${orderId} cancelado`);
+  };
+
+  const handleReprint = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    const invoiceNum = order?.invoiceNumber || selectedOrder?.invoiceNumber;
+
+    if (!invoiceNum) {
+      toast.error(
+        "No se encontró el número de factura. Intente facturar de nuevo.",
+      );
+      return;
+    }
+    try {
+      const allInvoices = await invoiceApi.getAll();
+      const match = allInvoices.find(
+        (inv: any) => inv.invoiceNumber === invoiceNum,
+      );
+      if (!match?.invoiceId) {
+        toast.error("No se encontró la factura para reimprimir.");
+        return;
+      }
+      const ticketText = await thermalTicketAPI.getThermalTicket(
+        match.invoiceId,
+      );
+      await printThermalTicket(ticketText);
+      toast.success("Ticket enviado a la impresora.");
+    } catch (err) {
+      console.error("[handleReprint] Error:", err);
+      toast.error("No se pudo reimprimir la factura.");
+    }
   };
 
   const handleDragStart = () => {
@@ -249,6 +331,7 @@ export const OrdersBoardPage = () => {
         onMoveStatus={handleManualMove}
         onRegisterPayment={handlePayment}
         onCancelOrder={handleCancelOrder}
+        onReprint={handleReprint}
         readOnly={readOnly}
         isInvoicing={isInvoicing}
       />

@@ -102,8 +102,7 @@ export const useCartActions = ({
         (acc, item) => acc + item.price * item.quantity,
         0,
     );
-    const tax = subtotal * 0.15;
-    const total = subtotal + tax;
+    const total = subtotal;
     const isPaymentSufficient =
         paymentMethod === "tarjeta" ||
         (paymentMethod === "efectivo" && paidInCordobas >= total);
@@ -310,7 +309,6 @@ export const useCartActions = ({
         apiTables,
         totalItems,
         subtotal,
-        tax,
         total,
         isPaymentSufficient,
         handleSendOrder,

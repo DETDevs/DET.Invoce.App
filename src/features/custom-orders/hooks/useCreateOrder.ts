@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { CreateOrderFormData } from "@/features/custom-orders/types";
-import type { Order, OrderItem, ProductOption } from "@/shared/types";
+import type { OrderItem, ProductOption } from "@/shared/types";
 import { useOrdersStore } from "../store/useOrdersStore";
 import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
@@ -10,7 +10,7 @@ import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 
 export const useCreateOrder = () => {
   const navigate = useNavigate();
-  const { addOrder } = useOrdersStore();
+
   const { user } = useAuthStore();
   const { session } = useCashBox();
   const [isSaving, setIsSaving] = useState(false);
@@ -127,32 +127,8 @@ export const useCreateOrder = () => {
         }),
       };
 
-      const result = await reservationOrderApi.save(payload);
-
-      const reservationOrderId: number | undefined =
-        typeof result === 'number'
-          ? result
-          : (result?.reservationOrderId ?? result?.id ?? undefined);
-
-      const formattedItems = formData.items.map(
-        (item) => `${item.quantity}x ${item.name}${item.description ? ` (${item.description})` : ""}`
-      );
-
-      const newOrder: Order = {
-        id: (typeof result === 'object' && result?.orderNumber) ? result.orderNumber : `ORD-${Date.now()}`,
-        reservationOrderId,
-        customer: formData.customerName,
-        identificationCustomer: formData.customerId || undefined,
-        items: formattedItems,
-        rawItems: formData.items,
-        total,
-        deposit,
-        paymentStatus: formData.status,
-        dueDate: formData.dueDate,
-        status: "pending",
-      };
-
-      addOrder(newOrder);
+      await reservationOrderApi.save(payload);
+      await useOrdersStore.getState().fetchOrders();
       toast.success("Pedido guardado correctamente");
       navigate("/tablero");
     } catch (err) {

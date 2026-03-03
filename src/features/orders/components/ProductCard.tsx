@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { ImageOff } from "lucide-react";
+import { Package } from "lucide-react";
 import type { Product } from "@/features/orders/types/index";
+import { getCurrencySymbol } from "@/shared/utils/currency";
 
 interface ProductCardProps {
   product: Product;
@@ -14,6 +15,7 @@ const ProductCardComponent = ({
   hidePrice,
 }: ProductCardProps) => {
   const [imgError, setImgError] = useState(false);
+  const initial = product.name?.charAt(0)?.toUpperCase() || "P";
 
   return (
     <div
@@ -30,8 +32,19 @@ const ProductCardComponent = ({
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
-            <ImageOff size={28} />
+          <div
+            className="w-full h-full flex flex-col items-center justify-center"
+            style={{
+              background:
+                "linear-gradient(135deg, #FDF6E3 0%, #F5E6C8 50%, #EDD9B3 100%)",
+            }}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm border border-white/80 mb-1.5">
+              <span className="text-2xl font-black text-[#593D31]">
+                {initial}
+              </span>
+            </div>
+            <Package size={14} className="text-[#C4A574] opacity-60" />
           </div>
         )}
       </div>
@@ -41,7 +54,7 @@ const ProductCardComponent = ({
         </h4>
         {!hidePrice && (
           <span className="text-[#E8BC6E] font-bold text-sm mt-1 block">
-            C$ {product.price}
+            {getCurrencySymbol()} {product.price}
           </span>
         )}
       </div>
