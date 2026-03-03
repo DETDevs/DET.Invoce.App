@@ -31,23 +31,26 @@ export const AddProductPage = () => {
   } = useAddProductForm({
     onSubmitSuccess: async (data) => {
       try {
-        await productApi.save({
-          productId: 0,
-          code: "",
-          categoryCode: data.category,
-          subCategoryId: data.subCategoryId ?? undefined,
-          name: data.name,
-          description: "",
-          price: Number(data.price),
-          trackInventory: true,
-          unitId: isNaturalBeverage ? "2" : 0,
-          divideQuantityBy: isNaturalBeverage
-            ? Number(data.divideQuantityBy)
-            : 0,
-          isActive: true,
-          quantity: Number(data.stock),
-          stockMinimum: Number(data.minStock),
-        });
+        await productApi.save(
+          {
+            productId: 0,
+            code: "",
+            categoryCode: data.category,
+            subCategoryId: data.subCategoryId ?? undefined,
+            name: data.name,
+            description: "",
+            price: Number(data.price),
+            trackInventory: true,
+            unitId: isNaturalBeverage ? "2" : 0,
+            divideQuantityBy: isNaturalBeverage
+              ? Number(data.divideQuantityBy)
+              : 0,
+            isActive: true,
+            quantity: Number(data.stock),
+            stockMinimum: Number(data.minStock),
+          },
+          data.imageFile,
+        );
         toast.success("Producto creado exitosamente!");
         navigate("/productos");
       } catch (err) {

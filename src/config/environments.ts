@@ -1,5 +1,5 @@
 const environments = {
-    BASE_API_URI: '/api',
+    BASE_API_URI: import.meta.env.VITE_API_URL || '/api',
 };
 
 export default environments;

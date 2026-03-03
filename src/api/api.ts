@@ -246,11 +246,19 @@ async function postText(url: string, body?: any): Promise<string> {
     return response.text();
 }
 
+async function postFormData<T>(url: string, formData: FormData): Promise<T> {
+    return apiCall(url, {
+        method: 'POST',
+        body: formData,
+    });
+}
+
 const api = {
     post,
     get,
     getText,
     postText,
+    postFormData,
     put,
     delete: del,
 };

@@ -131,7 +131,7 @@ export const useProductActions = () => {
         setIsStockModalOpen(true);
     };
 
-    const handleSaveProduct = async (updatedProduct: any) => {
+    const handleSaveProduct = async (updatedProduct: any, imageFile?: File | null) => {
         setIsSaving(true);
         try {
             await productApi.save({
@@ -149,7 +149,7 @@ export const useProductActions = () => {
                 isActive: updatedProduct.isActive ?? true,
                 quantity: updatedProduct.quantity ?? updatedProduct.stock ?? 0,
                 stockMinimum: updatedProduct.stockMinimum ?? 0,
-            });
+            }, imageFile);
             toast.success("Producto actualizado correctamente");
             await fetchProducts();
         } catch (err) {
@@ -201,7 +201,7 @@ export const useProductActions = () => {
                 isActive: false,
                 quantity: selectedProduct.quantity ?? 0,
                 stockMinimum: selectedProduct.stockMinimum ?? 0,
-            });
+            }, null);
             toast.success(`"${selectedProduct.name}" inactivado correctamente`);
             setIsDeleteModalOpen(false);
             await fetchProducts();

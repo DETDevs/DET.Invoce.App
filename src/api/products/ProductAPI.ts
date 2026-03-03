@@ -8,8 +8,13 @@ async function getByCode(code?: string) {
     return api.get<TProduct[]>(`/Product/GetByCode${params}`);
 }
 
-async function save(product: TSaveProduct) {
-    return api.post<any>('/Product/Save', product);
+async function save(product: TSaveProduct, imageFile?: File | null) {
+    const formData = new FormData();
+    formData.append('ProductJson', JSON.stringify(product));
+    if (imageFile) {
+        formData.append('Image', imageFile);
+    }
+    return api.postFormData<any>('/Product/Save', formData);
 }
 
 async function getLowStock() {

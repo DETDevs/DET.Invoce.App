@@ -11,7 +11,7 @@ interface EditProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: TProduct | null;
-  onSave: (updatedProduct: TProduct) => void;
+  onSave: (updatedProduct: TProduct, imageFile?: File | null) => void;
 }
 
 export const EditProductModal = ({
@@ -113,7 +113,7 @@ export const EditProductModal = ({
 
     if (formData) {
       setIsSaving(true);
-      onSave(formData);
+      onSave(formData, newImageFile);
       onClose();
     }
   };
