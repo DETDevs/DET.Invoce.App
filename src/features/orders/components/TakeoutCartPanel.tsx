@@ -62,7 +62,6 @@ export const TakeoutCartPanel = ({
     activeCuentas,
     apiTables,
     totalItems,
-    subtotal,
     total,
     isPaymentSufficient,
     handleSendOrder,

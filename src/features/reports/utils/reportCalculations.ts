@@ -14,19 +14,10 @@ export const calculateSalesReport = (invoices: Invoice[], movements: CashMovemen
     );
 
     const totalSales = completedInvoices.reduce((sum, inv) => sum + inv.total, 0);
-    const totalOrders = completedInvoices.length;
-    const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
 
     const totalCashIn = movements
         .filter(m => m.type === 'cash-in')
         .reduce((sum, m) => sum + m.amount, 0);
-
-    const totalOut = movements
-        .filter(m => m.type === 'cash-out')
-        .reduce((sum, m) => sum + m.amount, 0);
-
-    const theoreticalCash = totalSales + totalCashIn - totalOut;
-    const initialCash = totalCashIn;
 
     const salesByDateMap = new Map<string, { amount: number; orders: number }>();
 
@@ -45,18 +36,25 @@ export const calculateSalesReport = (invoices: Invoice[], movements: CashMovemen
         orders: data.orders,
     }));
 
-    const salesByPaymentMethod = [
-        { method: "Efectivo", amount: totalSales },
-    ];
+    const totalProductsSold = completedInvoices.reduce(
+        (sum, inv) => sum + inv.items.reduce((s, item) => s + item.quantity, 0), 0
+    );
+
+    const topProduct = Array.from(
+        completedInvoices.flatMap(inv => inv.items)
+            .reduce((map, item) => {
+                const current = map.get(item.productName) || 0;
+                map.set(item.productName, current + item.quantity);
+                return map;
+            }, new Map<string, number>())
+    ).sort((a, b) => b[1] - a[1])[0];
 
     return {
         totalSales,
-        totalOrders,
-        averageTicket,
-        theoreticalCash,
-        initialCash,
+        totalCashIncome: totalCashIn,
+        totalProductsSold,
+        topProductName: topProduct?.[0] || 'N/A',
         salesByDate,
-        salesByPaymentMethod,
     };
 };
 
@@ -139,31 +137,30 @@ export const calculateCashFlowReport = (movements: CashMovement[]): CashFlowRepo
 export const calculateOrdersReport = (invoices: Invoice[]): OrdersReportData => {
     const totalOrders = invoices.length;
     const completedOrders = invoices.filter(i => i.status === 'completed').length;
-    const returnedOrders = invoices.filter(i => i.status === 'returned').length;
+    const cancelledOrders = invoices.filter(i => i.status === 'returned').length;
 
     let totalItems = 0;
-    const peakHoursMap = new Map<number, { orders: number; amount: number }>();
+    const ordersByDateMap = new Map<string, { orders: number; amount: number }>();
 
     invoices.forEach(inv => {
         totalItems += inv.items.reduce((sum, item) => sum + item.quantity, 0);
-
-        const hour = new Date(inv.createdAt).getHours();
-        const current = peakHoursMap.get(hour) || { orders: 0, amount: 0 };
-        peakHoursMap.set(hour, {
+        const date = new Date(inv.createdAt).toLocaleDateString('es-NI');
+        const current = ordersByDateMap.get(date) || { orders: 0, amount: 0 };
+        ordersByDateMap.set(date, {
             orders: current.orders + 1,
             amount: current.amount + inv.total
         });
     });
 
-    const peakHours = Array.from(peakHoursMap.entries())
-        .map(([hour, data]) => ({ hour, ...data }))
-        .sort((a, b) => a.hour - b.hour);
+    const ordersByDate = Array.from(ordersByDateMap.entries())
+        .map(([date, data]) => ({ date, ...data }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return {
         totalOrders,
         completedOrders,
-        returnedOrders,
-        peakHours,
+        cancelledOrders,
+        ordersByDate,
         averageItemsPerOrder: totalOrders > 0 ? totalItems / totalOrders : 0
     };
 };

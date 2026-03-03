@@ -1,4 +1,3 @@
-import React from "react";
 import { Toaster } from "react-hot-toast";
 import { LoginImagePanel } from "@/features/auth/components/LoginImagePanel";
 import { LoginHeader } from "@/features/auth/components/LoginHeader";

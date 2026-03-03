@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { UploadCloud, Image as ImageIcon, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { UploadCloud, X } from "lucide-react";
 
 interface ImageUploadFieldProps {
   label: string;

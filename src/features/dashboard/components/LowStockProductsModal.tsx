@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { X, AlertTriangle } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
 

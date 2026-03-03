@@ -1,4 +1,3 @@
-import React from "react";
 import cakeImage from "@/assets/cake-login.svg";
 
 export const LoginImagePanel = () => {

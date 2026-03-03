@@ -163,7 +163,7 @@ export const useProductActions = () => {
     const handleSaveStock = async (
         productId: number,
         newStock: number,
-        reason: string,
+        _reason: string,
     ) => {
         const product = products.find((p) => p.productId === productId);
         if (!product) return;

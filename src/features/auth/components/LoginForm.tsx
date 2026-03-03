@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLogin } from "@/features/auth/hooks/useLogin";
 import { LoginInput } from "./LoginInput";
 import lockIcon from "@/assets/password.svg";

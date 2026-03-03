@@ -44,7 +44,6 @@ export const TakeoutDetailModal = ({
     isProcessing,
     isParaLlevar,
     canInvoice,
-    subtotal,
     total,
     isPaymentSufficient,
     isSplitMode,

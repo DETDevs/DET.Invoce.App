@@ -26,7 +26,10 @@ export const InvoiceCard = ({ invoice, onClick }: InvoiceCardProps) => {
   };
 
   const getStatusBadge = (status: Invoice["status"]) => {
-    const badges = {
+    const badges: Record<
+      Invoice["status"],
+      { label: string; className: string }
+    > = {
       completed: {
         label: "Completada",
         className: "bg-green-100 text-green-700",
@@ -34,6 +37,10 @@ export const InvoiceCard = ({ invoice, onClick }: InvoiceCardProps) => {
       returned: {
         label: "Devolucion",
         className: "bg-red-100 text-red-700",
+      },
+      partially_returned: {
+        label: "Parcial",
+        className: "bg-amber-100 text-amber-700",
       },
     };
 
