@@ -189,10 +189,10 @@ export const useReports = () => {
         }
     }, []);
 
-    const fetchCashFlowReport = useCallback(async (dateFrom: string, dateTo: string, _cashRegisterId?: number) => {
+    const fetchCashFlowReport = useCallback(async (dateFrom: string, dateTo: string, cashRegisterId?: number) => {
         try {
             const [movementsRes, movementTypesRes] = await Promise.all([
-                cashRegisterApi.getMovement(),
+                cashRegisterApi.getMovement({ cashRegisterId: cashRegisterId ?? null }),
                 cashRegisterApi.getMovementType()
             ]);
 
@@ -403,7 +403,7 @@ export const useReports = () => {
                 reportApi.getTotalSales({ dateFrom, dateTo, cashRegisterId }),
                 reportApi.getTotalCashIncome({ dateFrom, dateTo, cashRegisterId }),
                 reportApi.getTotalCashOut({ dateFrom, dateTo, cashRegisterId }),
-                cashRegisterApi.getMovement(),
+                cashRegisterApi.getMovement({ cashRegisterId: cashRegisterId ?? null }),
                 cashRegisterApi.getMovementType(),
                 invoiceApi.getAll(cashRegisterId),
             ]);

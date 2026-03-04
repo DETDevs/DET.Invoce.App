@@ -126,11 +126,19 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
       `);
       doc.close();
 
-      iframe.onload = () => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-        setTimeout(() => iframe.remove(), 1000);
-      };
+      // Wait for content to render, then print
+      setTimeout(() => {
+        const iframeWin = iframe.contentWindow;
+        if (!iframeWin) return;
+
+        // Remove iframe only after user closes the print dialog
+        iframeWin.addEventListener("afterprint", () => {
+          iframe.remove();
+        });
+
+        iframeWin.focus();
+        iframeWin.print();
+      }, 500);
     }
   };
 

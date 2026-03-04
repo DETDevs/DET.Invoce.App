@@ -24,7 +24,6 @@ import {
 import { TopSellerCarousel } from "@/features/dashboard/components/TopSellerCarousel";
 import { LowStockProductsModal } from "@/features/dashboard/components/LowStockProductsModal";
 import { productApi } from "@/api/products";
-import dashboardApi from "@/api/dashboard/DashboardAPI";
 import reportApi from "@/api/report/ReportAPI";
 import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 import type { TProduct } from "@/api/products/types";
@@ -155,56 +154,55 @@ export const DashboardPage = () => {
   }, [salesTrendRange]);
 
   useEffect(() => {
+    const crId = session?.cashRegisterId;
+
     const fetchDashboard = async () => {
       setLoadingKpis(true);
       try {
-        const [moneyRes, soldRes, categoryRes] = await Promise.allSettled([
-          dashboardApi.getTotalMoneyToday(),
-          dashboardApi.getTotalProductsSoldToday(),
-          dashboardApi.getSalesByCategoryToday(),
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const dateParams = {
+          dateFrom: startOfDay.toISOString(),
+          dateTo: today.toISOString(),
+          cashRegisterId: crId,
+        };
+
+        const [salesRes, ordersRes, topRes] = await Promise.allSettled([
+          reportApi.getTotalSales(dateParams),
+          reportApi.getTotalOrders(dateParams),
+          reportApi.getTopSellingProducts(dateParams),
         ]);
 
-        if (moneyRes.status === "fulfilled") {
-          const data = moneyRes.value;
-          setTotalMoney(
-            typeof data === "number"
-              ? data
-              : ((data as any)?.totalMoneyToday_ ?? 0),
-          );
+        if (salesRes.status === "fulfilled") {
+          setTotalMoney(salesRes.value?.totalSales ?? 0);
         }
 
-        if (soldRes.status === "fulfilled") {
-          const data = soldRes.value;
-          setTotalProductsSold(
-            typeof data === "number"
-              ? data
-              : ((data as any)?.totalProductsSoldToday_ ?? 0),
-          );
+        if (ordersRes.status === "fulfilled") {
+          setTotalProductsSold(ordersRes.value?.totalOrders ?? 0);
         }
 
-        if (categoryRes.status === "fulfilled") {
-          const data = categoryRes.value;
+        if (topRes.status === "fulfilled") {
+          const data = topRes.value;
           if (Array.isArray(data)) {
-            setSalesByCategory(data);
+            // Map report top-selling products to the dashboard carousel format
+            setSalesByCategory([]);
+            setTopProducts(
+              data.slice(0, 10).map((p) => ({
+                categoryName: "",
+                productName: p.name,
+                totalSold: p.totalSold,
+                imageUrl: undefined,
+              })),
+            );
           }
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       } finally {
         setLoadingKpis(false);
-      }
-    };
-
-    const fetchTopProducts = async () => {
-      setLoadingTopProducts(true);
-      try {
-        const data = await dashboardApi.getTopProductByCategoryToday();
-        if (Array.isArray(data)) {
-          setTopProducts(data);
-        }
-      } catch (err) {
-        console.error("Error fetching top products:", err);
-      } finally {
         setLoadingTopProducts(false);
       }
     };
@@ -234,9 +232,8 @@ export const DashboardPage = () => {
     }
 
     fetchDashboard();
-    fetchTopProducts();
     fetchLowStock();
-  }, [session?.isOpen]);
+  }, [session?.isOpen, session?.cashRegisterId]);
 
   const lowStockForModal = lowStockProducts.map((p) => ({
     id: p.productId,
