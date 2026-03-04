@@ -57,7 +57,7 @@ export const AddCustomProductForm = ({ onAdd }: Props) => {
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm text-center"
+            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm text-center"
           />
         </div>
 
@@ -77,7 +77,7 @@ export const AddCustomProductForm = ({ onAdd }: Props) => {
               onChange={(e) => setPrice(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="0.00"
-              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm"
+              className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-sm"
             />
           </div>
         </div>
@@ -86,7 +86,7 @@ export const AddCustomProductForm = ({ onAdd }: Props) => {
           type="button"
           onClick={handleAdd}
           disabled={!isValid}
-          className="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 bg-emerald-600 text-white px-5 py-2 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold whitespace-nowrap"
+          className="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold whitespace-nowrap"
         >
           <Plus size={16} /> Agregar
         </button>
