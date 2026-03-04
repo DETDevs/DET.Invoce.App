@@ -111,7 +111,7 @@ export const useInvoices = () => {
 
     const addReturn = async (
         invoiceId: string,
-        returnData: { reason: string; notes?: string }
+        _returnData: { reason: string; notes?: string }
     ) => {
         const invoice = invoices.find((inv) => inv.id === invoiceId);
         if (!invoice) return;

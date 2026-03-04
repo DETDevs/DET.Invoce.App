@@ -222,7 +222,7 @@ export const NewOrderPage = () => {
   }, [isCartOpen]);
 
   return (
-    <div className="h-screen w-full bg-[#FDFBF7] grid grid-rows-[1fr] min-[1400px]:grid-cols-[1fr_420px] overflow-hidden">
+    <div className="h-full w-full bg-[#FDFBF7] grid grid-rows-[1fr] min-[1400px]:grid-cols-[1fr_420px] overflow-hidden">
       <Toaster position="top-center" />
       <ConfirmDialog
         isOpen={isDialogOpen}
