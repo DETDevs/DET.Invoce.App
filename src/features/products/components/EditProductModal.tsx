@@ -21,7 +21,10 @@ export const EditProductModal = ({
   onSave,
 }: EditProductModalProps) => {
   const [formData, setFormData] = useState<TProduct | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [priceStr, setPriceStr] = useState("");
+  const [stockMinStr, setStockMinStr] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<TCategory[]>([]);
   const [subCategories, setSubCategories] = useState<TSubCategory[]>([]);
@@ -46,8 +49,11 @@ export const EditProductModal = ({
   useEffect(() => {
     if (product) {
       setFormData({ ...product });
+      setPriceStr(String(product.price ?? ""));
+      setStockMinStr(String(product.stockMinimum ?? ""));
       setNewImageFile(null);
       setIsSaving(false);
+      setIsDirty(false);
     }
   }, [product]);
 
@@ -67,19 +73,12 @@ export const EditProductModal = ({
 
   if (!isOpen || !formData) return null;
 
-  const isFormValid =
-    formData.name.trim() !== "" &&
-    formData.price > 0 &&
-    formData.stockMinimum >= 0 &&
-    (formData.imageUrl || newImageFile);
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (!e.target.value) {
-      toast.error(`El campo ${e.target.name} no puede estar vacío`, {
-        id: `error-${e.target.name}`,
-      });
-    }
+  const updateForm = (updates: Partial<TProduct>) => {
+    setFormData({ ...formData, ...updates });
+    setIsDirty(true);
   };
+
+  const isFormValid = formData.name.trim() !== "" && isDirty;
 
   const handleCategoryChange = (categoryCode: string) => {
     const cat = categories.find((c) => c.categoryCode === categoryCode);
@@ -90,14 +89,14 @@ export const EditProductModal = ({
       subCategoryId: undefined,
       subCategoryName: undefined,
     });
+    setIsDirty(true);
   };
 
   const handleSubCategoryChange = (subCategoryId: string) => {
     const sub = subCategories.find(
       (s) => s.subCategoryId === Number(subCategoryId),
     );
-    setFormData({
-      ...formData,
+    updateForm({
       subCategoryId: sub ? sub.subCategoryId : undefined,
       subCategoryName: sub ? sub.name : undefined,
     });
@@ -143,7 +142,14 @@ export const EditProductModal = ({
               <ImageUploadField
                 label="Imagen del Producto"
                 currentImage={formData.imageUrl || ""}
-                onImageSelected={setNewImageFile}
+                onImageSelected={(file) => {
+                  setNewImageFile(file);
+                  if (!file) {
+                    // Image was removed — clear the URL so backend knows
+                    setFormData({ ...formData, imageUrl: "" });
+                  }
+                  setIsDirty(true);
+                }}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -155,10 +161,7 @@ export const EditProductModal = ({
                     type="text"
                     name="nombre"
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    onBlur={handleBlur}
+                    onChange={(e) => updateForm({ name: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                   />
                 </div>
@@ -174,14 +177,16 @@ export const EditProductModal = ({
                     <input
                       type="number"
                       name="precio"
-                      value={formData.price}
-                      onChange={(e) =>
+                      value={priceStr}
+                      onChange={(e) => {
+                        setPriceStr(e.target.value);
                         setFormData({
                           ...formData,
-                          price: Number(e.target.value),
-                        })
-                      }
-                      onBlur={handleBlur}
+                          price:
+                            e.target.value === "" ? 0 : Number(e.target.value),
+                        });
+                        setIsDirty(true);
+                      }}
                       className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                     />
                   </div>
@@ -194,14 +199,16 @@ export const EditProductModal = ({
                   <input
                     type="number"
                     name="stockMinimum"
-                    value={formData.stockMinimum}
-                    onChange={(e) =>
+                    value={stockMinStr}
+                    onChange={(e) => {
+                      setStockMinStr(e.target.value);
                       setFormData({
                         ...formData,
-                        stockMinimum: Number(e.target.value),
-                      })
-                    }
-                    onBlur={handleBlur}
+                        stockMinimum:
+                          e.target.value === "" ? 0 : Number(e.target.value),
+                      });
+                      setIsDirty(true);
+                    }}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                   />
                 </div>

@@ -32,16 +32,6 @@ import type {
   TTopProductByCategory,
 } from "@/api/dashboard/types";
 
-const productsSoldMonthly = [
-  { name: "Ene", value: 120 },
-  { name: "Feb", value: 150 },
-  { name: "Mar", value: 180 },
-  { name: "Abr", value: 200 },
-  { name: "May", value: 160 },
-  { name: "Jun", value: 140 },
-  { name: "Jul", value: 210 },
-];
-
 const COLORS = ["#E8BC6E", "#593D31", "#F3EFE0", "#D4A373", "#A0785A"];
 
 export const DashboardPage = () => {
@@ -61,6 +51,10 @@ export const DashboardPage = () => {
 
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [loadingTopProducts, setLoadingTopProducts] = useState(true);
+
+  const [monthlySalesVolume, setMonthlySalesVolume] = useState<
+    { name: string; value: number }[]
+  >([]);
 
   const [salesTrendRange, setSalesTrendRange] = useState("Esta Semana");
   const [salesDataList, setSalesDataList] = useState<
@@ -104,6 +98,58 @@ export const DashboardPage = () => {
     };
 
     fetchSalesTrend();
+
+    // Fetch monthly sales volume (last 7 months)
+    const fetchMonthlyVolume = async () => {
+      try {
+        const MONTH_NAMES = [
+          "Ene",
+          "Feb",
+          "Mar",
+          "Abr",
+          "May",
+          "Jun",
+          "Jul",
+          "Ago",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dic",
+        ];
+        const end = new Date();
+        end.setHours(23, 59, 59, 999);
+        const start = new Date();
+        start.setMonth(end.getMonth() - 6);
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+
+        const data = await reportApi.getSalesTrend({
+          dateFrom: start.toISOString(),
+          dateTo: end.toISOString(),
+        });
+
+        if (Array.isArray(data) && data.length > 0) {
+          const monthMap = new Map<string, number>();
+          data.forEach((item) => {
+            const d = new Date(item.date);
+            const key = MONTH_NAMES[d.getMonth()];
+            monthMap.set(
+              key,
+              (monthMap.get(key) || 0) + (item.totalSales || 0),
+            );
+          });
+          setMonthlySalesVolume(
+            Array.from(monthMap.entries()).map(([name, value]) => ({
+              name,
+              value,
+            })),
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching monthly volume:", error);
+      }
+    };
+    fetchMonthlyVolume();
   }, [salesTrendRange]);
 
   useEffect(() => {
@@ -429,37 +475,40 @@ export const DashboardPage = () => {
               <h3 className="text-lg font-medium text-[#2D2D2D] p-2">
                 Volumen de Ventas
               </h3>
-              <button className="text-[#E8BC6E] text-sm font-medium hover:text-[#dca34b] p-2">
-                Ver reporte completo
-              </button>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={productsSoldMonthly} barSize={32}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#E5E7EB"
-                />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#9CA3AF", fontSize: 12 }}
-                  dy={10}
-                />
-                <Tooltip
-                  cursor={{ fill: "transparent" }}
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  }}
-                  formatter={(value) => [`${value} unidades`, "Ventas"]}
-                />
-                <Bar dataKey="value" fill="#E8BC6E" radius={[6, 6, 6, 6]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {monthlySalesVolume.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={monthlySalesVolume} barSize={32}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#E5E7EB"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                    dy={10}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "transparent" }}
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    }}
+                    formatter={(value) => [`C$${value}`, "Ventas"]}
+                  />
+                  <Bar dataKey="value" fill="#E8BC6E" radius={[6, 6, 6, 6]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[220px] text-gray-400 text-sm">
+                Sin datos disponibles
+              </div>
+            )}
           </Card>
         </div>
       </div>

@@ -22,9 +22,9 @@ export const KanbanColumn = ({
   readOnly = false,
 }: Props) => {
   return (
-    <div className="flex flex-col h-full w-[calc(100vw-2rem)] md:w-[320px] shrink-0 snap-start bg-gray-50/50 rounded-2xl border border-gray-200/60 shadow-sm">
+    <div className="flex flex-col min-h-0 h-full w-[75vw] sm:w-[280px] md:w-[320px] shrink-0 bg-gray-50/50 rounded-2xl border border-gray-200/60 shadow-sm">
       <div
-        className={`p-4 border-b border-gray-100 flex justify-between items-center rounded-t-2xl ${color}`}
+        className={`p-4 border-b border-gray-100 flex justify-between items-center rounded-t-2xl shrink-0 ${color}`}
       >
         <div className="flex items-center gap-2 min-w-0">
           <h3 className="font-bold text-[#2D2D2D] truncate">{title}</h3>
@@ -46,7 +46,7 @@ export const KanbanColumn = ({
             className={`p-3 flex-1 min-h-0 overflow-y-auto overscroll-contain transition-colors ${
               snapshot.isDraggingOver ? "bg-gray-100/80" : ""
             }`}
-            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+            style={{ WebkitOverflowScrolling: "touch" }}
           >
             {orders.map((order, index) => (
               <OrderCard

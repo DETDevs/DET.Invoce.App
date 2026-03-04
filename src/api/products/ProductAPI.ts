@@ -29,8 +29,13 @@ async function getProductMovements(productId: number, dateFrom?: string, dateTo?
     return api.get<any[]>(`/Product/GetProductMovements?${qs.toString()}`);
 }
 
+async function getByOrder() {
+    return api.get<TProduct[]>('/Product/GetByOrder');
+}
+
 const productApi = {
     getByCode,
+    getByOrder,
     save,
     getLowStock,
     getProductMovements,

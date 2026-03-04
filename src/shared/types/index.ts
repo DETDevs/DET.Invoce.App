@@ -25,6 +25,7 @@ export interface Order {
     paymentStatus: PaymentStatus;
     dueDate: string;
     status: OrderStatus;
+    notes?: string;
 }
 
 export type TakeoutStatus = 'active' | 'completed' | 'cancelled';

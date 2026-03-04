@@ -16,6 +16,7 @@ export const useProductActions = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filters, setFilters] = useState({
         category: "",
+        subCategory: "",
         minPrice: "",
         maxPrice: "",
         showInactive: false,
@@ -40,9 +41,9 @@ export const useProductActions = () => {
                 productApi.getByCode(),
                 categoryApi.getAll(),
             ]);
-            setProducts(data);
-            setFilteredProducts(data);
-            setCategories(cats.filter((c) => c.isActive));
+            setProducts(data.filter((p) => p.code !== "PERSONALIZADO"));
+            setFilteredProducts(data.filter((p) => p.code !== "PERSONALIZADO"));
+            setCategories(cats.filter((c) => c.isActive && c.categoryCode !== "CUSTOM"));
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Error al cargar productos",
@@ -76,6 +77,12 @@ export const useProductActions = () => {
             );
         }
 
+        if (filters.subCategory) {
+            result = result.filter(
+                (product) => product.subCategoryName === filters.subCategory,
+            );
+        }
+
         if (filters.minPrice) {
             result = result.filter(
                 (product) => product.price >= Number(filters.minPrice),
@@ -97,13 +104,14 @@ export const useProductActions = () => {
         currentPage * itemsPerPage,
     );
 
-    const getStockStatus = (stock: number) => {
-        if (stock <= 5) {
+    const getStockStatus = (stock: number, stockMinimum: number = 0) => {
+        const minThreshold = stockMinimum > 0 ? stockMinimum : 5;
+        if (stock <= minThreshold) {
             return {
                 color: "text-red-600 bg-red-50 border-red-100",
                 label: "Crítico",
             };
-        } else if (stock <= 15) {
+        } else if (stock <= minThreshold * 2) {
             return {
                 color: "text-amber-600 bg-amber-50 border-amber-100",
                 label: "Bajo",
@@ -147,9 +155,10 @@ export const useProductActions = () => {
                 unitId: updatedProduct.unitId ?? 0,
                 divideQuantityBy: updatedProduct.divideQuantityBy ?? 0,
                 isActive: updatedProduct.isActive ?? true,
-                quantity: updatedProduct.quantity ?? updatedProduct.stock ?? 0,
+                quantity: 0, // Don't touch stock — managed via Stock Adjustment modal
                 stockMinimum: updatedProduct.stockMinimum ?? 0,
             }, imageFile);
+
             toast.success("Producto actualizado correctamente");
             await fetchProducts();
         } catch (err) {
@@ -168,13 +177,27 @@ export const useProductActions = () => {
         const product = products.find((p) => p.productId === productId);
         if (!product) return;
 
+        const currentStock = product.quantity ?? 0;
+        const delta = newStock - currentStock;
+
+        if (delta === 0) return; // No change
+
         try {
-            await inventoryApi.save({
-                inventoryId: 0,
-                productCode: product.code,
-                quantityInStock: newStock,
-                minimumStock: product.stockMinimum ?? 0,
-            });
+            if (delta > 0) {
+                // Entry: Inventory_Save adds quantity to existing stock
+                await inventoryApi.save({
+                    inventoryId: 0,
+                    productCode: product.code,
+                    quantityInStock: delta,
+                    minimumStock: product.stockMinimum ?? 0,
+                });
+            } else {
+                // Exit: Inventory_Output subtracts with validation
+                await inventoryApi.output({
+                    productCode: product.code,
+                    quantityInStock: Math.abs(delta),
+                });
+            }
             toast.success("Inventario actualizado correctamente");
             await fetchProducts();
         } catch (err) {
@@ -199,7 +222,7 @@ export const useProductActions = () => {
                 unitId: selectedProduct.unitId ?? 0,
                 divideQuantityBy: selectedProduct.divideQuantityBy ?? 0,
                 isActive: false,
-                quantity: selectedProduct.quantity ?? 0,
+                quantity: 0, // Don't touch stock when deactivating
                 stockMinimum: selectedProduct.stockMinimum ?? 0,
             }, null);
             toast.success(`"${selectedProduct.name}" inactivado correctamente`);
@@ -237,6 +260,16 @@ export const useProductActions = () => {
         totalPages,
         itemsPerPage,
         categories,
+        subCategories: (() => {
+            const source = filters.category
+                ? products.filter((p) => p.categoryName === filters.category)
+                : products;
+            const unique = new Map<string, string>();
+            source.forEach((p) => {
+                if (p.subCategoryName) unique.set(p.subCategoryName, p.subCategoryName);
+            });
+            return Array.from(unique.values()).sort();
+        })(),
         getStockStatus,
         handleEditClick,
         handleDeleteClick,

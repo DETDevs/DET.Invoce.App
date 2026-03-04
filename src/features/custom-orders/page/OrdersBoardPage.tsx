@@ -253,7 +253,8 @@ export const OrdersBoardPage = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] lg:h-screen w-full flex flex-col bg-[#FDFBF7] overflow-hidden">
+    <div className="flex-1 flex flex-col w-full bg-[#FDFBF7] overflow-hidden">
+      {/* ── Toolbar: fixed height, never scrolls ── */}
       <div className="px-4 md:px-8 py-3 md:py-4 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="text-xl md:text-2xl font-bold text-[#2D2D2D]">
@@ -273,54 +274,53 @@ export const OrdersBoardPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <div
-          className="kanban-scroll-container h-full overflow-x-auto overflow-y-hidden px-4 md:px-8 py-4 md:py-6 snap-x snap-mandatory scroll-smooth overscroll-x-contain"
-          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+      {/* ── Kanban Wrapper: fills remaining space, horizontal scroll only ── */}
+      <div
+        className="kanban-scroll-container flex-1 min-h-0 overflow-x-auto overflow-y-hidden px-4 md:px-8 py-4 md:py-6"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        <DragDropContext
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         >
-          <DragDropContext
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="flex h-full min-w-full w-max gap-4 md:gap-6 items-stretch">
-              <KanbanColumn
-                id="pending"
-                title="Por Hacer"
-                color="bg-gray-100"
-                orders={orders.filter((o) => o.status === "pending")}
-                onCardClick={handleCardClick}
-                readOnly={readOnly}
-              />
+          <div className="flex h-full min-w-max gap-4 md:gap-6">
+            <KanbanColumn
+              id="pending"
+              title="Por Hacer"
+              color="bg-gray-100"
+              orders={orders.filter((o) => o.status === "pending")}
+              onCardClick={handleCardClick}
+              readOnly={readOnly}
+            />
 
-              <KanbanColumn
-                id="production"
-                title="En Proceso"
-                color="bg-blue-50"
-                orders={orders.filter((o) => o.status === "production")}
-                onCardClick={handleCardClick}
-                readOnly={readOnly}
-              />
+            <KanbanColumn
+              id="production"
+              title="En Proceso"
+              color="bg-blue-50"
+              orders={orders.filter((o) => o.status === "production")}
+              onCardClick={handleCardClick}
+              readOnly={readOnly}
+            />
 
-              <KanbanColumn
-                id="ready"
-                title="Listo"
-                color="bg-amber-50"
-                orders={orders.filter((o) => o.status === "ready")}
-                onCardClick={handleCardClick}
-                readOnly={readOnly}
-              />
+            <KanbanColumn
+              id="ready"
+              title="Listo"
+              color="bg-amber-50"
+              orders={orders.filter((o) => o.status === "ready")}
+              onCardClick={handleCardClick}
+              readOnly={readOnly}
+            />
 
-              <KanbanColumn
-                id="delivered"
-                title="Entregado"
-                color="bg-green-50"
-                orders={orders.filter((o) => o.status === "delivered")}
-                onCardClick={handleCardClick}
-                readOnly={readOnly}
-              />
-            </div>
-          </DragDropContext>
-        </div>
+            <KanbanColumn
+              id="delivered"
+              title="Entregado"
+              color="bg-green-50"
+              orders={orders.filter((o) => o.status === "delivered")}
+              onCardClick={handleCardClick}
+              readOnly={readOnly}
+            />
+          </div>
+        </DragDropContext>
       </div>
 
       <OrderDetailsModal

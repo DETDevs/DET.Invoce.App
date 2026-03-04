@@ -78,8 +78,7 @@ export const useAddProductForm = ({
     formData.price.trim() !== "" &&
     formData.stock.trim() !== "" &&
     formData.minStock.trim() !== "" &&
-    (!isNaturalBeverage || formData.divideQuantityBy.trim() !== "") &&
-    imageFile !== null;
+    (!isNaturalBeverage || formData.divideQuantityBy.trim() !== "");
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,

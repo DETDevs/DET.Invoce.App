@@ -48,8 +48,8 @@ export const AddCustomProductForm = ({ onAdd }: Props) => {
         />
       </div>
 
-      <div className="flex items-end gap-4">
-        <div className="w-28">
+      <div className="grid grid-cols-2 sm:grid-cols-[7rem_1fr_auto] gap-3 items-end">
+        <div>
           <label className="block text-xs text-gray-500 mb-1">Cantidad</label>
           <input
             type="number"
@@ -61,7 +61,7 @@ export const AddCustomProductForm = ({ onAdd }: Props) => {
           />
         </div>
 
-        <div className="flex-1">
+        <div>
           <label className="block text-xs text-gray-500 mb-1">
             Precio Unitario
           </label>
@@ -86,7 +86,7 @@ export const AddCustomProductForm = ({ onAdd }: Props) => {
           type="button"
           onClick={handleAdd}
           disabled={!isValid}
-          className="flex items-center gap-1.5 bg-emerald-600 text-white px-5 py-2 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold whitespace-nowrap"
+          className="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 bg-emerald-600 text-white px-5 py-2 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold whitespace-nowrap"
         >
           <Plus size={16} /> Agregar
         </button>

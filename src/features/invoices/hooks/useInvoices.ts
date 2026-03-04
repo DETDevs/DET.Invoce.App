@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import type { Invoice, InvoiceItem, InvoiceStatus, InvoiceReturn } from "@/features/invoices/types";
+import type { Invoice, InvoiceItem, InvoiceStatus } from "@/features/invoices/types";
 import invoiceApi from "@/api/invoice/InvoiceAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useCashBox } from "@/features/settings/pages/CashBoxContext";
+import toast from "react-hot-toast";
 
 export type DateFilterPreset = "all" | "today" | "week" | "month" | "custom";
 
@@ -123,26 +124,7 @@ export const useInvoices = () => {
             await fetchInvoices();
         } catch (err) {
             console.error("[useInvoices] Error al hacer devolución:", err);
-
-            const totalReturned = invoice.items.reduce((sum, item) => sum + item.subtotal, 0);
-
-            const newReturn: InvoiceReturn = {
-                id: `RET-${Date.now()}`,
-                returnedAt: new Date().toISOString(),
-                returnedBy: user?.name ?? "Usuario Actual",
-                reason: returnData.reason,
-                notes: returnData.notes,
-                items: invoice.items,
-                totalReturned,
-            };
-
-            const updatedInvoice: Invoice = {
-                ...invoice,
-                status: "returned" as InvoiceStatus,
-                returns: [...(invoice.returns || []), newReturn],
-            };
-
-            setInvoices((prev) => prev.map((inv) => inv.id === invoiceId ? updatedInvoice : inv));
+            toast.error("No se pudo procesar la devolución. Intente de nuevo.");
         }
     };
 

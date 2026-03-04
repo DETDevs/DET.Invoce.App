@@ -9,7 +9,7 @@ const LayoutContent = () => {
     <div className="flex bg-[#FDFBF7] min-h-screen">
       <Sidebar />
       <main
-        className={`flex-1 pt-16 md:pt-4 overflow-x-hidden ${
+        className={`flex-1 h-screen flex flex-col overflow-auto pt-16 md:pt-0 ${
           isCollapsed ? "ml-0 md:ml-[72px]" : "ml-0 md:ml-64"
         }`}
       >

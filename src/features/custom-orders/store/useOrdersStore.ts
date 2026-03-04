@@ -131,6 +131,7 @@ export const useOrdersStore = create<OrdersState>()(
                             paymentStatus,
                             dueDate: raw.deliveryDate || raw.orderDate || '',
                             status,
+                            notes: raw.notes || undefined,
                         };
                     });
 

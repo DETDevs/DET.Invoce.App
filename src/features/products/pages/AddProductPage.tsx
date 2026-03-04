@@ -34,14 +34,14 @@ export const AddProductPage = () => {
         await productApi.save(
           {
             productId: 0,
-            code: "",
+            code: `PP${Date.now()}${Math.floor(Math.random() * 9000 + 1000)}`,
             categoryCode: data.category,
             subCategoryId: data.subCategoryId ?? undefined,
             name: data.name,
             description: "",
             price: Number(data.price),
             trackInventory: true,
-            unitId: isNaturalBeverage ? "2" : 0,
+            unitId: isNaturalBeverage ? 3 : 5,
             divideQuantityBy: isNaturalBeverage
               ? Number(data.divideQuantityBy)
               : 0,

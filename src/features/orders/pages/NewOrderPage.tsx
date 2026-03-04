@@ -64,7 +64,7 @@ export const NewOrderPage = () => {
     let cancelled = false;
     setIsLoadingProducts(true);
     productApi
-      .getByCode()
+      .getByOrder()
       .then((data: TProduct[]) => {
         if (cancelled) return;
         const mapped: Product[] = data

@@ -91,7 +91,7 @@ export const OrderDetailsModal = ({
         const details = Array.isArray(res?.details) ? res.details : [];
         const items = details.map(
           (d: any) =>
-            `${d.quantity}x ${d.productName || d.notes || d.productCode || "Producto"}`,
+            `${d.quantity}x ${d.productCode === "PERSONALIZADO" ? d.notes || "Producto Personalizado" : d.productName || d.notes || d.productCode || "Producto"}`,
         );
         setFetchedItems(
           items.length > 0 ? items : ["Sin productos registrados"],
@@ -248,8 +248,10 @@ export const OrderDetailsModal = ({
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
                 Notas
               </h3>
-              <p className="text-sm text-gray-500 italic bg-amber-50/60 p-3 rounded-lg border border-amber-100/80">
-                Sin notas adicionales para este pedido.
+              <p
+                className={`text-sm italic p-3 rounded-lg border ${order.notes ? "text-gray-700 bg-white border-gray-200" : "text-gray-500 bg-amber-50/60 border-amber-100/80"}`}
+              >
+                {order.notes || "Sin notas adicionales para este pedido."}
               </p>
             </div>
           )}

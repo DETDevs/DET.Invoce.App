@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://localhost:7074',
+        target: 'https://pruebasdet1-001-site1.ltempurl.com',
         changeOrigin: true,
         secure: false,
       }

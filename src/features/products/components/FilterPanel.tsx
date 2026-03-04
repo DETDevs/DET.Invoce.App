@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 
 interface FilterState {
   category: string;
+  subCategory: string;
   minPrice: string;
   maxPrice: string;
   showInactive: boolean;
@@ -20,6 +21,7 @@ interface FilterPanelProps {
   onApply: () => void;
   onReset: () => void;
   categories?: CategoryOption[];
+  subCategories?: string[];
 }
 
 export const FilterPanel = ({
@@ -30,6 +32,7 @@ export const FilterPanel = ({
   onApply,
   onReset,
   categories = [],
+  subCategories = [],
 }: FilterPanelProps) => {
   if (!isOpen) return null;
 
@@ -55,7 +58,11 @@ export const FilterPanel = ({
             <select
               value={filters.category}
               onChange={(e) =>
-                setFilters({ ...filters, category: e.target.value })
+                setFilters({
+                  ...filters,
+                  category: e.target.value,
+                  subCategory: "",
+                })
               }
               className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E8BC6E]"
             >
@@ -67,6 +74,28 @@ export const FilterPanel = ({
               ))}
             </select>
           </div>
+
+          {subCategories.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase">
+                Subcategoría
+              </label>
+              <select
+                value={filters.subCategory}
+                onChange={(e) =>
+                  setFilters({ ...filters, subCategory: e.target.value })
+                }
+                className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E8BC6E]"
+              >
+                <option value="">Todas</option>
+                {subCategories.map((sc) => (
+                  <option key={sc} value={sc}>
+                    {sc}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase">
@@ -126,7 +155,7 @@ export const FilterPanel = ({
               onClick={onApply}
               className="flex-1 py-2 text-sm bg-[#E8BC6E] text-white font-bold rounded-lg hover:bg-[#dca34b] transition-colors"
             >
-              Aplicar
+              Cerrar
             </button>
           </div>
         </div>

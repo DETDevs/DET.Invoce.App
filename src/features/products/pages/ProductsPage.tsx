@@ -32,6 +32,7 @@ export const ProductsPage = () => {
     totalPages,
     itemsPerPage,
     categories,
+    subCategories,
     getStockStatus,
     handleEditClick,
     handleDeleteClick,
@@ -130,6 +131,7 @@ export const ProductsPage = () => {
             onReset={() =>
               setFilters({
                 category: "",
+                subCategory: "",
                 minPrice: "",
                 maxPrice: "",
                 showInactive: false,
@@ -139,6 +141,7 @@ export const ProductsPage = () => {
               code: c.categoryCode,
               name: c.categoryName,
             }))}
+            subCategories={subCategories}
           />
         </div>
       </div>
@@ -208,7 +211,10 @@ export const ProductsPage = () => {
                     </td>
                     <td className="px-4 lg:px-6 py-3">
                       {(() => {
-                        const status = getStockStatus(product.quantity);
+                        const status = getStockStatus(
+                          product.quantity,
+                          product.stockMinimum,
+                        );
                         return (
                           <div className="flex flex-col items-start gap-1">
                             <span className="text-sm font-bold text-[#2D2D2D]">
@@ -272,7 +278,10 @@ export const ProductsPage = () => {
         <div className="md:hidden">
           {paginatedProducts.length > 0 ? (
             paginatedProducts.map((product) => {
-              const status = getStockStatus(product.quantity);
+              const status = getStockStatus(
+                product.quantity,
+                product.stockMinimum,
+              );
               return (
                 <div
                   key={product.productId}
