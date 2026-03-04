@@ -1,31 +1,10 @@
 export async function printThermalTicket(ticketText: string): Promise<boolean> {
-    return new Promise((resolve) => {
-        try {
-            const existingFrame = document.getElementById('thermal-print-frame');
-            if (existingFrame) existingFrame.remove();
-
-            const iframe = document.createElement('iframe');
-            iframe.id = 'thermal-print-frame';
-            iframe.style.position = 'fixed';
-            iframe.style.top = '-10000px';
-            iframe.style.left = '-10000px';
-            iframe.style.width = '0';
-            iframe.style.height = '0';
-            iframe.style.border = 'none';
-            document.body.appendChild(iframe);
-
-            const doc = iframe.contentDocument || iframe.contentWindow?.document;
-            if (!doc) {
-                iframe.remove();
-                resolve(false);
-                return;
-            }
-
-            const htmlContent = `<!DOCTYPE html>
+    try {
+        const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Ticket</title>
+    <title>Ticket de Impresión</title>
     <style>
         @page {
             size: 80mm auto;
@@ -57,34 +36,54 @@ export async function printThermalTicket(ticketText: string): Promise<boolean> {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            @page {
-                size: 80mm auto;
-                margin: 0;
-            }
         }
     </style>
 </head>
-<body>${ticketText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body>
+<body>
+${ticketText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+</body>
 </html>`;
 
-            doc.open();
-            doc.write(htmlContent);
-            doc.close();
+        // Use a hidden iframe so only the native print dialog shows (no extra tab)
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = 'none';
+        iframe.style.opacity = '0';
+        document.body.appendChild(iframe);
 
-            iframe.onload = () => {
-                try {
-                    iframe.contentWindow?.focus();
-                    iframe.contentWindow?.print();
-                } catch (_) {
-                }
-
-                setTimeout(() => {
-                    iframe.remove();
-                    resolve(true);
-                }, 1000);
-            };
-        } catch {
-            resolve(false);
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc || !iframe.contentWindow) {
+            document.body.removeChild(iframe);
+            console.warn('[printService] Could not access iframe');
+            return false;
         }
-    });
+
+        iframeDoc.open();
+        iframeDoc.write(htmlContent);
+        iframeDoc.close();
+
+        // Wait for content to render, then trigger native print dialog
+        await new Promise<void>((resolve) => {
+            setTimeout(() => {
+                iframe.contentWindow!.print();
+                resolve();
+            }, 350);
+        });
+
+        // Clean up iframe after a delay (gives print dialog time to grab content)
+        setTimeout(() => {
+            if (iframe.parentNode) {
+                document.body.removeChild(iframe);
+            }
+        }, 2000);
+
+        return true;
+    } catch {
+        return false;
+    }
 }
+

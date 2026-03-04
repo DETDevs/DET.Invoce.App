@@ -93,6 +93,34 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     const el = document.getElementById("cash-close-print-area");
     if (!el) return;
 
+    const htmlContent = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Cierre de Caja - ${businessName}</title>
+    <style>
+      @page { margin: 0; size: auto; }
+      body { 
+        font-family: system-ui, sans-serif; 
+        margin: 0; 
+        padding: 0;
+        font-size: 11px;
+        color: #2D2D2D;
+      }
+      .print-content { padding: 10mm; }
+      @media print {
+        body { margin: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="print-content">
+      ${el.innerHTML}
+    </div>
+  </body>
+</html>`;
+
+    // Use a hidden iframe so only the native print dialog shows (no extra tab)
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.right = "0";
@@ -100,46 +128,30 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     iframe.style.width = "0";
     iframe.style.height = "0";
     iframe.style.border = "none";
+    iframe.style.opacity = "0";
     document.body.appendChild(iframe);
 
-    const doc = iframe.contentWindow?.document;
-    if (doc) {
-      doc.open();
-      doc.write(`
-        <html>
-          <head>
-            <style>
-              @page { margin: 0; size: auto; }
-              body { 
-                font-family: system-ui, sans-serif; 
-                margin: 0; 
-                padding: 10mm; 
-                font-size: 11px;
-                color: #2D2D2D;
-              }
-            </style>
-          </head>
-          <body>
-            ${el.innerHTML}
-          </body>
-        </html>
-      `);
-      doc.close();
-
-      // Wait for content to render, then print
-      setTimeout(() => {
-        const iframeWin = iframe.contentWindow;
-        if (!iframeWin) return;
-
-        // Remove iframe only after user closes the print dialog
-        iframeWin.addEventListener("afterprint", () => {
-          iframe.remove();
-        });
-
-        iframeWin.focus();
-        iframeWin.print();
-      }, 500);
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc || !iframe.contentWindow) {
+      document.body.removeChild(iframe);
+      toast.error("No se pudo preparar la impresión.");
+      return;
     }
+
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+
+    // Wait for content to render, then trigger native print dialog
+    setTimeout(() => {
+      iframe.contentWindow!.print();
+      // Clean up iframe after print dialog closes
+      setTimeout(() => {
+        if (iframe.parentNode) {
+          document.body.removeChild(iframe);
+        }
+      }, 2000);
+    }, 350);
   };
 
   return (
