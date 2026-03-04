@@ -76,7 +76,7 @@ export const NewOrderPage = () => {
             price: p.price,
             category: (p.categoryName ||
               "Sin Categoría") as Product["category"],
-            subcategory: p.subCategoryName || "General",
+            subcategory: p.subCategoryName || "",
             image: p.imageUrl || "",
           }));
         setAllProducts(mapped);
@@ -184,10 +184,10 @@ export const NewOrderPage = () => {
   };
 
   const currentSubcategories = useMemo(() => {
-    return (
+    const subs =
       categoriesData.find((c) => c.name === selectedCategory)?.subcategories ||
-      []
-    );
+      [];
+    return subs.filter((s) => s !== "");
   }, [selectedCategory, categoriesData]);
 
   useEffect(() => {
@@ -203,7 +203,8 @@ export const NewOrderPage = () => {
     let result = allProducts.filter(
       (p) =>
         p.category === selectedCategory &&
-        p.subcategory === selectedSubcategory,
+        (currentSubcategories.length === 0 ||
+          p.subcategory === selectedSubcategory),
     );
 
     if (debouncedSearchTerm) {
@@ -276,24 +277,29 @@ export const NewOrderPage = () => {
               ))}
             </div>
 
-            <div
-              className="flex gap-2 pt-3 overflow-x-auto scrollbar-hide overscroll-x-contain scroll-smooth"
-              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-            >
-              {currentSubcategories.map((subcat) => (
-                <button
-                  key={subcat}
-                  onClick={() => handleSubcategorySelect(subcat)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap ${
-                    selectedSubcategory === subcat
-                      ? "bg-[#E8BC6E] text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {subcat}
-                </button>
-              ))}
-            </div>
+            {currentSubcategories.length > 0 && (
+              <div
+                className="flex gap-2 pt-3 overflow-x-auto scrollbar-hide overscroll-x-contain scroll-smooth"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                  touchAction: "pan-x",
+                }}
+              >
+                {currentSubcategories.map((subcat) => (
+                  <button
+                    key={subcat}
+                    onClick={() => handleSubcategorySelect(subcat)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap ${
+                      selectedSubcategory === subcat
+                        ? "bg-[#E8BC6E] text-white"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {subcat}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
