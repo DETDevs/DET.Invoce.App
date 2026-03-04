@@ -26,6 +26,7 @@ import { LowStockProductsModal } from "@/features/dashboard/components/LowStockP
 import { productApi } from "@/api/products";
 import dashboardApi from "@/api/dashboard/DashboardAPI";
 import reportApi from "@/api/report/ReportAPI";
+import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 import type { TProduct } from "@/api/products/types";
 import type {
   TSalesByCategory,
@@ -35,6 +36,7 @@ import type {
 const COLORS = ["#E8BC6E", "#593D31", "#F3EFE0", "#D4A373", "#A0785A"];
 
 export const DashboardPage = () => {
+  const { session } = useCashBox();
   const [isLowStockModalOpen, setIsLowStockModalOpen] = useState(false);
 
   const [lowStockProducts, setLowStockProducts] = useState<TProduct[]>([]);
@@ -97,8 +99,6 @@ export const DashboardPage = () => {
       }
     };
 
-    fetchSalesTrend();
-
     // Fetch monthly sales volume (last 7 months)
     const fetchMonthlyVolume = async () => {
       try {
@@ -149,6 +149,8 @@ export const DashboardPage = () => {
         console.error("Error fetching monthly volume:", error);
       }
     };
+
+    fetchSalesTrend();
     fetchMonthlyVolume();
   }, [salesTrendRange]);
 
@@ -219,10 +221,22 @@ export const DashboardPage = () => {
       }
     };
 
+    // If no cash box is open, reset to zeros (except low stock which is inventory-based)
+    if (!session?.isOpen) {
+      setTotalMoney(0);
+      setTotalProductsSold(0);
+      setSalesByCategory([]);
+      setTopProducts([]);
+      setLoadingKpis(false);
+      setLoadingTopProducts(false);
+      fetchLowStock();
+      return;
+    }
+
     fetchDashboard();
     fetchTopProducts();
     fetchLowStock();
-  }, []);
+  }, [session?.isOpen]);
 
   const lowStockForModal = lowStockProducts.map((p) => ({
     id: p.productId,

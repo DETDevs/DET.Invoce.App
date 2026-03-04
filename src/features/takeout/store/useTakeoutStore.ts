@@ -7,6 +7,7 @@ interface TakeoutState {
     addItemsToOrder: (orderId: string, items: TakeoutItem[]) => void;
     splitOrder: (orderId: string, splitItems: { index: number; quantity: number }[]) => void;
     completeOrder: (orderId: string) => void;
+    completeOrdersByBackendId: (backendOrderId: number) => void;
     cancelOrder: (orderId: string) => void;
     getActiveOrdersByTable: (tableNumber: number) => TakeoutOrder[];
     getNextCuentaNumber: (tableNumber: number) => number;
@@ -106,6 +107,16 @@ export const useTakeoutStore = create<TakeoutState>()(
             set((state) => ({
                 orders: state.orders.map((order) =>
                     order.id === orderId
+                        ? { ...order, status: 'completed' as TakeoutStatus, updatedAt: new Date().toISOString() }
+                        : order
+                ),
+            }));
+        },
+
+        completeOrdersByBackendId: (backendOrderId) => {
+            set((state) => ({
+                orders: state.orders.map((order) =>
+                    order.backendOrderId === backendOrderId && order.status === 'active'
                         ? { ...order, status: 'completed' as TakeoutStatus, updatedAt: new Date().toISOString() }
                         : order
                 ),

@@ -82,8 +82,8 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     toast.success("Resumen copiado al portapapeles");
   };
 
-  const handleCloseBox = async (closingAmount: number) => {
-    await closeCashBox(closingAmount);
+  const handleCloseBox = async () => {
+    await closeCashBox(data.expectedTotal);
     setIsConfirmOpen(false);
     navigate("/");
     toast.success("🎉 Caja cerrada con éxito");
@@ -217,7 +217,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
 
         <CashCloseConfirmModal
           isOpen={isConfirmOpen}
-          expectedTotal={data.expectedTotal}
+          data={data}
           onConfirm={handleCloseBox}
           onCancel={() => setIsConfirmOpen(false)}
         />

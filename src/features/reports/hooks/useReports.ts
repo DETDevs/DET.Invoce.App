@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { ReportType, DateRangeType, SalesReportData, ProductsReportData, CashFlowReportData, OrdersReportData, ReservationsReportData, CashCloseReportData } from "@/features/reports/types";
 import reportApi from "@/api/report/ReportAPI";
 import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
+import invoiceApi from "@/api/invoice/InvoiceAPI";
 import orderApi from "@/api/order/OrderAPI";
 import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
 import { useCashBox } from "@/features/settings/pages/CashBoxContext";
@@ -388,13 +389,23 @@ export const useReports = () => {
     }, []);
 
     const fetchCashCloseReport = useCallback(async (dateFrom: string, dateTo: string, cashRegisterId?: number) => {
+        // If no active session, reset to zeros
+        if (!session?.isOpen) {
+            setCashCloseReport({
+                initialAmount: 0, salesTotal: 0, cashInTotal: 0, cashOutTotal: 0,
+                returnsTotal: 0, expectedTotal: 0, invoiceCount: 0, returnsCount: 0,
+                paymentBreakdown: [], movementLines: [],
+            });
+            return;
+        }
         try {
-            const [totalSalesRes, totalInRes, totalOutRes, movementsRes, movementTypesRes] = await Promise.all([
+            const [totalSalesRes, totalInRes, totalOutRes, movementsRes, movementTypesRes, invoicesRes] = await Promise.all([
                 reportApi.getTotalSales({ dateFrom, dateTo, cashRegisterId }),
                 reportApi.getTotalCashIncome({ dateFrom, dateTo, cashRegisterId }),
                 reportApi.getTotalCashOut({ dateFrom, dateTo, cashRegisterId }),
                 cashRegisterApi.getMovement(),
-                cashRegisterApi.getMovementType()
+                cashRegisterApi.getMovementType(),
+                invoiceApi.getAll(cashRegisterId),
             ]);
 
             const salesTotal = totalSalesRes?.totalSales || 0;
@@ -429,6 +440,32 @@ export const useReports = () => {
             const returnsCount = movementLines.filter(m => m.type === "devolucion").length;
             const expectedTotal = initialAmount + salesTotal + cashInTotal - cashOutTotal;
 
+            // Parse invoices for count and payment breakdown
+            const rawInvoices = Array.isArray(invoicesRes) ? invoicesRes : [];
+            const fromDate = new Date(dateFrom);
+            const toDate = new Date(dateTo);
+            const completedInvoices = rawInvoices.filter(
+                (inv: any) => {
+                    if (inv.status !== "PAID" && inv.status !== "completed") return false;
+                    const invDate = new Date(inv.invoiceDate ?? inv.createdAt);
+                    return invDate >= fromDate && invDate <= toDate;
+                }
+            );
+
+            const paymentMap = new Map<string, { amount: number; count: number }>();
+            completedInvoices.forEach((inv: any) => {
+                const method = inv.paymentmethod || inv.paymentMethod || "CASH";
+                const total = inv.total ?? (inv.details ?? []).reduce((s: number, d: any) => s + (d.unitPrice ?? 0) * (d.quantity ?? 1), 0);
+                const current = paymentMap.get(method) || { amount: 0, count: 0 };
+                paymentMap.set(method, {
+                    amount: current.amount + total,
+                    count: current.count + 1,
+                });
+            });
+            const paymentBreakdown = Array.from(paymentMap.entries())
+                .map(([method, data]) => ({ method, ...data }))
+                .sort((a, b) => b.amount - a.amount);
+
             setCashCloseReport({
                 initialAmount,
                 salesTotal,
@@ -436,19 +473,35 @@ export const useReports = () => {
                 cashOutTotal,
                 returnsTotal,
                 expectedTotal,
-                invoiceCount: 0,
+                invoiceCount: completedInvoices.length,
                 returnsCount,
-                paymentBreakdown: [],
+                paymentBreakdown,
                 movementLines
             });
         } catch (error) {
             console.error("[useReports] Error fetching cash close:", error);
         }
-    }, [session?.initialAmount]);
+    }, [session?.initialAmount, session?.isOpen]);
 
     useEffect(() => {
         const { dateFrom, dateTo } = getDateRange(dateRange, customRange);
         const cashRegisterId = dateRange === "today" ? session?.cashRegisterId : undefined;
+
+        // If filtering by "today" but no cash box is open, reset everything to zero
+        if (dateRange === "today" && !session?.isOpen) {
+            setSalesReport(emptySalesReport);
+            setProductsReport(emptyProductsReport);
+            setCashFlowReport(emptyCashFlowReport);
+            setOrdersReport(emptyOrdersReport);
+            setReservationsReport(emptyReservationsReport);
+            setCashCloseReport({
+                initialAmount: 0, salesTotal: 0, cashInTotal: 0, cashOutTotal: 0,
+                returnsTotal: 0, expectedTotal: 0, invoiceCount: 0, returnsCount: 0,
+                paymentBreakdown: [], movementLines: [],
+            });
+            setIsLoading(false);
+            return;
+        }
 
         setIsLoading(true);
 
@@ -479,7 +532,7 @@ export const useReports = () => {
         };
 
         fetch();
-    }, [activeReport, dateRange, customRange, session?.cashRegisterId, fetchSalesReport, fetchProductsReport, fetchCashFlowReport, fetchOrdersReport, fetchReservationsReport, fetchCashCloseReport]);
+    }, [activeReport, dateRange, customRange, session?.cashRegisterId, session?.isOpen, fetchSalesReport, fetchProductsReport, fetchCashFlowReport, fetchOrdersReport, fetchReservationsReport, fetchCashCloseReport]);
 
     return {
         activeReport,

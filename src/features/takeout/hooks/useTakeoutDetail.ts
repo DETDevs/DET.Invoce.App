@@ -35,7 +35,7 @@ export const useTakeoutDetail = ({
     const [isCancelling, setIsCancelling] = useState(false);
 
     const navigate = useNavigate();
-    const { completeOrder, splitOrder } = useTakeoutStore();
+    const { completeOrder, completeOrdersByBackendId, splitOrder } = useTakeoutStore();
     const { user } = useAuthStore();
     const canInvoice = user?.role === "cajero" || user?.role === "admin";
 
@@ -129,6 +129,9 @@ export const useTakeoutDetail = ({
             await handleInvoiceFlow({ orderAccountId, paymentmethod: pm });
 
             completeOrder(selectedCuenta.id);
+            if (selectedCuenta.backendOrderId) {
+                completeOrdersByBackendId(selectedCuenta.backendOrderId);
+            }
 
             if (paymentMethod === "efectivo" && paidInCordobas > total) {
                 const changeAmount = paidInCordobas - total;
@@ -344,6 +347,9 @@ export const useTakeoutDetail = ({
             await orderApi.cancel(mainCuenta.backendOrderId, user?.name || "Sistema");
             cuentas.forEach((cuenta) => {
                 completeOrder(cuenta.id);
+                if (cuenta.backendOrderId) {
+                    completeOrdersByBackendId(cuenta.backendOrderId);
+                }
             });
             toast.success("Orden cancelada correctamente", { icon: "🚫" });
             onClose();

@@ -82,6 +82,8 @@ export const InvoiceDetailsModal = ({
       : 0;
 
   const paymentLabel: Record<string, string> = {
+    CASH: "Efectivo",
+    CARD: "Tarjeta",
     Efectivo: "Efectivo",
     Tarjeta: "Tarjeta",
     Transferencia: "Transferencia",
@@ -146,8 +148,18 @@ export const InvoiceDetailsModal = ({
             )}
 
             {invoice.paymentMethod && (
-              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                <CreditCard size={20} className="text-blue-600" />
+              <div
+                className={`flex items-center gap-3 p-4 rounded-lg ${
+                  invoice.paymentMethod.toUpperCase() === "CASH"
+                    ? "bg-emerald-50"
+                    : "bg-sky-50"
+                }`}
+              >
+                {invoice.paymentMethod.toUpperCase() === "CASH" ? (
+                  <Banknote size={20} className="text-emerald-600" />
+                ) : (
+                  <CreditCard size={20} className="text-sky-600" />
+                )}
                 <div>
                   <p className="text-xs text-gray-600">Método de Pago</p>
                   <p className="text-sm font-semibold text-gray-900">
