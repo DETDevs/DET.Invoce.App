@@ -11,7 +11,7 @@ echo Abriendo Chrome con impresion directa...
 echo Impresora predeterminada: MUNBYN_USB
 echo.
 
-start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing --app=http://localhost:5174
+start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing --app=https://DMomentos.org
 
 echo Chrome abierto en modo POS.
 echo La impresion ira directo a la impresora predeterminada.
