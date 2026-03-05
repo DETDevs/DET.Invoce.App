@@ -140,11 +140,21 @@ export const AddProductPage = () => {
                       style={selectStyle}
                     >
                       <option value="">Seleccionar categoría</option>
-                      {categories.map((cat) => (
-                        <option key={cat.categoryCode} value={cat.categoryCode}>
-                          {cat.categoryName}
-                        </option>
-                      ))}
+                      {categories
+                        .filter(
+                          (cat) =>
+                            !cat.categoryName
+                              .toLowerCase()
+                              .includes("personalizado"),
+                        )
+                        .map((cat) => (
+                          <option
+                            key={cat.categoryCode}
+                            value={cat.categoryCode}
+                          >
+                            {cat.categoryName}
+                          </option>
+                        ))}
                     </select>
                   )}
                 </div>

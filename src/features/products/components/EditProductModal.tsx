@@ -80,8 +80,12 @@ export const EditProductModal = ({
     if (!cat?.categoryName) return false;
     const catName = cat.categoryName.toLowerCase();
 
-    // Cafetería → always show toggle
-    if (catName.includes("cafetería") || catName.includes("cafeteria"))
+    // Cafetería or Smoothie → always show toggle
+    if (
+      catName.includes("cafetería") ||
+      catName.includes("cafeteria") ||
+      catName.includes("smoothie")
+    )
       return true;
 
     // Bebidas → only when subcategory is Refrescos
@@ -231,11 +235,21 @@ export const EditProductModal = ({
                       style={selectStyle}
                     >
                       <option value="">Seleccionar categoría</option>
-                      {categories.map((cat) => (
-                        <option key={cat.categoryCode} value={cat.categoryCode}>
-                          {cat.categoryName}
-                        </option>
-                      ))}
+                      {categories
+                        .filter(
+                          (cat) =>
+                            !cat.categoryName
+                              .toLowerCase()
+                              .includes("personalizado"),
+                        )
+                        .map((cat) => (
+                          <option
+                            key={cat.categoryCode}
+                            value={cat.categoryCode}
+                          >
+                            {cat.categoryName}
+                          </option>
+                        ))}
                     </select>
                   )}
                 </div>

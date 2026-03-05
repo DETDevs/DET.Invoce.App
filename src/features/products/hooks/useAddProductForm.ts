@@ -70,8 +70,8 @@ export const useAddProductForm = ({
     if (!cat?.categoryName) return false;
     const catName = cat.categoryName.toLowerCase();
 
-    // Cafetería → always show toggle
-    if (catName.includes("cafetería") || catName.includes("cafeteria")) return true;
+    // Cafetería or Smoothie → always show toggle
+    if (catName.includes("cafetería") || catName.includes("cafeteria") || catName.includes("smoothie")) return true;
 
     // Bebidas → only when subcategory is Refrescos
     if (catName.includes("bebida") && formData.subCategoryId) {

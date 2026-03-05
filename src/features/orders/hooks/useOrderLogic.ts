@@ -13,9 +13,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         useCart();
     const { user } = useAuthStore();
     const [orderId, setOrderId] = useState<number | null>(null);
-    const [orderNumber, setOrderNumber] = useState(
-        Math.floor(Math.random() * 9000) + 1000,
-    );
+    const [orderNumber, setOrderNumber] = useState(0);
     const [isCreatingOrder, setIsCreatingOrder] = useState(false);
     const [isManualCancelOpen, setIsManualCancelOpen] = useState(false);
     const [pendingPath, setPendingPath] = useState<string | null>(null);
@@ -30,6 +28,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
 
     const orderIdRef = useRef<number | null>(null);
     const wasCheckedOut = useRef(false);
+    const hasCreatedOrder = useRef(false); // Guard against StrictMode double-mount
 
     useEffect(() => {
         orderIdRef.current = orderId;
@@ -48,13 +47,15 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         }
     }, [user]);
 
+    // Create order on mount — only ONCE (guarded against React StrictMode)
     useEffect(() => {
         if (isAddingToExisting) return;
-        let cancelled = false;
+        if (hasCreatedOrder.current) return; // Prevent duplicate creation
+        hasCreatedOrder.current = true;
+
         setIsCreatingOrder(true);
         orderApi.create({ createdBy: user?.name || "Caja" })
             .then((res: any) => {
-                if (cancelled) return;
                 const id = res?.orderId ?? res;
                 setOrderId(id);
                 setOrderNumber(id);
@@ -64,11 +65,9 @@ export const useOrderLogic = (isAddingToExisting = false) => {
                 toast.error("No se pudo iniciar la sesión de orden. Verifique la conexión e intente de nuevo.");
             })
             .finally(() => setIsCreatingOrder(false));
-        return () => {
-            cancelled = true;
-        };
     }, []);
 
+    // Cancel order on unmount if not checked out
     useEffect(() => {
         if (isAddingToExisting) return;
         return () => {
@@ -121,6 +120,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         return () => setBlocker(null);
     }, [cart.length, orderNumber, setBlocker, isAddingToExisting]);
 
+    // After checkout, create a fresh order for the next one
     const refreshOrder = useCallback(() => {
         clearCart();
         wasCheckedOut.current = true;
@@ -136,14 +136,13 @@ export const useOrderLogic = (isAddingToExisting = false) => {
             })
             .catch((err: unknown) => {
                 console.error("[Order] Error al refrescar:", err);
-                setOrderNumber(Math.floor(Math.random() * 9000) + 1000);
+                setOrderNumber(0);
             })
             .finally(() => setIsCreatingOrder(false));
     }, [clearCart, user]);
 
     const handleCheckout = () => {
         if (cart.length > 0) {
-
             toast.success(isAddingToExisting ? "Productos agregados correctamente" : "Orden Tomada correctamente");
             refreshOrder();
             setIsCartOpen(false);
@@ -156,19 +155,17 @@ export const useOrderLogic = (isAddingToExisting = false) => {
 
     const handleRequestCancel = () => {
         setPendingPath(null);
-        if (cart.length === 0) {
-            setIsCartOpen(false);
-        } else {
-            setIsCartOpen(false);
-            setDialogConfig({
-                title: "Cancelar Orden",
-                message:
-                    "¿Estás seguro de que deseas cancelar esta orden? Se perderán todos los productos agregados.",
-                confirmText: "Sí, cancelar",
-                cancelText: "Volver",
-            });
-            setIsManualCancelOpen(true);
-        }
+        setIsCartOpen(false);
+        setDialogConfig({
+            title: "Cancelar Orden",
+            message:
+                cart.length === 0
+                    ? "¿Deseas cancelar esta orden y salir?"
+                    : "¿Estás seguro de que deseas cancelar esta orden? Se perderán todos los productos agregados.",
+            confirmText: "Sí, cancelar",
+            cancelText: "Volver",
+        });
+        setIsManualCancelOpen(true);
     };
 
     const handleConfirmDialog = async () => {
