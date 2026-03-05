@@ -207,22 +207,24 @@ export const TakeoutDashboardPage = () => {
               </span>
             )}
           </button>
-          <button
-            onClick={() => setActiveTab("llevar")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
-              activeTab === "llevar"
-                ? "bg-white text-[#593D31] shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <Package size={14} />
-            Para Llevar
-            {takeoutCount > 0 && (
-              <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                {takeoutCount}
-              </span>
-            )}
-          </button>
+          {!isMesero && (
+            <button
+              onClick={() => setActiveTab("llevar")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
+                activeTab === "llevar"
+                  ? "bg-white text-[#593D31] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Package size={14} />
+              Para Llevar
+              {takeoutCount > 0 && (
+                <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                  {takeoutCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 

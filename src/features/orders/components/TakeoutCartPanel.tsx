@@ -100,7 +100,7 @@ export const TakeoutCartPanel = ({
           </div>
         )}
 
-        {!isPreselected && (
+        {!isPreselected && isCajero && (
           <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1">
             <button
               type="button"
