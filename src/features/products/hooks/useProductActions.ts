@@ -151,6 +151,7 @@ export const useProductActions = () => {
                 name: updatedProduct.name,
                 description: updatedProduct.description ?? "",
                 price: updatedProduct.price,
+                imageUrl: updatedProduct.imageUrl ?? "",
                 trackInventory: updatedProduct.trackInventory ?? true,
                 unitId: updatedProduct.unitId ?? 0,
                 divideQuantityBy: updatedProduct.divideQuantityBy ?? 0,
@@ -261,14 +262,13 @@ export const useProductActions = () => {
         itemsPerPage,
         categories,
         subCategories: (() => {
-            const source = filters.category
-                ? products.filter((p) => p.categoryName === filters.category)
-                : products;
-            const unique = new Map<string, string>();
-            source.forEach((p) => {
-                if (p.subCategoryName) unique.set(p.subCategoryName, p.subCategoryName);
-            });
-            return Array.from(unique.values()).sort();
+            if (!filters.category) return [];
+            const cat = categories.find((c) => c.categoryName === filters.category);
+            if (!cat?.subCategories) return [];
+            return cat.subCategories
+                .filter((s) => s.isActive)
+                .map((s) => s.name)
+                .sort();
         })(),
         getStockStatus,
         handleEditClick,

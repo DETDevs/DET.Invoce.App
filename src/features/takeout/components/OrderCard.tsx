@@ -12,10 +12,6 @@ export const OrderCard = ({ tableId, orders, onClick }: Props) => {
   const isParaLlevar = tableId === null;
   const firstOrder = orders[0];
 
-  const minutesAgo = Math.floor(
-    (Date.now() - new Date(firstOrder.orderDate).getTime()) / 60000,
-  );
-
   const createdTime = new Date(firstOrder.orderDate).toLocaleTimeString(
     "es-NI",
     {
@@ -52,17 +48,6 @@ export const OrderCard = ({ tableId, orders, onClick }: Props) => {
             </div>
           </div>
         </div>
-        <span
-          className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-            minutesAgo < 10
-              ? "bg-green-100 text-green-700"
-              : minutesAgo < 30
-                ? "bg-amber-100 text-amber-700"
-                : "bg-red-100 text-red-700"
-          }`}
-        >
-          {minutesAgo < 1 ? "Recién" : `${minutesAgo} min`}
-        </span>
       </div>
 
       <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-3">

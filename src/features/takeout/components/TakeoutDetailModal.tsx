@@ -341,8 +341,7 @@ export const TakeoutDetailModal = ({
                     ticket += `${separator}\n`;
                     ticket += `\nTOTAL:              ${cs} ${total.toFixed(2)}\n`;
                     ticket += `${separator}\n`;
-                    ticket += `\n    * Esta NO es una factura fiscal *\n`;
-                    ticket += `       Gracias por su preferencia\n`;
+                    ticket += `\n      Gracias por preferirnos\n`;
 
                     printThermalTicket(ticket);
                   }}

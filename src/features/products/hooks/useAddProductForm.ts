@@ -40,7 +40,7 @@ export const useAddProductForm = ({
     categoryApi
       .getAll()
       .then((data) => {
-        const active = (data || []).filter((c) => c.isActive);
+        const active = (data || []).filter((c) => c.isActive && c.categoryCode !== "CUSTOM");
         setCategories(active);
         if (active.length > 0 && !formData.category) {
           setFormData((prev) => ({ ...prev, category: active[0].categoryCode }));

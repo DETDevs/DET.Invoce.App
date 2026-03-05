@@ -27,6 +27,7 @@ export type TSaveProduct = {
     name: string;
     description?: string;
     price: number;
+    imageUrl?: string;
     trackInventory: boolean;
     unitId: number | string;
     divideQuantityBy?: number;
