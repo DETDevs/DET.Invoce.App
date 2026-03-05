@@ -17,7 +17,7 @@ export const useOrders = () => {
                     seen.add(o.orderId);
                     return true;
                 });
-                setOrders(unique.filter((o) => o.status === 'InProgress'));
+                setOrders(unique.filter((o) => o.status === 'InProgress' || o.status === 'Pending'));
             }
         } catch (err) {
             console.error('Error fetching orders:', err);
