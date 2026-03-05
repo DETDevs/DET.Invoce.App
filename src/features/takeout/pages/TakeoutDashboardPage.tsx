@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   UtensilsCrossed,
   RefreshCw,
@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { useOrders } from "@/features/takeout/hooks/useOrders";
 import { OrderCard } from "@/features/takeout/components/OrderCard";
 import { TakeoutDetailModal } from "@/features/takeout/components/TakeoutDetailModal";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import orderApi from "@/api/order/OrderAPI";
 import type { TOrder } from "@/api/order/types";
 import type { TakeoutOrder } from "@/shared/types";
@@ -18,13 +19,37 @@ import type { TakeoutOrder } from "@/shared/types";
 type DashboardTab = "mesas" | "llevar";
 
 export const TakeoutDashboardPage = () => {
-  const { tableGroups, takeoutOrders, totalActive, loading, refetch } =
-    useOrders();
+  const {
+    tableGroups: allTableGroups,
+    takeoutOrders: allTakeoutOrders,
+    totalActive,
+    loading,
+    refetch,
+  } = useOrders();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<DashboardTab>("mesas");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [cuentasForModal, setCuentasForModal] = useState<TakeoutOrder[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Meseros solo ven sus propias mesas/órdenes. Admin y cajero ven todas.
+  const isMesero = user?.role === "mesero";
+
+  const tableGroups = useMemo(() => {
+    if (!isMesero) return allTableGroups;
+    const filtered = new Map<number, TOrder[]>();
+    allTableGroups.forEach((orders, tableId) => {
+      const myOrders = orders.filter((o) => o.createdBy === user?.name);
+      if (myOrders.length > 0) filtered.set(tableId, myOrders);
+    });
+    return filtered;
+  }, [allTableGroups, isMesero, user?.name]);
+
+  const takeoutOrders = useMemo(() => {
+    if (!isMesero) return allTakeoutOrders;
+    return allTakeoutOrders.filter((o) => o.createdBy === user?.name);
+  }, [allTakeoutOrders, isMesero, user?.name]);
 
   const mesaCount = tableGroups.size;
   const takeoutCount = takeoutOrders.length;
