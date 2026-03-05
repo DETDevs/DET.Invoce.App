@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { X, Save, Loader2 } from "lucide-react";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
@@ -70,6 +70,30 @@ export const EditProductModal = ({
     );
     setSubCategories(activeSubs);
   }, [formData?.categoryCode, categories]);
+
+  // Toggle visible for: Cafetería (all), Bebidas only when subcategory = Refrescos
+  const showTrackToggle = useMemo(() => {
+    if (!formData || categories.length === 0) return false;
+    const cat = categories.find(
+      (c) => c.categoryCode === formData.categoryCode,
+    );
+    if (!cat?.categoryName) return false;
+    const catName = cat.categoryName.toLowerCase();
+
+    // Cafetería → always show toggle
+    if (catName.includes("cafetería") || catName.includes("cafeteria"))
+      return true;
+
+    // Bebidas → only when subcategory is Refrescos
+    if (catName.includes("bebida") && formData.subCategoryId) {
+      const sub = (cat.subCategories || []).find(
+        (s) => s.subCategoryId === formData.subCategoryId,
+      );
+      return sub?.name?.toLowerCase().includes("refresco") ?? false;
+    }
+
+    return false;
+  }, [formData?.categoryCode, formData?.subCategoryId, categories]);
 
   if (!isOpen || !formData) return null;
 
@@ -145,7 +169,6 @@ export const EditProductModal = ({
                 onImageSelected={(file) => {
                   setNewImageFile(file);
                   if (!file) {
-                    // Image was removed — clear the URL so backend knows
                     setFormData({ ...formData, imageUrl: "" });
                   }
                   setIsDirty(true);
@@ -190,27 +213,6 @@ export const EditProductModal = ({
                       className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                    Cantidad Mínima
-                  </label>
-                  <input
-                    type="number"
-                    name="stockMinimum"
-                    value={stockMinStr}
-                    onChange={(e) => {
-                      setStockMinStr(e.target.value);
-                      setFormData({
-                        ...formData,
-                        stockMinimum:
-                          e.target.value === "" ? 0 : Number(e.target.value),
-                      });
-                      setIsDirty(true);
-                    }}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                  />
                 </div>
 
                 <div>
@@ -261,6 +263,59 @@ export const EditProductModal = ({
                     ))}
                   </select>
                 </div>
+
+                {showTrackToggle && (
+                  <div className="md:col-span-2 flex items-center justify-between py-3 px-4 bg-gray-50 border border-gray-200 rounded-xl">
+                    <div>
+                      <span className="text-sm font-bold text-[#593D31]">
+                        Manejar Inventario
+                      </span>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Controlar stock y alertas de cantidad mínima
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateForm({ trackInventory: !formData.trackInventory })
+                      }
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        formData.trackInventory ? "bg-[#E8BC6E]" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          formData.trackInventory
+                            ? "translate-x-5"
+                            : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
+
+                {formData.trackInventory && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                      Cantidad Mínima
+                    </label>
+                    <input
+                      type="number"
+                      name="stockMinimum"
+                      value={stockMinStr}
+                      onChange={(e) => {
+                        setStockMinStr(e.target.value);
+                        setFormData({
+                          ...formData,
+                          stockMinimum:
+                            e.target.value === "" ? 0 : Number(e.target.value),
+                        });
+                        setIsDirty(true);
+                      }}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </form>

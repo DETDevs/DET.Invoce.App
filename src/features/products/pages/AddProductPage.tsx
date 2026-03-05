@@ -1,4 +1,4 @@
-import { Save, ArrowLeft, Loader2, Info } from "lucide-react";
+import { Save, ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/shared/ui/Card";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
@@ -19,10 +19,11 @@ export const AddProductPage = () => {
     formData,
     setImageFile,
     isFormValid,
-    isNaturalBeverage,
+    showTrackToggle,
     handleInputChange,
     handleCategoryChange,
     handleSubCategoryChange,
+    handleTrackInventoryChange,
     handleBlur,
     handleSubmit,
     categories,
@@ -40,14 +41,12 @@ export const AddProductPage = () => {
             name: data.name,
             description: "",
             price: Number(data.price),
-            trackInventory: true,
-            unitId: isNaturalBeverage ? 3 : 5,
-            divideQuantityBy: isNaturalBeverage
-              ? Number(data.divideQuantityBy)
-              : 0,
+            trackInventory: data.trackInventory,
+            unitId: 5,
+            divideQuantityBy: 0,
             isActive: true,
-            quantity: Number(data.stock),
-            stockMinimum: Number(data.minStock),
+            quantity: data.trackInventory ? Number(data.stock) : 0,
+            stockMinimum: data.trackInventory ? Number(data.minStock) : 0,
           },
           data.imageFile,
         );
@@ -126,121 +125,6 @@ export const AddProductPage = () => {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="stock"
-                    className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      {isNaturalBeverage
-                        ? "Cantidad Inicial (Ltrs)"
-                        : "Cantidad Inicial"}{" "}
-                      <span className="text-red-400">*</span>
-                      {isNaturalBeverage && (
-                        <span className="relative group">
-                          <Info
-                            size={14}
-                            className="text-gray-300 hover:text-gray-500 cursor-help transition-colors"
-                          />
-                          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-56 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity normal-case tracking-normal font-normal">
-                            <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                              <span className="block w-2 h-2 bg-gray-800 rotate-45" />
-                            </span>
-                            Cantidad total de litros disponibles para preparar
-                            refrescos.
-                          </span>
-                        </span>
-                      )}
-                    </span>
-                  </label>
-                  <input
-                    type="number"
-                    id="stock"
-                    name="stock"
-                    value={formData.stock}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    placeholder={isNaturalBeverage ? "Ej: 10 Ltrs" : "0"}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                  />
-                </div>
-
-                {isNaturalBeverage && (
-                  <div>
-                    <label
-                      htmlFor="divideQuantityBy"
-                      className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        Porción por servicio (ML){" "}
-                        <span className="text-red-400">*</span>
-                        <span className="relative group">
-                          <Info
-                            size={14}
-                            className="text-gray-300 hover:text-gray-500 cursor-help transition-colors"
-                          />
-                          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-56 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity normal-case tracking-normal font-normal">
-                            <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                              <span className="block w-2 h-2 bg-gray-800 rotate-45" />
-                            </span>
-                            Cantidad de ML que se usa por cada vaso o servicio
-                            vendido.
-                          </span>
-                        </span>
-                      </span>
-                    </label>
-                    <input
-                      type="number"
-                      id="divideQuantityBy"
-                      name="divideQuantityBy"
-                      value={formData.divideQuantityBy}
-                      onChange={handleInputChange}
-                      onBlur={handleBlur}
-                      placeholder="Ej: 300 ML"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label
-                    htmlFor="minStock"
-                    className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      {isNaturalBeverage
-                        ? "Cantidad Mínima (UND)"
-                        : "Cantidad Mínima"}{" "}
-                      <span className="text-red-400">*</span>
-                      {isNaturalBeverage && (
-                        <span className="relative group">
-                          <Info
-                            size={14}
-                            className="text-gray-300 hover:text-gray-500 cursor-help transition-colors"
-                          />
-                          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-56 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity normal-case tracking-normal font-normal">
-                            <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                              <span className="block w-2 h-2 bg-gray-800 rotate-45" />
-                            </span>
-                            Cantidad mínima de porciones/servicios antes de
-                            alerta de stock bajo.
-                          </span>
-                        </span>
-                      )}
-                    </span>
-                  </label>
-                  <input
-                    type="number"
-                    id="minStock"
-                    name="minStock"
-                    value={formData.minStock}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    placeholder={isNaturalBeverage ? "Ej: 100 UND" : "0"}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
-                  />
-                </div>
-
-                <div>
                   <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">
                     Categoría
                   </label>
@@ -288,6 +172,78 @@ export const AddProductPage = () => {
                     ))}
                   </select>
                 </div>
+
+                {showTrackToggle && (
+                  <div className="md:col-span-2 flex items-center justify-between py-3 px-4 bg-gray-50 border border-gray-200 rounded-xl">
+                    <div>
+                      <span className="text-sm font-bold text-[#593D31]">
+                        Manejar Inventario
+                      </span>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Controlar stock y alertas de cantidad mínima
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleTrackInventoryChange(!formData.trackInventory)
+                      }
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        formData.trackInventory ? "bg-[#E8BC6E]" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          formData.trackInventory
+                            ? "translate-x-5"
+                            : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
+
+                {formData.trackInventory && (
+                  <>
+                    <div>
+                      <label
+                        htmlFor="stock"
+                        className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
+                      >
+                        Cantidad Inicial <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="stock"
+                        name="stock"
+                        value={formData.stock}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        placeholder="0"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="minStock"
+                        className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide"
+                      >
+                        Cantidad Mínima <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="minStock"
+                        name="minStock"
+                        value={formData.minStock}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        placeholder="0"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] text-[#2D2D2D]"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

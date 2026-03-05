@@ -8,7 +8,7 @@ export interface ProductFormData {
   price: string;
   stock: string;
   minStock: string;
-  divideQuantityBy: string;
+  trackInventory: boolean;
   category: string;
   subCategoryId: number | null;
 }
@@ -30,7 +30,7 @@ export const useAddProductForm = ({
     price: "",
     stock: "",
     minStock: "",
-    divideQuantityBy: "",
+    trackInventory: true,
     category: "",
     subCategoryId: null,
   });
@@ -60,25 +60,34 @@ export const useAddProductForm = ({
     const selected = categories.find((c) => c.categoryCode === formData.category);
     const activeSubs = (selected?.subCategories || []).filter((s) => s.isActive);
     setSubCategories(activeSubs);
-    setFormData((prev) => ({ ...prev, subCategoryId: null, divideQuantityBy: "" }));
+    setFormData((prev) => ({ ...prev, subCategoryId: null }));
   }, [formData.category, categories]);
 
-  const isNaturalBeverage = useMemo(() => {
-    if (!formData.subCategoryId || categories.length === 0) return false;
+  // Toggle visible for: Cafetería (all), Bebidas only when subcategory = Refrescos
+  const showTrackToggle = useMemo(() => {
+    if (categories.length === 0 || !formData.category) return false;
     const cat = categories.find((c) => c.categoryCode === formData.category);
-    if (!cat?.categoryName?.toLowerCase().includes("bebida")) return false;
-    const sub = (cat.subCategories || []).find(
-      (s) => s.subCategoryId === formData.subCategoryId,
-    );
-    return sub?.name?.toLowerCase().includes("refresco") ?? false;
+    if (!cat?.categoryName) return false;
+    const catName = cat.categoryName.toLowerCase();
+
+    // Cafetería → always show toggle
+    if (catName.includes("cafetería") || catName.includes("cafeteria")) return true;
+
+    // Bebidas → only when subcategory is Refrescos
+    if (catName.includes("bebida") && formData.subCategoryId) {
+      const sub = (cat.subCategories || []).find(
+        (s) => s.subCategoryId === formData.subCategoryId,
+      );
+      return sub?.name?.toLowerCase().includes("refresco") ?? false;
+    }
+
+    return false;
   }, [formData.category, formData.subCategoryId, categories]);
 
   const isFormValid =
     formData.name.trim() !== "" &&
     formData.price.trim() !== "" &&
-    formData.stock.trim() !== "" &&
-    formData.minStock.trim() !== "" &&
-    (!isNaturalBeverage || formData.divideQuantityBy.trim() !== "");
+    (!formData.trackInventory || (formData.stock.trim() !== "" && formData.minStock.trim() !== ""));
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -88,12 +97,16 @@ export const useAddProductForm = ({
   };
 
   const handleCategoryChange = useCallback((categoryCode: string) => {
-    setFormData((prev) => ({ ...prev, category: categoryCode, subCategoryId: null, divideQuantityBy: "" }));
+    setFormData((prev) => ({ ...prev, category: categoryCode, subCategoryId: null, trackInventory: true }));
   }, []);
 
   const handleSubCategoryChange = useCallback((subCategoryId: string) => {
     const id = subCategoryId ? Number(subCategoryId) : null;
-    setFormData((prev) => ({ ...prev, subCategoryId: id, divideQuantityBy: "" }));
+    setFormData((prev) => ({ ...prev, subCategoryId: id }));
+  }, []);
+
+  const handleTrackInventoryChange = useCallback((value: boolean) => {
+    setFormData((prev) => ({ ...prev, trackInventory: value }));
   }, []);
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -119,10 +132,11 @@ export const useAddProductForm = ({
     formData,
     setImageFile,
     isFormValid,
-    isNaturalBeverage,
+    showTrackToggle,
     handleInputChange,
     handleCategoryChange,
     handleSubCategoryChange,
+    handleTrackInventoryChange,
     handleBlur,
     handleSubmit,
     categories,

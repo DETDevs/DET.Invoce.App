@@ -75,7 +75,7 @@ export const ProductCarousel = ({ title, products, onAdd }: Props) => {
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="h-full w-full object-cover group-hover/card:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-contain group-hover/card:scale-105 transition-transform duration-500 border-2 border-red-500"
                         draggable={false}
                       />
                     ) : (
