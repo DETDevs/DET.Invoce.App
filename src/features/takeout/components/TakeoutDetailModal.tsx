@@ -13,11 +13,13 @@ import {
   Check,
   AlertTriangle,
   Loader2,
+  Printer,
 } from "lucide-react";
 import type { TakeoutOrder } from "@/shared/types";
 import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
 import { useTakeoutDetail } from "@/features/takeout/hooks/useTakeoutDetail";
 import { getCurrencySymbol } from "@/shared/utils/currency";
+import { printThermalTicket } from "@/services/printService";
 
 interface Props {
   isOpen: boolean;
@@ -300,13 +302,63 @@ export const TakeoutDetailModal = ({
                   </button>
                 )}
               </div>
-              <button
-                onClick={() => setShowCancelConfirm(true)}
-                className="w-full py-2 text-sm text-red-500 hover:text-red-700 font-semibold transition-colors flex items-center justify-center gap-1.5"
-              >
-                <AlertTriangle size={14} />
-                Cancelar Orden
-              </button>
+              <div className="flex items-center justify-between mt-2">
+                <button
+                  onClick={() => {
+                    const cs = getCurrencySymbol();
+                    const businessName =
+                      JSON.parse(localStorage.getItem("app_settings") || "{}")
+                        .businessName || "Dulces Momentos";
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString("es-NI");
+                    const timeStr = now.toLocaleTimeString("es-NI", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    });
+                    const separator =
+                      "------------------------------------------";
+                    const label = isParaLlevar
+                      ? `Orden #${selectedCuenta.cuentaNumber}`
+                      : `Mesa ${tableNumber} — Cuenta ${selectedCuenta.cuentaNumber}`;
+
+                    let ticket = "";
+                    ticket += `        ${businessName}\n`;
+                    ticket += `${separator}\n`;
+                    ticket += `  PRE-CUENTA  Fecha: ${dateStr} ${timeStr}\n`;
+                    ticket += `  ${label}\n`;
+                    ticket += `  Atendido por: ${selectedCuenta.createdBy}\n`;
+                    ticket += `${separator}\n`;
+                    ticket += `DESCRIPCION        CANT    P.U.\n`;
+                    ticket += `${separator}\n`;
+
+                    for (const item of selectedCuenta.items) {
+                      const subtotal = (item.price * item.quantity).toFixed(2);
+                      ticket += `${item.name}\n`;
+                      ticket += `                ${item.quantity}    ${item.price.toFixed(2)} ${subtotal}\n`;
+                    }
+
+                    ticket += `${separator}\n`;
+                    ticket += `\nTOTAL:              ${cs} ${total.toFixed(2)}\n`;
+                    ticket += `${separator}\n`;
+                    ticket += `\n    * Esta NO es una factura fiscal *\n`;
+                    ticket += `       Gracias por su preferencia\n`;
+
+                    printThermalTicket(ticket);
+                  }}
+                  className="py-2 text-sm text-[#593D31] hover:text-[#E8BC6E] font-semibold transition-colors flex items-center gap-1.5"
+                >
+                  <Printer size={14} />
+                  Imprimir Cuenta
+                </button>
+                <button
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="py-2 text-sm text-red-500 hover:text-red-700 font-semibold transition-colors flex items-center gap-1.5"
+                >
+                  <AlertTriangle size={14} />
+                  Cancelar Orden
+                </button>
+              </div>
             </>
           )}
         </div>

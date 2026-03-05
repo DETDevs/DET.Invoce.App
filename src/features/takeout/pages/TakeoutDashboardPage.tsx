@@ -35,14 +35,6 @@ export const TakeoutDashboardPage = () => {
 
   // Meseros solo ven sus propias mesas/órdenes. Admin y cajero ven todas.
   const isMesero = user?.role === "mesero";
-  console.log(
-    "[DEBUG Takeout] user:",
-    user?.name,
-    "role:",
-    user?.role,
-    "isMesero:",
-    isMesero,
-  );
 
   const tableGroups = useMemo(() => {
     if (!isMesero) return allTableGroups;
