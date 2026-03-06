@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Card } from "@/shared/ui/Card";
 import {
   TrendingUp,
@@ -98,7 +98,7 @@ export const DashboardPage = () => {
       }
     };
 
-    // Fetch monthly sales volume (last 7 months)
+    
     const fetchMonthlyVolume = async () => {
       try {
         const MONTH_NAMES = [
@@ -187,7 +187,7 @@ export const DashboardPage = () => {
         if (topRes.status === "fulfilled") {
           const data = topRes.value;
           if (Array.isArray(data)) {
-            // Map report top-selling products to the dashboard carousel format
+            
             setSalesByCategory([]);
             setTopProducts(
               data.slice(0, 10).map((p) => ({
@@ -219,7 +219,7 @@ export const DashboardPage = () => {
       }
     };
 
-    // If no cash box is open, reset to zeros (except low stock which is inventory-based)
+    
     if (!session?.isOpen) {
       setTotalMoney(0);
       setTotalProductsSold(0);

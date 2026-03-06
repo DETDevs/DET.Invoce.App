@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import type { Product, CartItem } from "@/features/orders/types/index";
 import inventoryApi from "@/api/inventory/InventoryAPI";
 import toast from "react-hot-toast";
@@ -79,5 +79,4 @@ export const useCart = () => {
 
   return { cart, addToCart, updateQuantity, removeFromCart, total, clearCart, initializeCart };
 };
-
 

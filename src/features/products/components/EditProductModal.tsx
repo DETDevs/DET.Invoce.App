@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { X, Save, Loader2 } from "lucide-react";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
 import toast from "react-hot-toast";
@@ -71,7 +71,7 @@ export const EditProductModal = ({
     setSubCategories(activeSubs);
   }, [formData?.categoryCode, categories]);
 
-  // Toggle visible for: Cafetería (all), Bebidas only when subcategory = Refrescos
+  
   const showTrackToggle = useMemo(() => {
     if (!formData || categories.length === 0) return false;
     const cat = categories.find(
@@ -80,7 +80,7 @@ export const EditProductModal = ({
     if (!cat?.categoryName) return false;
     const catName = cat.categoryName.toLowerCase();
 
-    // Cafetería or Smoothie → always show toggle
+    
     if (
       catName.includes("cafetería") ||
       catName.includes("cafeteria") ||
@@ -88,7 +88,7 @@ export const EditProductModal = ({
     )
       return true;
 
-    // Bebidas → only when subcategory is Refrescos
+    
     if (catName.includes("bebida") && formData.subCategoryId) {
       const sub = (cat.subCategories || []).find(
         (s) => s.subCategoryId === formData.subCategoryId,

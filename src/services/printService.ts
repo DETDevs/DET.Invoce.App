@@ -1,4 +1,4 @@
-export async function printThermalTicket(ticketText: string): Promise<boolean> {
+﻿export async function printThermalTicket(ticketText: string): Promise<boolean> {
     try {
         const htmlContent = `<!DOCTYPE html>
 <html>
@@ -44,7 +44,7 @@ ${ticketText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
 </body>
 </html>`;
 
-        // Use a hidden iframe so only the native print dialog shows (no extra tab)
+        
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
         iframe.style.right = '0';
@@ -66,7 +66,7 @@ ${ticketText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
         iframeDoc.write(htmlContent);
         iframeDoc.close();
 
-        // Wait for content to render, then trigger native print dialog
+        
         await new Promise<void>((resolve) => {
             setTimeout(() => {
                 iframe.contentWindow!.print();
@@ -74,7 +74,7 @@ ${ticketText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
             }, 350);
         });
 
-        // Clean up iframe after a delay (gives print dialog time to grab content)
+        
         setTimeout(() => {
             if (iframe.parentNode) {
                 document.body.removeChild(iframe);

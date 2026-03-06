@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import {
   UtensilsCrossed,
   RefreshCw,
@@ -33,7 +33,7 @@ export const TakeoutDashboardPage = () => {
   const [cuentasForModal, setCuentasForModal] = useState<TakeoutOrder[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
-  // Meseros solo ven sus propias mesas/órdenes. Admin y cajero ven todas.
+  
   const isMesero = user?.role === "mesero";
 
   const tableGroups = useMemo(() => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { type Settings } from "@/features/settings/types";
 import settingsApi from "@/api/settings/SettingsAPI";
@@ -59,7 +59,7 @@ export const useSettings = () => {
     };
 
     fetchSettings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   useEffect(() => {

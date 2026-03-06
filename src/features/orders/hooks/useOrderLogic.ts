@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useNavigationBlocker } from "@/shared/context/NavigationBlockerContext";
@@ -28,7 +28,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
 
     const orderIdRef = useRef<number | null>(null);
     const wasCheckedOut = useRef(false);
-    const hasCreatedOrder = useRef(false); // Guard against StrictMode double-mount
+    const hasCreatedOrder = useRef(false); 
 
     useEffect(() => {
         orderIdRef.current = orderId;
@@ -47,10 +47,10 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         }
     }, [user]);
 
-    // Create order on mount — only ONCE (guarded against React StrictMode)
+    
     useEffect(() => {
         if (isAddingToExisting) return;
-        if (hasCreatedOrder.current) return; // Prevent duplicate creation
+        if (hasCreatedOrder.current) return; 
         hasCreatedOrder.current = true;
 
         setIsCreatingOrder(true);
@@ -67,7 +67,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
             .finally(() => setIsCreatingOrder(false));
     }, []);
 
-    // Cancel order on unmount if not checked out
+    
     useEffect(() => {
         if (isAddingToExisting) return;
         return () => {
@@ -120,7 +120,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         return () => setBlocker(null);
     }, [cart.length, orderNumber, setBlocker, isAddingToExisting]);
 
-    // After checkout, create a fresh order for the next one
+    
     const refreshOrder = useCallback(() => {
         clearCart();
         wasCheckedOut.current = true;

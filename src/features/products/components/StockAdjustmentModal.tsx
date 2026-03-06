@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   X,
   Save,
@@ -24,7 +24,7 @@ const REASONS_IN = [
 ];
 
 const REASONS_OUT = [
-  // { value: "sale", label: "Venta Directa" },
+  
   { value: "damage", label: "Merma / Daño" },
   { value: "internal", label: "Consumo Interno" },
   { value: "adjustment_out", label: "Ajuste de Salida" },

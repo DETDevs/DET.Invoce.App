@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+﻿import { useState, useEffect, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import categoryApi from "@/api/category/CategoryAPI";
 import type { TCategory, TSubCategory } from "@/api/category/types";
@@ -63,17 +63,17 @@ export const useAddProductForm = ({
     setFormData((prev) => ({ ...prev, subCategoryId: null }));
   }, [formData.category, categories]);
 
-  // Toggle visible for: Cafetería (all), Bebidas only when subcategory = Refrescos
+  
   const showTrackToggle = useMemo(() => {
     if (categories.length === 0 || !formData.category) return false;
     const cat = categories.find((c) => c.categoryCode === formData.category);
     if (!cat?.categoryName) return false;
     const catName = cat.categoryName.toLowerCase();
 
-    // Cafetería or Smoothie → always show toggle
+    
     if (catName.includes("cafetería") || catName.includes("cafeteria") || catName.includes("smoothie")) return true;
 
-    // Bebidas → only when subcategory is Refrescos
+    
     if (catName.includes("bebida") && formData.subCategoryId) {
       const sub = (cat.subCategories || []).find(
         (s) => s.subCategoryId === formData.subCategoryId,

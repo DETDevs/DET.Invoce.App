@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import type { Order, OrderStatus, PaymentStatus } from '@/shared/types';
 import reservationOrderApi from '@/api/reservation-order/ReservationOrderAPI';
 
@@ -41,7 +41,6 @@ function resolveStatus(raw: any): OrderStatus {
     return 'pending';
 }
 
-
 interface OrdersState {
     orders: Order[];
     isLoading: boolean;
@@ -66,7 +65,7 @@ export const useOrdersStore = create<OrdersState>()(
                 const data = await reservationOrderApi.getAll();
                 const rawRows = Array.isArray(data) ? data : [];
 
-                // Group rows by reservationOrderId (SP joins with details)
+                
                 const orderMap = new Map<number, any>();
                 rawRows.forEach((raw: any) => {
                     const id = raw.reservationOrderId;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import type { ReportType, DateRangeType, SalesReportData, ProductsReportData, CashFlowReportData, OrdersReportData, ReservationsReportData, CashCloseReportData } from "@/features/reports/types";
 import reportApi from "@/api/report/ReportAPI";
 import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
@@ -389,7 +389,7 @@ export const useReports = () => {
     }, []);
 
     const fetchCashCloseReport = useCallback(async (dateFrom: string, dateTo: string, cashRegisterId?: number) => {
-        // If no active session, reset to zeros
+        
         if (!session?.isOpen) {
             setCashCloseReport({
                 initialAmount: 0, salesTotal: 0, cashInTotal: 0, cashOutTotal: 0,
@@ -440,7 +440,7 @@ export const useReports = () => {
             const returnsCount = movementLines.filter(m => m.type === "devolucion").length;
             const expectedTotal = initialAmount + salesTotal + cashInTotal - cashOutTotal;
 
-            // Parse invoices for count and payment breakdown
+            
             const rawInvoices = Array.isArray(invoicesRes) ? invoicesRes : [];
             const fromDate = new Date(dateFrom);
             const toDate = new Date(dateTo);
@@ -487,7 +487,7 @@ export const useReports = () => {
         const { dateFrom, dateTo } = getDateRange(dateRange, customRange);
         const cashRegisterId = dateRange === "today" ? session?.cashRegisterId : undefined;
 
-        // If filtering by "today" but no cash box is open, reset everything to zero
+        
         if (dateRange === "today" && !session?.isOpen) {
             setSalesReport(emptySalesReport);
             setProductsReport(emptyProductsReport);

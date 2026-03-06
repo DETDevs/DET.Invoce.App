@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Landmark,
@@ -120,7 +120,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
   </body>
 </html>`;
 
-    // Use a hidden iframe so only the native print dialog shows (no extra tab)
+    
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.right = "0";
@@ -142,10 +142,10 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     iframeDoc.write(htmlContent);
     iframeDoc.close();
 
-    // Wait for content to render, then trigger native print dialog
+    
     setTimeout(() => {
       iframe.contentWindow!.print();
-      // Clean up iframe after print dialog closes
+      
       setTimeout(() => {
         if (iframe.parentNode) {
           document.body.removeChild(iframe);

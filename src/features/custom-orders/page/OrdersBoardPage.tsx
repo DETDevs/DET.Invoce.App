@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
@@ -90,7 +90,7 @@ export const OrdersBoardPage = () => {
           ? response
           : response?.invoiceNumber || response?.data;
 
-      // Print thermal ticket — search by invoiceNumber which IS returned by Invoice_GetAll
+      
       try {
         const allInvoices = await invoiceApi.getAll();
         const match = allInvoices.find(
@@ -104,14 +104,14 @@ export const OrdersBoardPage = () => {
           try {
             await thermalTicketAPI.openCashDrawer();
           } catch {
-            /* ignore */
+            
           }
         }
       } catch (printErr) {
         console.warn("[handleInvoice] No se pudo imprimir:", printErr);
       }
 
-      // Store invoiceNumber for reprinting
+      
       setSelectedOrder((prev) =>
         prev
           ? {

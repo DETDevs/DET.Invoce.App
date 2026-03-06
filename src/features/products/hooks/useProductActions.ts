@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { productApi } from "@/api/products";
 import inventoryApi from "@/api/inventory/InventoryAPI";
 import categoryApi from "@/api/category/CategoryAPI";
@@ -156,7 +156,7 @@ export const useProductActions = () => {
                 unitId: updatedProduct.unitId ?? 0,
                 divideQuantityBy: updatedProduct.divideQuantityBy ?? 0,
                 isActive: updatedProduct.isActive ?? true,
-                quantity: 0, // Don't touch stock — managed via Stock Adjustment modal
+                quantity: 0, 
                 stockMinimum: updatedProduct.stockMinimum ?? 0,
             }, imageFile);
 
@@ -181,11 +181,11 @@ export const useProductActions = () => {
         const currentStock = product.quantity ?? 0;
         const delta = newStock - currentStock;
 
-        if (delta === 0) return; // No change
+        if (delta === 0) return; 
 
         try {
             if (delta > 0) {
-                // Entry: Inventory_Save adds quantity to existing stock
+                
                 await inventoryApi.save({
                     inventoryId: 0,
                     productCode: product.code,
@@ -193,7 +193,7 @@ export const useProductActions = () => {
                     minimumStock: product.stockMinimum ?? 0,
                 });
             } else {
-                // Exit: Inventory_Output subtracts with validation
+                
                 await inventoryApi.output({
                     productCode: product.code,
                     quantityInStock: Math.abs(delta),
@@ -223,7 +223,7 @@ export const useProductActions = () => {
                 unitId: selectedProduct.unitId ?? 0,
                 divideQuantityBy: selectedProduct.divideQuantityBy ?? 0,
                 isActive: false,
-                quantity: 0, // Don't touch stock when deactivating
+                quantity: 0, 
                 stockMinimum: selectedProduct.stockMinimum ?? 0,
             }, null);
             toast.success(`"${selectedProduct.name}" inactivado correctamente`);
