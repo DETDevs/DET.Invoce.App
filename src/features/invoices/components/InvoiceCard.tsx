@@ -22,6 +22,7 @@ export const InvoiceCard = ({ invoice, onClick }: InvoiceCardProps) => {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "America/Managua",
     }).format(date);
   };
 

@@ -14,6 +14,8 @@ import {
   AlertTriangle,
   Loader2,
   Printer,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import type { TakeoutOrder } from "@/shared/types";
 import { CurrencyAmountInput } from "@/features/shared/components/CurrencyAmountInput";
@@ -65,6 +67,16 @@ export const TakeoutDetailModal = ({
     handleConfirmSplit,
     handleCancelOrder,
     handleAddProducts,
+    isEditMode,
+    enterEditMode,
+    exitEditMode,
+    editQuantities,
+    removedItems,
+    setEditQty,
+    toggleRemoveItem,
+    editHasChanges,
+    remainingAfterEdit,
+    handleConfirmEdit,
   } = useTakeoutDetail({ isOpen, onClose, tableNumber, cuentas });
 
   if (
@@ -161,18 +173,33 @@ export const TakeoutDetailModal = ({
         )}
 
         <div className="flex-1 overflow-y-auto min-h-0 p-5">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
-            {isSplitMode ? (
-              "Selecciona los productos para la nueva cuenta"
-            ) : (
-              <>
-                Productos —{" "}
-                {isParaLlevar
-                  ? `Orden #${selectedCuenta.cuentaNumber}`
-                  : `Cuenta ${selectedCuenta.cuentaNumber}`}
-              </>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+              {isSplitMode ? (
+                "Selecciona los productos para la nueva cuenta"
+              ) : (
+                <>
+                  Productos —{" "}
+                  {isParaLlevar
+                    ? `Orden #${selectedCuenta.cuentaNumber}`
+                    : `Cuenta ${selectedCuenta.cuentaNumber}`}
+                </>
+              )}
+            </h3>
+            {!isSplitMode && (
+              <button
+                onClick={() => (isEditMode ? exitEditMode() : enterEditMode())}
+                className={`p-1.5 rounded-lg transition-all ${
+                  isEditMode
+                    ? "bg-amber-100 text-amber-700"
+                    : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                }`}
+                title={isEditMode ? "Salir del modo edición" : "Editar orden"}
+              >
+                <Pencil size={16} />
+              </button>
             )}
-          </h3>
+          </div>
           <div className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-100 text-gray-600 font-medium">
@@ -182,12 +209,19 @@ export const TakeoutDetailModal = ({
                   <th className="px-4 py-2 text-center">Cant.</th>
                   <th className="px-4 py-2 text-right">Precio</th>
                   <th className="px-4 py-2 text-right">Subtotal</th>
+                  {isEditMode && !isSplitMode && (
+                    <th className="px-2 py-2 w-10"></th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {selectedCuenta.items.map((item, idx) => {
                   const isSelected = splitQuantities.has(idx);
                   const splitQty = splitQuantities.get(idx) ?? 0;
+                  const isRemoved = removedItems.has(idx);
+                  const editQty = editQuantities.get(idx) ?? item.quantity;
+                  const displayQty =
+                    isEditMode && !isRemoved ? editQty : item.quantity;
                   return (
                     <tr
                       key={idx}
@@ -196,7 +230,9 @@ export const TakeoutDetailModal = ({
                           ? `transition-colors ${
                               isSelected ? "bg-violet-50" : "hover:bg-gray-50"
                             }`
-                          : ""
+                          : isRemoved
+                            ? "bg-red-50 opacity-50"
+                            : ""
                       }`}
                     >
                       {isSplitMode && (
@@ -213,7 +249,9 @@ export const TakeoutDetailModal = ({
                           </div>
                         </td>
                       )}
-                      <td className="px-4 py-2.5 text-[#2D2D2D] font-medium">
+                      <td
+                        className={`px-4 py-2.5 text-[#2D2D2D] font-medium ${isRemoved ? "line-through" : ""}`}
+                      >
                         {item.name}
                       </td>
                       <td className="px-4 py-2.5 text-center text-gray-600">
@@ -244,14 +282,47 @@ export const TakeoutDetailModal = ({
                               /{item.quantity}
                             </span>
                           </div>
+                        ) : isEditMode && !isSplitMode && !isRemoved ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditQty(idx, displayQty - 1);
+                              }}
+                              disabled={displayQty <= 1}
+                              className="w-6 h-6 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-700 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span
+                              className={`w-8 text-center font-bold ${editQuantities.has(idx) ? "text-amber-700" : "text-gray-600"}`}
+                            >
+                              {displayQty}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditQty(idx, displayQty + 1);
+                              }}
+                              className="w-6 h-6 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-700 flex items-center justify-center transition-colors"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
                         ) : (
-                          item.quantity
+                          <span className={isRemoved ? "line-through" : ""}>
+                            {item.quantity}
+                          </span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right text-gray-600">
+                      <td
+                        className={`px-4 py-2.5 text-right text-gray-600 ${isRemoved ? "line-through" : ""}`}
+                      >
                         {getCurrencySymbol()} {item.price.toFixed(2)}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium">
+                      <td
+                        className={`px-4 py-2.5 text-right font-medium ${isRemoved ? "line-through" : ""}`}
+                      >
                         {isSplitMode && isSelected ? (
                           <span className="text-violet-700 font-bold">
                             {getCurrencySymbol()}{" "}
@@ -260,10 +331,28 @@ export const TakeoutDetailModal = ({
                         ) : (
                           <>
                             {getCurrencySymbol()}{" "}
-                            {(item.price * item.quantity).toFixed(2)}
+                            {(item.price * displayQty).toFixed(2)}
                           </>
                         )}
                       </td>
+                      {isEditMode && !isSplitMode && (
+                        <td className="px-2 py-2.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRemoveItem(idx);
+                            }}
+                            className={`p-1.5 rounded-lg transition-all ${isRemoved ? "bg-red-100 text-red-600" : "text-gray-400 hover:bg-red-50 hover:text-red-500"}`}
+                            title={
+                              isRemoved
+                                ? "Restaurar producto"
+                                : "Eliminar producto"
+                            }
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -271,7 +360,28 @@ export const TakeoutDetailModal = ({
             </table>
           </div>
 
-          {!isSplitMode && (
+          {/* Edit mode confirm/cancel buttons */}
+          {isEditMode && !isSplitMode && editHasChanges && (
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={exitEditMode}
+                className="flex-1 py-2.5 bg-white border-2 border-gray-300 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+              >
+                <X size={16} />
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmEdit}
+                disabled={isProcessing || remainingAfterEdit <= 0}
+                className="flex-1 py-2.5 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Check size={16} />
+                {isProcessing ? "Guardando..." : "Confirmar Cambios"}
+              </button>
+            </div>
+          )}
+
+          {!isSplitMode && !isEditMode && (
             <>
               <div className="flex gap-2 mt-3">
                 <button

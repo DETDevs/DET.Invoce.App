@@ -389,7 +389,7 @@ export const useReports = () => {
     }, []);
 
     const fetchCashCloseReport = useCallback(async (dateFrom: string, dateTo: string, cashRegisterId?: number) => {
-        
+
         if (!session?.isOpen) {
             setCashCloseReport({
                 initialAmount: 0, salesTotal: 0, cashInTotal: 0, cashOutTotal: 0,
@@ -440,7 +440,7 @@ export const useReports = () => {
             const returnsCount = movementLines.filter(m => m.type === "devolucion").length;
             const expectedTotal = initialAmount + salesTotal + cashInTotal - cashOutTotal;
 
-            
+
             const rawInvoices = Array.isArray(invoicesRes) ? invoicesRes : [];
             const fromDate = new Date(dateFrom);
             const toDate = new Date(dateTo);
@@ -487,7 +487,7 @@ export const useReports = () => {
         const { dateFrom, dateTo } = getDateRange(dateRange, customRange);
         const cashRegisterId = dateRange === "today" ? session?.cashRegisterId : undefined;
 
-        
+
         if (dateRange === "today" && !session?.isOpen) {
             setSalesReport(emptySalesReport);
             setProductsReport(emptyProductsReport);

@@ -33,9 +33,10 @@ export const useTakeoutDetail = ({
     );
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const navigate = useNavigate();
-    const { completeOrder, completeOrdersByBackendId, splitOrder } = useTakeoutStore();
+    const { completeOrder, completeOrdersByBackendId, splitOrder, updateItemQuantity, removeItem } = useTakeoutStore();
     const { user } = useAuthStore();
     const canInvoice = user?.role === "cajero" || user?.role === "admin";
 
@@ -49,6 +50,7 @@ export const useTakeoutDetail = ({
             setSplitQuantities(new Map());
             setShowCancelConfirm(false);
             setIsCancelling(false);
+            setIsEditMode(false);
         }
         setAmountPaid("");
         setPaymentMethod("efectivo");
@@ -379,6 +381,7 @@ export const useTakeoutDetail = ({
         ? new Date(selectedCuenta.createdAt).toLocaleTimeString("es-NI", {
             hour: "2-digit",
             minute: "2-digit",
+            timeZone: "America/Managua",
         })
         : "";
 
@@ -393,38 +396,129 @@ export const useTakeoutDetail = ({
         });
     };
 
+    const handleEditQuantity = async (_itemIndex: number, _newQuantity: number) => { };
+    const handleRemoveItem = async (_itemIndex: number) => { };
+
+    // ── Edit mode: local pending state (like split mode) ──
+    const [editQuantities, setEditQuantities] = useState<Map<number, number>>(new Map());
+    const [removedItems, setRemovedItems] = useState<Set<number>>(new Set());
+
+    const enterEditMode = () => {
+        setEditQuantities(new Map());
+        setRemovedItems(new Set());
+        setIsEditMode(true);
+    };
+
+    const exitEditMode = () => {
+        setEditQuantities(new Map());
+        setRemovedItems(new Set());
+        setIsEditMode(false);
+    };
+
+    const setEditQty = (idx: number, qty: number) => {
+        if (removedItems.has(idx)) return;
+        setEditQuantities((prev) => {
+            const next = new Map(prev);
+            const originalQty = selectedCuenta?.items[idx]?.quantity ?? 1;
+            if (qty <= 0) {
+                next.delete(idx);
+                setRemovedItems((p) => new Set(p).add(idx));
+            } else if (qty === originalQty) {
+                next.delete(idx);
+            } else {
+                next.set(idx, qty);
+            }
+            return next;
+        });
+    };
+
+    const toggleRemoveItem = (idx: number) => {
+        setRemovedItems((prev) => {
+            const next = new Set(prev);
+            if (next.has(idx)) {
+                next.delete(idx);
+            } else {
+                next.add(idx);
+                setEditQuantities((p) => { const n = new Map(p); n.delete(idx); return n; });
+            }
+            return next;
+        });
+    };
+
+    const editHasChanges = editQuantities.size > 0 || removedItems.size > 0;
+    const remainingAfterEdit = selectedCuenta ? selectedCuenta.items.length - removedItems.size : 0;
+
+    const handleConfirmEdit = async () => {
+        if (!selectedCuenta?.backendOrderId) {
+            toast.error('No se pudo obtener la información de la orden.');
+            return;
+        }
+        if (remainingAfterEdit <= 0) {
+            toast.error('No puedes eliminar todos los productos. Cancela la orden.');
+            return;
+        }
+        setIsProcessing(true);
+        try {
+            const accountsData = await orderApi.getOrderAccountWithDetails(selectedCuenta.backendOrderId);
+            const accountsList = Array.isArray(accountsData) ? accountsData : [accountsData];
+            const account = accountsList.find((a: any) => a.accountNumber === selectedCuenta.cuentaNumber) || accountsList[0];
+            if (!account?.orderAccountId) { toast.error('No se encontró la cuenta.'); return; }
+
+            const backendDetails: any[] = account.orderAccountDetails || [];
+            const removedCodes = new Set(Array.from(removedItems).map((idx) => selectedCuenta.items[idx]?.productCode));
+
+            const updatedDetails = backendDetails
+                .filter((d: any) => !removedCodes.has(d.productCode))
+                .map((d: any) => {
+                    const localIdx = selectedCuenta.items.findIndex((i) => i.productCode === d.productCode);
+                    const pendingQty = localIdx >= 0 ? editQuantities.get(localIdx) : undefined;
+                    return { productCode: d.productCode, quantity: pendingQty ?? d.quantity, unitPrice: d.unitPrice, discount: d.discount || 0, notes: d.notes || '' };
+                });
+
+            await orderApi.save({
+                orderId: selectedCuenta.backendOrderId,
+                createdBy: user?.name || 'Sistema',
+                orderType: !isParaLlevar,
+                tableId: isParaLlevar ? undefined : tableNumber ?? undefined,
+                details: updatedDetails,
+            });
+            // Save pending changes before clearing state
+            const pendingQuantities = new Map(editQuantities);
+            const pendingRemovals = new Set(removedItems);
+            const orderId = selectedCuenta.id;
+
+            // First apply quantity changes
+            for (const [idx, qty] of pendingQuantities.entries()) {
+                if (!pendingRemovals.has(idx)) updateItemQuantity(orderId, idx, qty);
+            }
+            // Then apply removals in reverse order to keep indices stable
+            const sortedRemovals = Array.from(pendingRemovals).sort((a, b) => b - a);
+            for (const idx of sortedRemovals) removeItem(orderId, idx);
+
+            toast.success('Orden actualizada correctamente');
+            exitEditMode();
+            onClose();
+        } catch (error) {
+            console.error('[TakeoutDetail] Error al confirmar edición:', error);
+            toast.error('No se pudo actualizar la orden.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return {
-        selectedCuentaId,
-        setSelectedCuentaId,
-        selectedCuenta,
-        paymentMethod,
-        setPaymentMethod,
-        amountPaid,
-        setAmountPaid,
-        paidInCordobas,
-        setPaidInCordobas,
-        isProcessing,
-        isParaLlevar,
-        canInvoice,
-        subtotal,
-        total,
-        isPaymentSufficient,
-        isSplitMode,
-        setIsSplitMode,
-        splitQuantities,
-        setSplitQuantities,
-        splitSubtotal,
-        splitItemCount,
-        showCancelConfirm,
-        setShowCancelConfirm,
-        isCancelling,
-        createdTime,
-        handleInvoice,
-        toggleSplitItem,
-        setSplitQty,
-        handleCancelCuenta,
-        handleConfirmSplit,
-        handleCancelOrder,
-        handleAddProducts,
+        selectedCuentaId, setSelectedCuentaId, selectedCuenta,
+        paymentMethod, setPaymentMethod, amountPaid, setAmountPaid,
+        paidInCordobas, setPaidInCordobas, isProcessing, isParaLlevar,
+        canInvoice, subtotal, total, isPaymentSufficient,
+        isSplitMode, setIsSplitMode, splitQuantities, setSplitQuantities,
+        splitSubtotal, splitItemCount, showCancelConfirm, setShowCancelConfirm,
+        isCancelling, createdTime, handleInvoice, toggleSplitItem, setSplitQty,
+        handleCancelCuenta, handleConfirmSplit, handleCancelOrder, handleAddProducts,
+        isEditMode, enterEditMode, exitEditMode,
+        editQuantities, removedItems, setEditQty, toggleRemoveItem,
+        editHasChanges, remainingAfterEdit, handleConfirmEdit,
+        handleEditQuantity, handleRemoveItem,
     };
 };
+

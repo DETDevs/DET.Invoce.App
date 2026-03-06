@@ -56,11 +56,13 @@ function mapBackendInvoice(raw: any): Invoice {
         mappedStatus = "returned";
     }
 
+    const createdAt = raw.invoiceDate ?? raw.createdAt ?? new Date().toISOString();
+
     return {
         id: String(raw.invoiceId ?? raw.invoiceNumber ?? ""),
         orderNumber: raw.invoiceNumber ?? raw.invoiceId ?? "",
         customerName: raw.customer ?? "",
-        createdAt: raw.invoiceDate ?? raw.createdAt ?? new Date().toISOString(),
+        createdAt,
         createdBy: raw.createdBy ?? "",
         paymentMethod: raw.paymentmethod ?? raw.paymentMethod ?? "",
         amountPaid: raw.amountPaid ?? 0,
