@@ -120,7 +120,6 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
   </body>
 </html>`;
 
-    
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.right = "0";
@@ -142,10 +141,9 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
     iframeDoc.write(htmlContent);
     iframeDoc.close();
 
-    
     setTimeout(() => {
       iframe.contentWindow!.print();
-      
+
       setTimeout(() => {
         if (iframe.parentNode) {
           document.body.removeChild(iframe);
@@ -164,7 +162,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
       />
 
       <div className="print:hidden!">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
           <KPICard
             title="Fondo Inicial"
             value={fmtCompact(data.initialAmount)}
