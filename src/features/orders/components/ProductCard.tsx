@@ -20,9 +20,9 @@ const ProductCardComponent = ({
   return (
     <div
       onClick={() => onClick(product)}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:border-[#E8BC6E] hover:shadow-md transition-all group overflow-hidden"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:border-[#E8BC6E] hover:shadow-md transition-all group overflow-hidden min-w-0"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+      <div className="relative h-28 sm:h-40 lg:h-44 overflow-hidden bg-gray-100">
         {!imgError && product.image ? (
           <img
             src={product.image}
@@ -39,21 +39,21 @@ const ProductCardComponent = ({
                 "linear-gradient(135deg, #FDF6E3 0%, #F5E6C8 50%, #EDD9B3 100%)",
             }}
           >
-            <div className="w-14 h-14 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm border border-white/80 mb-1.5">
-              <span className="text-2xl font-black text-[#593D31]">
+            <div className="w-9 h-9 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm border border-white/80 mb-0.5">
+              <span className="text-base sm:text-2xl font-black text-[#593D31]">
                 {initial}
               </span>
             </div>
-            <Package size={14} className="text-[#C4A574] opacity-60" />
+            <Package size={11} className="text-[#C4A574] opacity-60" />
           </div>
         )}
       </div>
-      <div className="p-3">
-        <h4 className="font-bold text-[#2D2D2D] text-sm leading-tight line-clamp-2">
+      <div className="px-1.5 py-1 sm:p-3">
+        <h4 className="font-semibold text-[#2D2D2D] text-[11px] sm:text-sm leading-tight line-clamp-2">
           {product.name}
         </h4>
         {!hidePrice && (
-          <span className="text-[#E8BC6E] font-bold text-sm mt-1 block">
+          <span className="text-[#E8BC6E] font-bold text-[11px] sm:text-sm mt-0.5 block">
             {getCurrencySymbol()} {product.price}
           </span>
         )}

@@ -223,7 +223,7 @@ export const NewOrderPage = () => {
   }, [isCartOpen]);
 
   return (
-    <div className="h-full w-full bg-[#FDFBF7] grid grid-rows-[1fr] min-[1400px]:grid-cols-[1fr_420px] overflow-hidden">
+    <div className="h-full w-full bg-[#FDFBF7] grid grid-rows-[1fr] min-[1400px]:grid-cols-[1fr_420px] overflow-hidden min-h-0">
       <Toaster position="top-center" />
       <ConfirmDialog
         isOpen={isDialogOpen}
@@ -236,8 +236,8 @@ export const NewOrderPage = () => {
         variant="danger"
       />
 
-      <main className="grid grid-rows-[auto_1fr] h-full w-full max-w-[100vw] overflow-hidden min-[1400px]:border-r min-[1400px]:border-gray-200">
-        <div>
+      <main className="grid grid-rows-[auto_1fr] h-full w-full overflow-hidden min-h-0 min-[1400px]:border-r min-[1400px]:border-gray-200">
+        <div className="overflow-hidden min-w-0">
           <div className="p-4 sm:p-6 lg:p-8 pb-4 z-10 bg-[#FDFBF7]">
             <h1 className="text-2xl lg:text-3xl font-bold text-[#2D2D2D] mb-4 lg:mb-6">
               {isAddingToExisting ? "Agregar a Orden" : "Nueva Orden"}
@@ -303,9 +303,9 @@ export const NewOrderPage = () => {
           </div>
         </div>
 
-        <div className="overflow-y-auto pt-6 pb-28 lg:pb-8 scrollbar-hide w-full">
+        <div className="overflow-y-auto overflow-x-hidden pt-6 pb-28 lg:pb-8 scrollbar-hide w-full min-w-0">
           <div
-            className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 min-[1400px]:grid-cols-3 min-[1600px]:grid-cols-4 gap-4 px-4 sm:px-6 lg:px-8 transition-opacity duration-200 ${isPending ? "opacity-50" : "opacity-100"}`}
+            className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 min-[1400px]:grid-cols-3 min-[1600px]:grid-cols-4 gap-2 px-2 sm:gap-4 sm:px-6 lg:px-8 transition-opacity duration-200 ${isPending ? "opacity-50" : "opacity-100"}`}
           >
             {isLoadingProducts ? (
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-400 gap-3">

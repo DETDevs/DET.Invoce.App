@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Utility: hide scrollbar but keep scroll functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @import "swiper/css";
 @import "swiper/css/navigation";
 @import "swiper/css/free-mode";
