@@ -21,6 +21,10 @@ export const OrderCard = ({ tableId, orders, onClick }: Props) => {
   );
 
   const totalAmount = orders.reduce((sum, o) => sum + o.total, 0);
+  const customerName =
+    firstOrder.notes ||
+    localStorage.getItem(`order-customer-name-${firstOrder.orderId}`) ||
+    null;
 
   return (
     <div
@@ -41,6 +45,9 @@ export const OrderCard = ({ tableId, orders, onClick }: Props) => {
           <div>
             <h3 className="font-bold text-[#2D2D2D] text-lg">
               {isParaLlevar ? "Para Llevar" : `Mesa ${tableId}`}
+              {customerName && (
+                <span className="text-[#593D31]"> — {customerName}</span>
+              )}
             </h3>
             <div className="flex items-center gap-1 text-xs text-gray-400">
               <User size={12} />

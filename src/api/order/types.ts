@@ -11,6 +11,7 @@ export type TOrderSave = {
     createdBy: string;
     orderType: boolean;
     tableId?: number;
+    notes?: string;
     details: TOrderDetail[];
 };
 

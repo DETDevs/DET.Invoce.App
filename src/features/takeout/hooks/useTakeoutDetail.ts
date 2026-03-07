@@ -31,6 +31,7 @@ export const useTakeoutDetail = ({
     const [splitQuantities, setSplitQuantities] = useState<Map<number, number>>(
         new Map(),
     );
+    const [splitCustomerName, setSplitCustomerName] = useState("");
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -133,6 +134,7 @@ export const useTakeoutDetail = ({
             completeOrder(selectedCuenta.id);
             if (selectedCuenta.backendOrderId) {
                 completeOrdersByBackendId(selectedCuenta.backendOrderId);
+                localStorage.removeItem(`order-customer-name-${selectedCuenta.backendOrderId}`);
             }
 
             if (paymentMethod === "efectivo" && paidInCordobas > total) {
@@ -220,6 +222,12 @@ export const useTakeoutDetail = ({
                 toAccount.orderAccountId,
                 user?.name || "Cajero",
             );
+            // Clean up split account name from localStorage
+            if (selectedCuenta.backendOrderId) {
+                localStorage.removeItem(
+                    `order-customer-name-${selectedCuenta.backendOrderId}-account-${selectedCuenta.cuentaNumber}`,
+                );
+            }
             toast.success(
                 "Cuenta cancelada. Los productos regresaron a la cuenta original.",
                 { icon: "↩️" },
@@ -316,7 +324,16 @@ export const useTakeoutDetail = ({
             const splitItems = Array.from(splitQuantities.entries()).map(
                 ([index, quantity]) => ({ index, quantity }),
             );
-            splitOrder(originalCuenta.id, splitItems);
+            splitOrder(originalCuenta.id, splitItems, splitCustomerName.trim() || undefined);
+
+            // Persist split account name to localStorage keyed by orderId + new accountNumber
+            if (originalCuenta.backendOrderId && splitCustomerName.trim()) {
+                const newAccountNumber = cuentas.length + 1;
+                localStorage.setItem(
+                    `order-customer-name-${originalCuenta.backendOrderId}-account-${newAccountNumber}`,
+                    splitCustomerName.trim(),
+                );
+            }
             const totalMoved = splitItems.reduce((acc, s) => acc + s.quantity, 0);
             toast.success(
                 `Cuenta dividida: ${totalMoved} unidad${totalMoved > 1 ? "es" : ""} movida${totalMoved > 1 ? "s" : ""} a nueva cuenta`,
@@ -333,6 +350,7 @@ export const useTakeoutDetail = ({
 
         setIsSplitMode(false);
         setSplitQuantities(new Map());
+        setSplitCustomerName("");
     };
 
     const handleCancelOrder = async () => {
@@ -353,6 +371,12 @@ export const useTakeoutDetail = ({
                     completeOrdersByBackendId(cuenta.backendOrderId);
                 }
             });
+            // Clean all localStorage keys for this order
+            const orderId = mainCuenta.backendOrderId;
+            localStorage.removeItem(`order-customer-name-${orderId}`);
+            for (let i = 2; i <= cuentas.length + 2; i++) {
+                localStorage.removeItem(`order-customer-name-${orderId}-account-${i}`);
+            }
             toast.success("Orden cancelada correctamente", { icon: "🚫" });
             onClose();
         } catch (error) {
@@ -512,6 +536,7 @@ export const useTakeoutDetail = ({
         paidInCordobas, setPaidInCordobas, isProcessing, isParaLlevar,
         canInvoice, subtotal, total, isPaymentSufficient,
         isSplitMode, setIsSplitMode, splitQuantities, setSplitQuantities,
+        splitCustomerName, setSplitCustomerName,
         splitSubtotal, splitItemCount, showCancelConfirm, setShowCancelConfirm,
         isCancelling, createdTime, handleInvoice, toggleSplitItem, setSplitQty,
         handleCancelCuenta, handleConfirmSplit, handleCancelOrder, handleAddProducts,

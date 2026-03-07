@@ -68,6 +68,8 @@ export const TakeoutCartPanel = ({
     handleCajeroParaLlevarInvoice,
     navigate,
     getActiveOrdersByTable,
+    customerName,
+    setCustomerName,
   } = useCartActions({
     cart,
     orderId,
@@ -242,6 +244,21 @@ export const TakeoutCartPanel = ({
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+            {/* Customer name input — only for new mesa orders */}
+            {selectedTable && !isPreselected && (
+              <div className="space-y-2 animate-fade-in">
+                <label className="block text-xs font-bold text-gray-500 uppercase">
+                  Nombre del cliente (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Ej: Juan Pérez"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-[#2D2D2D] focus:outline-none focus:ring-2 focus:ring-[#E8BC6E] transition-colors"
+                />
               </div>
             )}
           </>

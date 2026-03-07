@@ -3,9 +3,9 @@ import type { TakeoutOrder, TakeoutItem, TakeoutStatus } from '@/shared/types';
 
 interface TakeoutState {
     orders: TakeoutOrder[];
-    addOrder: (tableNumber: number, cuentaNumber: number, items: TakeoutItem[], createdBy: string, backendOrderId?: number) => void;
+    addOrder: (tableNumber: number, cuentaNumber: number, items: TakeoutItem[], createdBy: string, backendOrderId?: number, customerName?: string) => void;
     addItemsToOrder: (orderId: string, items: TakeoutItem[]) => void;
-    splitOrder: (orderId: string, splitItems: { index: number; quantity: number }[]) => void;
+    splitOrder: (orderId: string, splitItems: { index: number; quantity: number }[], customerName?: string) => void;
     completeOrder: (orderId: string) => void;
     completeOrdersByBackendId: (backendOrderId: number) => void;
     cancelOrder: (orderId: string) => void;
@@ -21,7 +21,7 @@ export const useTakeoutStore = create<TakeoutState>()(
     (set, get) => ({
         orders: [],
 
-        addOrder: (tableNumber, cuentaNumber, items, createdBy, backendOrderId) => {
+        addOrder: (tableNumber, cuentaNumber, items, createdBy, backendOrderId, customerName) => {
             const now = new Date().toISOString();
             const newOrder: TakeoutOrder = {
                 id: `TO-${tableNumber}-${cuentaNumber}`,
@@ -33,6 +33,7 @@ export const useTakeoutStore = create<TakeoutState>()(
                 status: 'active',
                 createdBy,
                 backendOrderId,
+                customerName,
             };
             set((state) => ({
                 orders: [...state.orders, newOrder],
@@ -52,7 +53,7 @@ export const useTakeoutStore = create<TakeoutState>()(
             }));
         },
 
-        splitOrder: (orderId, splitItems) => {
+        splitOrder: (orderId, splitItems, customerName) => {
             const sourceOrder = get().orders.find((o) => o.id === orderId);
             if (!sourceOrder) return;
             if (splitItems.length === 0) return;
@@ -89,6 +90,7 @@ export const useTakeoutStore = create<TakeoutState>()(
                 status: 'active',
                 createdBy: sourceOrder.createdBy,
                 backendOrderId: sourceOrder.backendOrderId,
+                customerName,
             };
 
             set((state) => ({

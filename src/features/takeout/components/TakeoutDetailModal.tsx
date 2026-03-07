@@ -54,6 +54,8 @@ export const TakeoutDetailModal = ({
     setIsSplitMode,
     splitQuantities,
     setSplitQuantities,
+    splitCustomerName,
+    setSplitCustomerName,
     splitSubtotal,
     splitItemCount,
     showCancelConfirm,
@@ -110,6 +112,12 @@ export const TakeoutDetailModal = ({
               </div>
               <h2 className="text-xl md:text-2xl font-bold text-[#2D2D2D]">
                 {isParaLlevar ? "Para Llevar" : `Mesa ${tableNumber}`}
+                {selectedCuenta.customerName && (
+                  <span className="text-[#593D31]">
+                    {" "}
+                    — {selectedCuenta.customerName}
+                  </span>
+                )}
               </h2>
             </div>
             <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
@@ -460,13 +468,15 @@ export const TakeoutDetailModal = ({
                   <Printer size={14} />
                   Imprimir Cuenta
                 </button>
-                <button
-                  onClick={() => setShowCancelConfirm(true)}
-                  className="py-2 text-sm text-red-500 hover:text-red-700 font-semibold transition-colors flex items-center gap-1.5"
-                >
-                  <AlertTriangle size={14} />
-                  Cancelar Orden
-                </button>
+                {selectedCuenta.cuentaNumber === 1 && (
+                  <button
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="py-2 text-sm text-red-500 hover:text-red-700 font-semibold transition-colors flex items-center gap-1.5"
+                  >
+                    <AlertTriangle size={14} />
+                    Cancelar Orden
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -475,6 +485,19 @@ export const TakeoutDetailModal = ({
         {isSplitMode ? (
           <div className="flex-shrink-0 border-t border-gray-200 bg-violet-50">
             <div className="px-5 py-4 space-y-3">
+              {/* Customer name for new split account */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-violet-700 uppercase">
+                  Nombre del cliente (nueva cuenta)
+                </label>
+                <input
+                  type="text"
+                  value={splitCustomerName}
+                  onChange={(e) => setSplitCustomerName(e.target.value)}
+                  placeholder="Ej: María García"
+                  className="w-full px-3 py-2 bg-white border border-violet-200 rounded-xl text-sm font-medium text-[#2D2D2D] focus:outline-none focus:ring-2 focus:ring-violet-400 transition-colors"
+                />
+              </div>
               {splitItemCount > 0 && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-violet-700 font-medium">

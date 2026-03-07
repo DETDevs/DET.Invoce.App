@@ -57,6 +57,7 @@ export const useCartActions = ({
     const [amountPaid, setAmountPaid] = useState("");
     const [paidInCordobas, setPaidInCordobas] = useState(0);
     const [apiTables, setApiTables] = useState<RestaurantTable[]>([]);
+    const [customerName, setCustomerName] = useState("");
 
     const { user } = useAuthStore();
     const isCajero = user?.role === "cajero" || user?.role === "admin";
@@ -199,7 +200,11 @@ export const useCartActions = ({
                 );
             } else if (selectedTable) {
                 const cuentaNumber = getNextCuentaNumber(selectedTable);
-                addOrder(selectedTable, cuentaNumber, items, userName, orderId);
+                addOrder(selectedTable, cuentaNumber, items, userName, orderId, customerName.trim() || undefined);
+                // Also persist to localStorage in case backend doesn't store notes
+                if (orderId && customerName.trim()) {
+                    localStorage.setItem(`order-customer-name-${orderId}`, customerName.trim());
+                }
                 toast.success(
                     `Orden enviada - Mesa ${selectedTable}${cuentaNumber > 1 ? ` (Cuenta ${cuentaNumber})` : ""}`,
                     { icon: "🍽️" },
@@ -315,5 +320,7 @@ export const useCartActions = ({
         handleCajeroParaLlevarInvoice,
         navigate,
         getActiveOrdersByTable,
+        customerName,
+        setCustomerName,
     };
 };

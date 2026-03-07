@@ -50,4 +50,5 @@ export interface TakeoutOrder {
     createdBy: string;
     backendOrderId?: number;
     orderNumber?: string;
+    customerName?: string;
 }
