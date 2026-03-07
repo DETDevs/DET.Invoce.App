@@ -98,7 +98,6 @@ export const DashboardPage = () => {
       }
     };
 
-    
     const fetchMonthlyVolume = async () => {
       try {
         const MONTH_NAMES = [
@@ -170,9 +169,8 @@ export const DashboardPage = () => {
           cashRegisterId: crId,
         };
 
-        const [salesRes, ordersRes, topRes] = await Promise.allSettled([
+        const [salesRes, topRes] = await Promise.allSettled([
           reportApi.getTotalSales(dateParams),
-          reportApi.getTotalOrders(dateParams),
           reportApi.getTopSellingProducts(dateParams),
         ]);
 
@@ -180,15 +178,31 @@ export const DashboardPage = () => {
           setTotalMoney(salesRes.value?.totalSales ?? 0);
         }
 
-        if (ordersRes.status === "fulfilled") {
-          setTotalProductsSold(ordersRes.value?.totalOrders ?? 0);
-        }
+        // totalProductsSold will be set from the top products sum below
 
         if (topRes.status === "fulfilled") {
           const data = topRes.value;
-          if (Array.isArray(data)) {
-            
-            setSalesByCategory([]);
+          if (Array.isArray(data) && data.length > 0) {
+            // Sum all items sold for the KPI card
+            const sumSold = data.reduce(
+              (acc, p) => acc + (p.totalSold ?? 0),
+              0,
+            );
+            setTotalProductsSold(sumSold);
+
+            // Top 5 por ingresos (para la torta de categorías)
+            const top5ByRevenue = [...data]
+              .sort((a, b) => (b.totalRevenue ?? 0) - (a.totalRevenue ?? 0))
+              .slice(0, 5);
+            setSalesByCategory(
+              top5ByRevenue.map((p, i) => ({
+                categoryId: i,
+                categoryName: p.name,
+                totalProductsSold: p.totalSold ?? 0,
+                totalMoney: p.totalRevenue ?? 0,
+              })),
+            );
+
             setTopProducts(
               data.slice(0, 10).map((p) => ({
                 categoryName: "",
@@ -219,7 +233,6 @@ export const DashboardPage = () => {
       }
     };
 
-    
     if (!session?.isOpen) {
       setTotalMoney(0);
       setTotalProductsSold(0);
