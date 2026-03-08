@@ -66,6 +66,7 @@ export const TakeoutCartPanel = ({
     isPaymentSufficient,
     handleSendOrder,
     handleCajeroParaLlevarInvoice,
+    isSendingOrder,
     navigate,
     getActiveOrdersByTable,
     customerName,
@@ -334,11 +335,16 @@ export const TakeoutCartPanel = ({
           {mode === "llevar" && isCajero ? (
             <button
               onClick={handleCajeroParaLlevarInvoice}
-              disabled={cart.length === 0 || !isPaymentSufficient || !orderId}
+              disabled={
+                cart.length === 0 ||
+                !isPaymentSufficient ||
+                !orderId ||
+                isSendingOrder
+              }
               className="w-full py-3.5 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
             >
               <FileText size={18} />
-              Facturar
+              {isSendingOrder ? "Procesando..." : "Facturar"}
             </button>
           ) : (
             <button
@@ -346,16 +352,19 @@ export const TakeoutCartPanel = ({
               disabled={
                 cart.length === 0 ||
                 (mode === "mesa" && !selectedTable) ||
-                (!isPreselected && !orderId)
+                (!isPreselected && !orderId) ||
+                isSendingOrder
               }
               className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
             >
               <Send size={18} />
-              {isPreselected
-                ? "Agregar Productos"
-                : mode === "llevar"
-                  ? "Enviar a Caja"
-                  : "Tomar Orden"}
+              {isSendingOrder
+                ? "Enviando..."
+                : isPreselected
+                  ? "Agregar Productos"
+                  : mode === "llevar"
+                    ? "Enviar a Caja"
+                    : "Tomar Orden"}
             </button>
           )}
           <button

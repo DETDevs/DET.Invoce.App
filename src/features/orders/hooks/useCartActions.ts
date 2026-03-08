@@ -59,6 +59,7 @@ export const useCartActions = ({
     const [paidInCordobas, setPaidInCordobas] = useState(0);
     const [apiTables, setApiTables] = useState<RestaurantTable[]>([]);
     const [customerName, setCustomerName] = useState("");
+    const [isSendingOrder, setIsSendingOrder] = useState(false);
 
     const { user } = useAuthStore();
     const isCajero = user?.role === "cajero" || user?.role === "admin";
@@ -114,6 +115,7 @@ export const useCartActions = ({
             toast.error("Agrega al menos un producto");
             return;
         }
+        if (isSendingOrder) return;
 
         const items: TakeoutItem[] = cart.map((item) => ({
             productId: item.id,
@@ -124,6 +126,7 @@ export const useCartActions = ({
             addedAt: new Date().toISOString(),
         }));
 
+        setIsSendingOrder(true);
         try {
             if (isPreselected && preselectedCuentaId) {
                 logStep("handleSendOrder", "Agregando a cuenta existente", {
@@ -221,6 +224,8 @@ export const useCartActions = ({
                 "No se pudo enviar la orden. Verifique la conexión e intente de nuevo.",
                 { duration: 5000 },
             );
+        } finally {
+            setIsSendingOrder(false);
         }
     };
 
@@ -229,6 +234,7 @@ export const useCartActions = ({
             toast.error("Agrega al menos un producto");
             return;
         }
+        if (isSendingOrder) return;
         if (!isPaymentSufficient) {
             toast.error("El monto recibido es insuficiente");
             return;
@@ -240,6 +246,7 @@ export const useCartActions = ({
             return;
         }
 
+        setIsSendingOrder(true);
         try {
             logStep("handleCajeroInvoice", "Guardando orden para llevar", {
                 orderId, itemCount: cart.length, total, paymentMethod,
@@ -304,6 +311,8 @@ export const useCartActions = ({
                 "No se pudo generar la factura. Verifique la conexión e intente de nuevo. Si el problema persiste, llame a soporte.",
                 { duration: 6000 },
             );
+        } finally {
+            setIsSendingOrder(false);
         }
     };
 
@@ -334,6 +343,7 @@ export const useCartActions = ({
         isPaymentSufficient,
         handleSendOrder,
         handleCajeroParaLlevarInvoice,
+        isSendingOrder,
         navigate,
         getActiveOrdersByTable,
         customerName,

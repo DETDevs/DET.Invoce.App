@@ -231,6 +231,7 @@ export const useTakeoutDetail = ({
                 toast.error("No se pudo identificar las cuentas. Intente de nuevo.", {
                     duration: 5000,
                 });
+                setIsProcessing(false);
                 return;
             }
             await orderApi.accountMerge(
@@ -282,6 +283,7 @@ export const useTakeoutDetail = ({
             return;
         }
 
+        setIsProcessing(true);
         try {
             const accounts = await orderApi.getOrderAccountWithDetails(
                 originalCuenta.backendOrderId,
@@ -362,11 +364,12 @@ export const useTakeoutDetail = ({
                 "No se pudo dividir la cuenta. Verifique la conexión e intente de nuevo.",
                 { duration: 5000 },
             );
+        } finally {
+            setIsProcessing(false);
+            setIsSplitMode(false);
+            setSplitQuantities(new Map());
+            setSplitCustomerName("");
         }
-
-        setIsSplitMode(false);
-        setSplitQuantities(new Map());
-        setSplitCustomerName("");
     };
 
     const handleCancelOrder = async () => {
@@ -518,8 +521,9 @@ export const useTakeoutDetail = ({
             await orderApi.save({
                 orderId: selectedCuenta.backendOrderId,
                 createdBy: user?.name || 'Sistema',
-                orderType: !isParaLlevar,
+                orderType: isParaLlevar,
                 tableId: isParaLlevar ? undefined : tableNumber ?? undefined,
+                notes: selectedCuenta.customerName || undefined,
                 details: updatedDetails,
             });
             // Save pending changes before clearing state
