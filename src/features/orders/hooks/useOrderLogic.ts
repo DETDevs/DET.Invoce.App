@@ -57,6 +57,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         orderApi.create({ createdBy: user?.name || "Caja" })
             .then((res: any) => {
                 const id = res?.orderId ?? res;
+                orderIdRef.current = id;
                 setOrderId(id);
                 setOrderNumber(id);
             })
@@ -66,6 +67,30 @@ export const useOrderLogic = (isAddingToExisting = false) => {
             })
             .finally(() => setIsCreatingOrder(false));
     }, []);
+
+    // Auto-recovery: if orderId is lost while still on the page (not from checkout), create a new one
+    useEffect(() => {
+        if (isAddingToExisting) return;
+        if (orderId) return;              // already have an order
+        if (isCreatingOrder) return;      // already creating one
+        if (wasCheckedOut.current) return; // checkout flow — will navigate away
+        if (!hasCreatedOrder.current) return; // initial mount hasn't happened yet
+
+        setIsCreatingOrder(true);
+        orderApi.create({ createdBy: user?.name || "Caja" })
+            .then((res: any) => {
+                const id = res?.orderId ?? res;
+                orderIdRef.current = id;
+                setOrderId(id);
+                setOrderNumber(id);
+                toast.success("Nueva orden creada", { icon: "🔄" });
+            })
+            .catch((err: unknown) => {
+                logError("[Order] Error al recuperar orden", err, { action: "recoverOrder" });
+                toast.error("No se pudo crear una nueva orden. Intente salir y volver a entrar.");
+            })
+            .finally(() => setIsCreatingOrder(false));
+    }, [orderId, isCreatingOrder, isAddingToExisting, user]);
 
     useEffect(() => {
         if (isAddingToExisting) return;
