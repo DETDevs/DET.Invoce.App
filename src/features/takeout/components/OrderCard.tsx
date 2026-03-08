@@ -21,10 +21,7 @@ export const OrderCard = ({ tableId, orders, onClick }: Props) => {
   );
 
   const totalAmount = orders.reduce((sum, o) => sum + o.total, 0);
-  const customerName =
-    firstOrder.notes ||
-    localStorage.getItem(`order-customer-name-${firstOrder.orderId}`) ||
-    null;
+  const customerName = firstOrder.notes || null;
 
   return (
     <div

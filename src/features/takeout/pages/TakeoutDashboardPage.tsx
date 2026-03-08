@@ -101,15 +101,7 @@ export const TakeoutDashboardPage = () => {
             createdBy: order.createdBy,
             backendOrderId: order.orderId,
             orderNumber: order.orderNumber,
-            customerName:
-              order.notes ||
-              localStorage.getItem(
-                `order-customer-name-${order.orderId}-account-${account.accountNumber}`,
-              ) ||
-              (account.accountNumber === 1
-                ? localStorage.getItem(`order-customer-name-${order.orderId}`)
-                : null) ||
-              undefined,
+            customerName: order.notes || undefined,
           });
         }
       } catch {

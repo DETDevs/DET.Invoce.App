@@ -176,6 +176,7 @@ export const useCartActions = ({
                 createdBy: userName,
                 orderType: mode === "llevar",
                 tableId: mode === "mesa" ? (selectedTable ?? undefined) : undefined,
+                notes: customerName.trim() || undefined,
                 details: cart.map((item) => ({
                     productCode: item.code,
                     quantity: item.quantity,
@@ -206,10 +207,6 @@ export const useCartActions = ({
             } else if (selectedTable) {
                 const cuentaNumber = getNextCuentaNumber(selectedTable);
                 addOrder(selectedTable, cuentaNumber, items, userName, orderId, customerName.trim() || undefined);
-                // Also persist to localStorage in case backend doesn't store notes
-                if (orderId && customerName.trim()) {
-                    localStorage.setItem(`order-customer-name-${orderId}`, customerName.trim());
-                }
                 toast.success(
                     `Orden enviada - Mesa ${selectedTable}${cuentaNumber > 1 ? ` (Cuenta ${cuentaNumber})` : ""}`,
                     { icon: "🍽️" },
