@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { logError } from "@/shared/utils/logError";
+import { logError, logStep } from "@/shared/utils/logError";
 import { useNavigate } from "react-router-dom";
 import type { CartItem } from "@/features/orders/types/index";
 import type { TakeoutItem } from "@/shared/types";
@@ -126,6 +126,9 @@ export const useCartActions = ({
 
         try {
             if (isPreselected && preselectedCuentaId) {
+                logStep("handleSendOrder", "Agregando a cuenta existente", {
+                    preselectedCuentaId, preselectedTable, itemCount: items.length,
+                });
                 const parts = preselectedCuentaId.split("-");
                 const orderAccountId = Number(parts[parts.length - 1]);
 
@@ -181,6 +184,8 @@ export const useCartActions = ({
                     notes: "",
                 })),
             });
+
+            logStep("handleSendOrder", "API respondió OK — guardando en store", { orderId, mode });
 
             if (mode === "llevar") {
                 const cuentaNumber = getNextCuentaNumber(PARA_LLEVAR_TABLE);
@@ -239,6 +244,11 @@ export const useCartActions = ({
         }
 
         try {
+            logStep("handleCajeroInvoice", "Guardando orden para llevar", {
+                orderId, itemCount: cart.length, total, paymentMethod,
+                amountPaid: paidInCordobas,
+            });
+
             await orderApi.save({
                 orderId,
                 createdBy: userName,
@@ -251,6 +261,8 @@ export const useCartActions = ({
                     notes: "",
                 })),
             });
+
+            logStep("handleCajeroInvoice", "Orden guardada — obteniendo cuenta", { orderId });
 
             const accounts = await orderApi.getOrderAccountWithDetails(orderId);
             const account = Array.isArray(accounts) ? accounts[0] : accounts;
@@ -265,7 +277,14 @@ export const useCartActions = ({
             }
 
             const pm = paymentMethod === "tarjeta" ? "CARD" : "CASH";
+
+            logStep("handleCajeroInvoice", "Facturando", {
+                orderAccountId, paymentMethod: pm, total,
+            });
+
             await handleInvoiceFlow({ orderAccountId, paymentmethod: pm });
+
+            logStep("handleCajeroInvoice", "Factura generada exitosamente", { orderId, paymentMethod });
 
             if (paymentMethod === "efectivo" && paidInCordobas > total) {
                 const changeAmount = paidInCordobas - total;

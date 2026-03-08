@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { logError } from "@/shared/utils/logError";
+import { logError, logStep } from "@/shared/utils/logError";
 import { useNavigate } from "react-router-dom";
 import type { TakeoutOrder } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
@@ -107,6 +107,12 @@ export const useTakeoutDetail = ({
         setIsProcessing(true);
 
         try {
+            logStep("handleInvoice", "Obteniendo cuentas de la orden", {
+                backendOrderId: selectedCuenta.backendOrderId,
+                cuentaId: selectedCuenta.id,
+                tableNumber, total, paymentMethod,
+            });
+
             const accountsData = await orderApi.getOrderAccountWithDetails(
                 selectedCuenta.backendOrderId,
             );
@@ -130,7 +136,16 @@ export const useTakeoutDetail = ({
 
             const orderAccountId: number = account.orderAccountId;
             const pm = paymentMethod === "tarjeta" ? "CARD" : "CASH";
+
+            logStep("handleInvoice", "Facturando cuenta", {
+                orderAccountId, paymentMethod: pm, total,
+            });
+
             await handleInvoiceFlow({ orderAccountId, paymentmethod: pm });
+
+            logStep("handleInvoice", "Factura generada exitosamente", {
+                backendOrderId: selectedCuenta.backendOrderId, paymentMethod,
+            });
 
             completeOrder(selectedCuenta.id);
             if (selectedCuenta.backendOrderId) {
