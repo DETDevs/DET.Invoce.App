@@ -17,8 +17,11 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
   // Environment tag
   environment: import.meta.env.MODE,
-  // Only send errors from your domain
-  allowUrls: [/https?:\/\/(.*\.)?vercel\.app/],
+  // Only send errors from your domains
+  allowUrls: [
+    /https?:\/\/(.*\.)?vercel\.app/,
+    /https?:\/\/(.*\.)?dmomentos\.org/,
+  ],
   // Ignore common noise
   ignoreErrors: ["ResizeObserver loop", "Non-Error promise rejection captured"],
 });
