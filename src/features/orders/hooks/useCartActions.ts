@@ -153,7 +153,6 @@ export const useCartActions = ({
                     { icon: "🍽️" },
                 );
                 onOrderSent();
-                navigate("/takeout");
                 return;
             }
 

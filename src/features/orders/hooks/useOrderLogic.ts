@@ -28,7 +28,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
 
     const orderIdRef = useRef<number | null>(null);
     const wasCheckedOut = useRef(false);
-    const hasCreatedOrder = useRef(false); 
+    const hasCreatedOrder = useRef(false);
 
     useEffect(() => {
         orderIdRef.current = orderId;
@@ -47,10 +47,9 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         }
     }, [user]);
 
-    
     useEffect(() => {
         if (isAddingToExisting) return;
-        if (hasCreatedOrder.current) return; 
+        if (hasCreatedOrder.current) return;
         hasCreatedOrder.current = true;
 
         setIsCreatingOrder(true);
@@ -67,7 +66,6 @@ export const useOrderLogic = (isAddingToExisting = false) => {
             .finally(() => setIsCreatingOrder(false));
     }, []);
 
-    
     useEffect(() => {
         if (isAddingToExisting) return;
         return () => {
@@ -120,37 +118,14 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         return () => setBlocker(null);
     }, [cart.length, orderNumber, setBlocker, isAddingToExisting]);
 
-    
-    const refreshOrder = useCallback(() => {
-        clearCart();
-        wasCheckedOut.current = true;
-        setOrderId(null);
-        orderIdRef.current = null;
-        setIsCreatingOrder(true);
-        orderApi.create({ createdBy: user?.name || "Caja" })
-            .then((res: any) => {
-                const id = res?.orderId ?? res;
-                setOrderId(id);
-                setOrderNumber(id);
-                wasCheckedOut.current = false;
-            })
-            .catch((err: unknown) => {
-                console.error("[Order] Error al refrescar:", err);
-                setOrderNumber(0);
-            })
-            .finally(() => setIsCreatingOrder(false));
-    }, [clearCart, user]);
-
     const handleCheckout = () => {
-        if (cart.length > 0) {
-            toast.success(isAddingToExisting ? "Productos agregados correctamente" : "Orden Tomada correctamente");
-            refreshOrder();
-            setIsCartOpen(false);
-
-            if (isAddingToExisting) {
-                navigate('/takeout');
-            }
-        }
+        wasCheckedOut.current = true;
+        orderIdRef.current = null;
+        setOrderId(null);
+        clearCart();
+        setIsCartOpen(false);
+        setBlocker(null);
+        navigate('/takeout');
     };
 
     const handleRequestCancel = () => {
@@ -171,12 +146,11 @@ export const useOrderLogic = (isAddingToExisting = false) => {
     const handleConfirmDialog = async () => {
         setIsManualCancelOpen(false);
         await cancelCurrentOrder();
+        setBlocker(null);
         if (pendingPath) {
-            setBlocker(null)
             navigate(pendingPath);
         } else {
-            refreshOrder();
-            setIsCartOpen(false);
+            navigate('/takeout');
             toast.error("Orden cancelada");
         }
         setPendingPath(null);

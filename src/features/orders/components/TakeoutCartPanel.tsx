@@ -334,7 +334,7 @@ export const TakeoutCartPanel = ({
           {mode === "llevar" && isCajero ? (
             <button
               onClick={handleCajeroParaLlevarInvoice}
-              disabled={cart.length === 0 || !isPaymentSufficient}
+              disabled={cart.length === 0 || !isPaymentSufficient || !orderId}
               className="w-full py-3.5 bg-[#E8BC6E] hover:bg-[#dca34b] text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
             >
               <FileText size={18} />
@@ -344,7 +344,9 @@ export const TakeoutCartPanel = ({
             <button
               onClick={handleSendOrder}
               disabled={
-                cart.length === 0 || (mode === "mesa" && !selectedTable)
+                cart.length === 0 ||
+                (mode === "mesa" && !selectedTable) ||
+                (!isPreselected && !orderId)
               }
               className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
             >
