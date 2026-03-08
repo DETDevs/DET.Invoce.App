@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { logError } from "@/shared/utils/logError";
 import toast from "react-hot-toast";
 import { type Settings } from "@/features/settings/types";
 import settingsApi from "@/api/settings/SettingsAPI";
@@ -23,7 +24,7 @@ const loadSettingsFromStorage = (): Settings => {
       return { ...defaultSettings, ...JSON.parse(storedSettings) };
     }
   } catch (error) {
-    console.error("Error loading settings from localStorage", error);
+    logError("[Settings] Error loading settings from localStorage", error, { action: "loadSettings" });
   }
   return defaultSettings;
 };
@@ -52,14 +53,14 @@ export const useSettings = () => {
           setOriginalSettings((prev) => ({ ...prev, ...apiSettings }));
         }
       } catch (error) {
-        console.error("Error fetching settings from backend:", error);
+        logError("[Settings] Error fetching settings from backend", error, { action: "fetchSettings" });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSettings();
-    
+
   }, []);
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export const useSettings = () => {
         toast.success("Configuración guardada correctamente");
       }, 500);
     } catch (error) {
-      console.error("Error saving settings to localStorage", error);
+      logError("[Settings] Error saving settings to localStorage", error, { action: "saveSettings" });
       toast.error("No se pudo guardar la configuración.");
       setIsLoading(false);
     }

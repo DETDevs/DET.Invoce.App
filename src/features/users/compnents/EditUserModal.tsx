@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { logError } from "@/shared/utils/logError";
 import { X, Save, Loader2, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import userApi from "@/api/user/UserAPI";
@@ -50,7 +51,9 @@ export const EditUserModal = ({
         onClose();
       } catch (error) {
         toast.error("Hubo un error al cambiar la contraseña");
-        console.error(error);
+        logError("[Users] Error changing password", error, {
+          action: "changePassword",
+        });
       } finally {
         setIsSubmitting(false);
       }

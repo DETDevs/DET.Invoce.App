@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logError } from "@/shared/utils/logError";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { CreateOrderFormData } from "@/features/custom-orders/types";
@@ -132,7 +133,7 @@ export const useCreateOrder = () => {
       toast.success("Pedido guardado correctamente");
       navigate("/tablero");
     } catch (err) {
-      console.error("[useCreateOrder] Error al guardar pedido:", err);
+      logError("[CustomOrders] Error al guardar pedido", err, { action: "createOrder" });
       toast.error("No se pudo guardar el pedido. Verifique la conexión e intente de nuevo.", { duration: 5000 });
     } finally {
       setIsSaving(false);

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { logError } from "@/shared/utils/logError";
 import { Save, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { type Settings } from "@/features/settings/types";
@@ -22,7 +23,9 @@ export const CurrencySettings = ({ settings, onUpdate }: Props) => {
       localStorage.setItem("app-settings", JSON.stringify(settings));
       toast.success("Configuración de moneda guardada");
     } catch (error: any) {
-      console.error("Error al guardar configuración:", error);
+      logError("[Settings] Error al guardar configuración", error, {
+        action: "saveCurrency",
+      });
       const msg = error?.message || "No se pudo guardar en el servidor";
       toast.error(msg);
     } finally {

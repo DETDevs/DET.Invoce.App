@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logError } from "@/shared/utils/logError";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { authApi } from "@/api/auth/AuthAPI";
@@ -69,7 +70,7 @@ export const useLogin = () => {
         navigate(defaultRoutes[mappedRole] || "/");
       }, 1500);
     } catch (error) {
-      console.error("Login Error:", error);
+      logError("[Auth] Login error", error, { action: "login" });
       toast.error("Credenciales incorrectas o error de conexión.", {
         duration: 4000,
         style: {

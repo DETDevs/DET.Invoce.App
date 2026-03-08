@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logError } from '@/shared/utils/logError';
 import orderApi from '@/api/order/OrderAPI';
 import type { TOrder } from '@/api/order/types';
 
@@ -20,7 +21,7 @@ export const useOrders = () => {
                 setOrders(unique.filter((o) => o.status === 'InProgress' || o.status === 'Pending'));
             }
         } catch (err) {
-            console.error('Error fetching orders:', err);
+            logError('[Takeout] Error fetching orders', err, { action: 'fetchOrders' });
         } finally {
             setLoading(false);
         }

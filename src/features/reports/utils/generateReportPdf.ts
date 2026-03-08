@@ -1,4 +1,5 @@
 import { toPng } from "html-to-image";
+import { logError } from "@/shared/utils/logError";
 import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
 
@@ -86,7 +87,7 @@ export const generateReportPdf = async (
 
         toast.success("PDF descargado correctamente", { id: toastId });
     } catch (error) {
-        console.error("Error generating PDF:", error);
+        logError("[Reports] Error generating PDF", error, { action: "generatePdf" });
         toast.error("Error al generar el PDF", { id: toastId });
     }
 };

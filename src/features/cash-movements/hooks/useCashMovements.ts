@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { logError } from "@/shared/utils/logError";
 import type { CashMovement, MovementType, MovementTypeOption } from "@/features/cash-movements/types";
 import type { DateRangeType } from "@/features/reports/types";
 import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
@@ -98,7 +99,7 @@ export const useCashMovements = () => {
                 );
             }
         } catch (err) {
-            console.error("Error fetching movement types:", err);
+            logError("[CashMovements] Error fetching movement types", err, { action: "fetchMovementTypes" });
         }
     }, []);
 
@@ -118,7 +119,7 @@ export const useCashMovements = () => {
                 setMovements(mapped);
             }
         } catch (err) {
-            console.error("Error fetching cash movements:", err);
+            logError("[CashMovements] Error fetching cash movements", err, { action: "fetchMovements" });
         } finally {
             setLoading(false);
         }
@@ -182,7 +183,7 @@ export const useCashMovements = () => {
             await fetchMovements();
             setCurrentPage(1);
         } catch (err) {
-            console.error("Error saving cash movement:", err);
+            logError("[CashMovements] Error saving cash movement", err, { action: "saveMovement" });
             toast.error("No se pudo registrar el movimiento");
             throw err;
         }

@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useTransition } from "react";
+import { logError } from "@/shared/utils/logError";
 import { useLocation } from "react-router-dom";
 import { Search, X, Loader2 } from "lucide-react";
 import { ProductCard } from "@/features/orders/components/ProductCard";
@@ -83,7 +84,9 @@ export const NewOrderPage = () => {
         setIsLoadingProducts(false);
       })
       .catch((err: unknown) => {
-        console.error("Error fetching products:", err);
+        logError("[Orders] Error fetching products", err, {
+          action: "fetchProducts",
+        });
         setIsLoadingProducts(false);
       });
     return () => {

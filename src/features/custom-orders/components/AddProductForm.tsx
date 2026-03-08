@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { logError } from "@/shared/utils/logError";
 import { Plus, Search } from "lucide-react";
 import type { ProductOption } from "@/shared/types";
 import { useAddOrderItem } from "@/features/custom-orders/hooks/useAddOrderItem";
@@ -28,7 +29,9 @@ export const AddProductForm = ({ onAdd }: Props) => {
         const data = await productApi.getByCode();
         setProducts(data.filter((p) => p.isActive));
       } catch (err) {
-        console.error("Error loading products:", err);
+        logError("[CustomOrders] Error loading products", err, {
+          action: "loadProducts",
+        });
         setError(true);
         setProducts([]);
       } finally {

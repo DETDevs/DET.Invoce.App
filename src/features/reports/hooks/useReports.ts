@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from "react";
+import { logError } from "@/shared/utils/logError";
 import type { ReportType, DateRangeType, SalesReportData, ProductsReportData, CashFlowReportData, OrdersReportData, ReservationsReportData, CashCloseReportData } from "@/features/reports/types";
 import reportApi from "@/api/report/ReportAPI";
 import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
@@ -165,7 +166,7 @@ export const useReports = () => {
                 salesByDate,
             });
         } catch (error) {
-            console.error("[useReports] Error fetching sales:", error);
+            logError("[useReports] Error fetching sales", error, { action: "fetchSales" });
         }
     }, []);
 
@@ -185,7 +186,7 @@ export const useReports = () => {
                 lowStockProducts: [],
             });
         } catch (error) {
-            console.error("[useReports] Error fetching products:", error);
+            logError("[useReports] Error fetching products", error, { action: "fetchProducts" });
         }
     }, []);
 
@@ -249,7 +250,7 @@ export const useReports = () => {
                 })),
             });
         } catch (error) {
-            console.error("[useReports] Error fetching cash flow:", error);
+            logError("[useReports] Error fetching cash flow", error, { action: "fetchCashFlow" });
         }
     }, []);
 
@@ -318,7 +319,7 @@ export const useReports = () => {
                 averageItemsPerOrder: ordersWithItems > 0 ? Number((totalItems / ordersWithItems).toFixed(1)) : 0,
             });
         } catch (error) {
-            console.error("[useReports] Error fetching orders:", error);
+            logError("[useReports] Error fetching orders", error, { action: "fetchOrders" });
         }
     }, []);
 
@@ -384,7 +385,7 @@ export const useReports = () => {
                 reservationsByDate
             });
         } catch (error) {
-            console.error("[useReports] Error fetching reservations:", error);
+            logError("[useReports] Error fetching reservations", error, { action: "fetchReservations" });
         }
     }, []);
 
@@ -479,7 +480,7 @@ export const useReports = () => {
                 movementLines
             });
         } catch (error) {
-            console.error("[useReports] Error fetching cash close:", error);
+            logError("[useReports] Error fetching cash close", error, { action: "fetchCashClose" });
         }
     }, [session?.initialAmount, session?.isOpen]);
 

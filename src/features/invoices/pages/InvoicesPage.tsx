@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { logError } from "@/shared/utils/logError";
 import { useNavigate } from "react-router-dom";
 import {
   Receipt,
@@ -63,7 +64,9 @@ export const InvoicesPage = () => {
       await printThermalTicket(ticketText);
       toast.success("Factura enviada a impresión", { id: toastId });
     } catch (error) {
-      console.error("[Reprint] Error:", error);
+      logError("[Invoices] Error reprinting invoice", error, {
+        action: "reprint",
+      });
       toast.error("No se pudo reimprimir la factura. Intente de nuevo.", {
         id: toastId,
         duration: 5000,

@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { logError } from "@/shared/utils/logError";
 import { Card } from "@/shared/ui/Card";
 import {
   TrendingUp,
@@ -94,7 +95,9 @@ export const DashboardPage = () => {
           );
         }
       } catch (error) {
-        console.error("Error fetching sales trend:", error);
+        logError("[Dashboard] Error fetching sales trend", error, {
+          action: "fetchSalesTrend",
+        });
       }
     };
 
@@ -144,7 +147,9 @@ export const DashboardPage = () => {
           );
         }
       } catch (error) {
-        console.error("Error fetching monthly volume:", error);
+        logError("[Dashboard] Error fetching monthly volume", error, {
+          action: "fetchMonthlyVolume",
+        });
       }
     };
 
@@ -214,7 +219,9 @@ export const DashboardPage = () => {
           }
         }
       } catch (err) {
-        console.error("Error fetching dashboard data:", err);
+        logError("[Dashboard] Error fetching dashboard data", err, {
+          action: "fetchDashboard",
+        });
       } finally {
         setLoadingKpis(false);
         setLoadingTopProducts(false);
@@ -227,7 +234,9 @@ export const DashboardPage = () => {
         const data = await productApi.getLowStock();
         setLowStockProducts(data);
       } catch (err) {
-        console.error("Error fetching low stock products:", err);
+        logError("[Dashboard] Error fetching low stock", err, {
+          action: "fetchLowStock",
+        });
       } finally {
         setLoadingLowStock(false);
       }

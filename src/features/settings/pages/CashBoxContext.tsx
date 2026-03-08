@@ -5,6 +5,7 @@ import {
   useContext,
   type ReactNode,
 } from "react";
+import { logError } from "@/shared/utils/logError";
 import { OpenCashBoxModal } from "@/features/settings/components/OpenCashBoxModal";
 import { useSettings } from "@/features/settings/hooks/useSettings";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
@@ -52,7 +53,9 @@ export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
           setIsModalOpen(true);
         }
       } catch (error) {
-        console.error("Error al consultar caja abierta:", error);
+        logError("[CashBox] Error al consultar caja abierta", error, {
+          action: "checkOpenCashBox",
+        });
         setIsModalOpen(true);
       }
     };
@@ -81,7 +84,9 @@ export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
       setIsModalOpen(false);
       toast.success("Caja abierta correctamente");
     } catch (error) {
-      console.error("Error al abrir caja:", error);
+      logError("[CashBox] Error al abrir caja", error, {
+        action: "openCashBox",
+      });
       toast.error("No se pudo abrir la caja en el servidor");
     }
   };
@@ -94,7 +99,9 @@ export const CashBoxProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem(CASH_BOX_STORAGE_KEY);
       setSession(null);
     } catch (error) {
-      console.error("Error al cerrar caja:", error);
+      logError("[CashBox] Error al cerrar caja", error, {
+        action: "closeCashBox",
+      });
       toast.error("No se pudo cerrar la caja en el servidor");
     }
   };

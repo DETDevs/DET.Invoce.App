@@ -1,4 +1,5 @@
 import { Save, ArrowLeft, Loader2 } from "lucide-react";
+import { logError } from "@/shared/utils/logError";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/shared/ui/Card";
 import { ImageUploadField } from "@/shared/ui/ImageUploadField";
@@ -53,7 +54,9 @@ export const AddProductPage = () => {
         toast.success("Producto creado exitosamente!");
         navigate("/productos");
       } catch (err) {
-        console.error("Error creating product:", err);
+        logError("[Products] Error creating product", err, {
+          action: "createProduct",
+        });
         toast.error("No se pudo crear el producto");
       }
     },

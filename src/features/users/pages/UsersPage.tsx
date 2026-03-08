@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logError } from "@/shared/utils/logError";
 import {
   Plus,
   Filter,
@@ -58,7 +59,9 @@ export const UsersPage = () => {
         const mapped = data.map(mapUserToVM);
         setUsers(mapped);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        logError("[Users] Error fetching users", error, {
+          action: "fetchUsers",
+        });
         toast.error("Error al cargar los usuarios");
       } finally {
         setIsLoading(false);

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logError } from "@/shared/utils/logError";
 import { useNavigate } from "react-router-dom";
 import { Save, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { Card } from "@/shared/ui/Card";
@@ -60,7 +61,7 @@ export const AddUserPage = () => {
       navigate("/usuarios");
     } catch (error) {
       toast.error("Hubo un error al crear el usuario.");
-      console.error(error);
+      logError("[Users] Error creating user", error, { action: "createUser" });
     } finally {
       setIsSubmitting(false);
     }

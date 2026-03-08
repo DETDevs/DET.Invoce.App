@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from "react";
+import { logError } from "@/shared/utils/logError";
 import { productApi } from "@/api/products";
 import inventoryApi from "@/api/inventory/InventoryAPI";
 import categoryApi from "@/api/category/CategoryAPI";
@@ -48,7 +49,7 @@ export const useProductActions = () => {
             setError(
                 err instanceof Error ? err.message : "Error al cargar productos",
             );
-            console.error("Error fetching products:", err);
+            logError("[Products] Error fetching products", err, { action: "fetchProducts" });
         } finally {
             setLoading(false);
         }
@@ -156,14 +157,14 @@ export const useProductActions = () => {
                 unitId: updatedProduct.unitId ?? 0,
                 divideQuantityBy: updatedProduct.divideQuantityBy ?? 0,
                 isActive: updatedProduct.isActive ?? true,
-                quantity: 0, 
+                quantity: 0,
                 stockMinimum: updatedProduct.stockMinimum ?? 0,
             }, imageFile);
 
             toast.success("Producto actualizado correctamente");
             await fetchProducts();
         } catch (err) {
-            console.error("Error saving product:", err);
+            logError("[Products] Error saving product", err, { action: "saveProduct" });
             toast.error("No se pudo guardar el producto");
         } finally {
             setIsSaving(false);
@@ -181,11 +182,11 @@ export const useProductActions = () => {
         const currentStock = product.quantity ?? 0;
         const delta = newStock - currentStock;
 
-        if (delta === 0) return; 
+        if (delta === 0) return;
 
         try {
             if (delta > 0) {
-                
+
                 await inventoryApi.save({
                     inventoryId: 0,
                     productCode: product.code,
@@ -193,7 +194,7 @@ export const useProductActions = () => {
                     minimumStock: product.stockMinimum ?? 0,
                 });
             } else {
-                
+
                 await inventoryApi.output({
                     productCode: product.code,
                     quantityInStock: Math.abs(delta),
@@ -202,7 +203,7 @@ export const useProductActions = () => {
             toast.success("Inventario actualizado correctamente");
             await fetchProducts();
         } catch (err) {
-            console.error("Error saving stock:", err);
+            logError("[Products] Error saving stock", err, { action: "saveStock" });
             toast.error("No se pudo actualizar el inventario");
         }
     };
@@ -223,14 +224,14 @@ export const useProductActions = () => {
                 unitId: selectedProduct.unitId ?? 0,
                 divideQuantityBy: selectedProduct.divideQuantityBy ?? 0,
                 isActive: false,
-                quantity: 0, 
+                quantity: 0,
                 stockMinimum: selectedProduct.stockMinimum ?? 0,
             }, null);
             toast.success(`"${selectedProduct.name}" inactivado correctamente`);
             setIsDeleteModalOpen(false);
             await fetchProducts();
         } catch (err) {
-            console.error("Error inactivating product:", err);
+            logError("[Products] Error inactivating product", err, { action: "inactivateProduct" });
             toast.error("No se pudo inactivar el producto");
         } finally {
             setIsSaving(false);

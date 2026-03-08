@@ -1,4 +1,5 @@
 ﻿import { create } from 'zustand';
+import { logError } from '@/shared/utils/logError';
 import type { Order, OrderStatus, PaymentStatus } from '@/shared/types';
 import reservationOrderApi from '@/api/reservation-order/ReservationOrderAPI';
 
@@ -65,7 +66,7 @@ export const useOrdersStore = create<OrdersState>()(
                 const data = await reservationOrderApi.getAll();
                 const rawRows = Array.isArray(data) ? data : [];
 
-                
+
                 const orderMap = new Map<number, any>();
                 rawRows.forEach((raw: any) => {
                     const id = raw.reservationOrderId;
@@ -139,7 +140,7 @@ export const useOrdersStore = create<OrdersState>()(
                 );
                 set({ orders: [...backendOrders, ...existingLocal] });
             } catch (err) {
-                console.error('[useOrdersStore] Error al cargar pedidos:', err);
+                logError('[useOrdersStore] Error al cargar pedidos', err, { action: 'fetchOrders' });
             } finally {
                 set({ isLoading: false });
             }
@@ -160,7 +161,7 @@ export const useOrdersStore = create<OrdersState>()(
                 try {
                     await reservationOrderApi.updateStatus(order.reservationOrderId, STATUS_TO_ID[status]);
                 } catch (err) {
-                    console.error('[useOrdersStore] Error al actualizar estado:', err);
+                    logError('[useOrdersStore] Error al actualizar estado', err, { action: 'updateStatus' });
                     if (prevStatus) {
                         set((state) => ({
                             orders: state.orders.map((o) =>
