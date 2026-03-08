@@ -30,6 +30,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
     const orderIdRef = useRef<number | null>(null);
     const wasCheckedOut = useRef(false);
     const hasCreatedOrder = useRef(false);
+    const initialCreateDone = useRef(false);
 
     useEffect(() => {
         orderIdRef.current = orderId;
@@ -65,7 +66,10 @@ export const useOrderLogic = (isAddingToExisting = false) => {
                 logError("[Order] Error al crear", err, { action: "createOrder" });
                 toast.error("No se pudo iniciar la sesión de orden. Verifique la conexión e intente de nuevo.");
             })
-            .finally(() => setIsCreatingOrder(false));
+            .finally(() => {
+                setIsCreatingOrder(false);
+                initialCreateDone.current = true; // now auto-recovery can work
+            });
     }, []);
 
     // Auto-recovery: if orderId is lost while still on the page (not from checkout), create a new one
@@ -74,7 +78,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
         if (orderId) return;              // already have an order
         if (isCreatingOrder) return;      // already creating one
         if (wasCheckedOut.current) return; // checkout flow — will navigate away
-        if (!hasCreatedOrder.current) return; // initial mount hasn't happened yet
+        if (!initialCreateDone.current) return; // initial creation hasn't finished yet
 
         setIsCreatingOrder(true);
         orderApi.create({ createdBy: user?.name || "Caja" })
@@ -171,6 +175,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
 
     const handleConfirmDialog = async () => {
         setIsManualCancelOpen(false);
+        wasCheckedOut.current = true;
         await cancelCurrentOrder();
         setBlocker(null);
         if (pendingPath) {
