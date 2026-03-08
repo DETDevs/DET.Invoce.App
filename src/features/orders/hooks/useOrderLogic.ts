@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useNavigationBlocker } from "@/shared/context/NavigationBlockerContext";
+import { logError } from "@/shared/utils/logError";
 import { useCart } from "./useCart";
 import orderApi from "@/api/order/OrderAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
@@ -40,7 +41,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
             try {
                 await orderApi.cancel(id, user?.name || "Caja");
             } catch (err) {
-                console.error("[Order] Error al cancelar orden:", err);
+                logError("[Order] Error al cancelar orden", err, { action: "cancelOrder" });
             }
             orderIdRef.current = null;
             setOrderId(null);
@@ -60,7 +61,7 @@ export const useOrderLogic = (isAddingToExisting = false) => {
                 setOrderNumber(id);
             })
             .catch((err: unknown) => {
-                console.error("[Order] Error al crear:", err);
+                logError("[Order] Error al crear", err, { action: "createOrder" });
                 toast.error("No se pudo iniciar la sesión de orden. Verifique la conexión e intente de nuevo.");
             })
             .finally(() => setIsCreatingOrder(false));

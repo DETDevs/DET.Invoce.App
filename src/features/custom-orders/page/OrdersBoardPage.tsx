@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { logError } from "@/shared/utils/logError";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
@@ -90,7 +91,6 @@ export const OrdersBoardPage = () => {
           ? response
           : response?.invoiceNumber || response?.data;
 
-      
       try {
         const allInvoices = await invoiceApi.getAll();
         const match = allInvoices.find(
@@ -103,15 +103,12 @@ export const OrdersBoardPage = () => {
           await printThermalTicket(ticketText);
           try {
             await thermalTicketAPI.openCashDrawer();
-          } catch {
-            
-          }
+          } catch {}
         }
       } catch (printErr) {
         console.warn("[handleInvoice] No se pudo imprimir:", printErr);
       }
 
-      
       setSelectedOrder((prev) =>
         prev
           ? {
@@ -128,7 +125,9 @@ export const OrdersBoardPage = () => {
       setIsModalOpen(false);
       toast.success("¡Factura generada y pedido entregado!");
     } catch (err) {
-      console.error("[handleInvoice] Error al facturar:", err);
+      logError("[handleInvoice] Error al facturar", err, {
+        action: "customOrderInvoice",
+      });
       toast.error(
         "No se pudo generar la factura. Verifique la conexión e intente de nuevo.",
         { duration: 5000 },
@@ -149,7 +148,9 @@ export const OrdersBoardPage = () => {
           user?.name ?? "Sistema",
         );
       } catch (err) {
-        console.error("[handleCancelOrder] Error al cancelar:", err);
+        logError("[handleCancelOrder] Error al cancelar", err, {
+          action: "customOrderCancel",
+        });
         toast.error("No se pudo cancelar el pedido en el servidor.");
         return;
       }
@@ -185,7 +186,7 @@ export const OrdersBoardPage = () => {
       await printThermalTicket(ticketText);
       toast.success("Ticket enviado a la impresora.");
     } catch (err) {
-      console.error("[handleReprint] Error:", err);
+      logError("[handleReprint] Error", err, { action: "reprint" });
       toast.error("No se pudo reimprimir la factura.");
     }
   };

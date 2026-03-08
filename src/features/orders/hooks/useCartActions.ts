@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logError } from "@/shared/utils/logError";
 import { useNavigate } from "react-router-dom";
 import type { CartItem } from "@/features/orders/types/index";
 import type { TakeoutItem } from "@/shared/types";
@@ -94,7 +95,7 @@ export const useCartActions = ({
                 setApiTables(data.filter((t) => t.isActive));
             })
             .catch((err: unknown) => {
-                console.error("[TakeoutCartPanel] Error fetching tables:", err);
+                logError("[TakeoutCartPanel] Error fetching tables", err);
             });
     }, []);
 
@@ -213,7 +214,7 @@ export const useCartActions = ({
             onOrderSent();
             setSelectedTable(null);
         } catch (error) {
-            console.error("[Order] Error al guardar:", error);
+            logError("[Order] Error al guardar", error, { action: "sendOrder" });
             toast.error(
                 "No se pudo enviar la orden. Verifique la conexión e intente de nuevo.",
                 { duration: 5000 },
@@ -282,7 +283,7 @@ export const useCartActions = ({
             setPaymentMethod("efectivo");
             onOrderSent();
         } catch (error) {
-            console.error("[TakeoutCartPanel] Error al facturar:", error);
+            logError("[TakeoutCartPanel] Error al facturar", error, { action: "cajeroInvoice" });
             toast.error(
                 "No se pudo generar la factura. Verifique la conexión e intente de nuevo. Si el problema persiste, llame a soporte.",
                 { duration: 6000 },

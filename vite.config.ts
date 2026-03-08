@@ -3,10 +3,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+    sourcemap: true, // Required for Sentry source maps
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -78,6 +82,16 @@ export default defineConfig({
           },
         ],
       },
+    }),
+    // Upload source maps to Sentry on production builds (only when token is available)
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: {
+        filesToDeleteAfterUpload: ["./dist/**/*.map"], // Don't serve source maps to users
+      },
+      disable: !process.env.SENTRY_AUTH_TOKEN, // Skip in local dev
     }),
   ],
   resolve: {

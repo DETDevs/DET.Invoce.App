@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Invoice, InvoiceItem, InvoiceStatus } from "@/features/invoices/types";
+import { logError } from "@/shared/utils/logError";
 import invoiceApi from "@/api/invoice/InvoiceAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useCashBox } from "@/features/settings/pages/CashBoxContext";
@@ -100,7 +101,7 @@ export const useInvoices = () => {
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
             setInvoices(mapped);
         } catch (err) {
-            console.error("[useInvoices] Error al cargar facturas:", err);
+            logError("[useInvoices] Error al cargar facturas", err, { action: "loadInvoices" });
             setError("No se pudieron cargar las facturas. Verifique la conexión.");
         } finally {
             setIsLoading(false);
@@ -125,7 +126,7 @@ export const useInvoices = () => {
             });
             await fetchInvoices();
         } catch (err) {
-            console.error("[useInvoices] Error al hacer devolución:", err);
+            logError("[useInvoices] Error al hacer devolución", err, { action: "returnInvoice" });
             toast.error("No se pudo procesar la devolución. Intente de nuevo.");
         }
     };

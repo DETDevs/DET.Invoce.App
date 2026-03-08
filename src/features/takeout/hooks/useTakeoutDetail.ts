@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logError } from "@/shared/utils/logError";
 import { useNavigate } from "react-router-dom";
 import type { TakeoutOrder } from "@/shared/types";
 import { useTakeoutStore } from "@/features/takeout/store/useTakeoutStore";
@@ -149,7 +150,7 @@ export const useTakeoutDetail = ({
 
             onClose();
         } catch (error) {
-            console.error("[TakeoutDetailModal] Error al facturar:", error);
+            logError("[TakeoutDetailModal] Error al facturar", error, { action: "invoice" });
             toast.error(
                 "No se pudo generar la factura. Verifique la conexión e intente de nuevo. Si el problema persiste, llame a soporte.",
                 { duration: 6000 },
@@ -234,7 +235,7 @@ export const useTakeoutDetail = ({
             );
             onClose();
         } catch (error) {
-            console.error("[TakeoutDetailModal] Error al cancelar cuenta:", error);
+            logError("[TakeoutDetailModal] Error al cancelar cuenta", error, { action: "cancelCuenta" });
             toast.error(
                 "No se pudo cancelar la cuenta. Verifique la conexión e intente de nuevo.",
                 { duration: 5000 },
@@ -341,7 +342,7 @@ export const useTakeoutDetail = ({
             );
             onClose();
         } catch (error) {
-            console.error("[TakeoutDetailModal] Error al dividir cuenta:", error);
+            logError("[TakeoutDetailModal] Error al dividir cuenta", error, { action: "splitAccount" });
             toast.error(
                 "No se pudo dividir la cuenta. Verifique la conexión e intente de nuevo.",
                 { duration: 5000 },
@@ -380,7 +381,7 @@ export const useTakeoutDetail = ({
             toast.success("Orden cancelada correctamente", { icon: "🚫" });
             onClose();
         } catch (error) {
-            console.error("[TakeoutDetailModal] Error al cancelar orden:", error);
+            logError("[TakeoutDetailModal] Error al cancelar orden", error, { action: "cancelOrder" });
             toast.error(
                 "No se pudo cancelar la orden. Verifique la conexión e intente de nuevo.",
                 { duration: 5000 },
@@ -523,7 +524,7 @@ export const useTakeoutDetail = ({
             exitEditMode();
             onClose();
         } catch (error) {
-            console.error('[TakeoutDetail] Error al confirmar edición:', error);
+            logError("[TakeoutDetail] Error al confirmar edición", error, { action: "confirmEdit" });
             toast.error('No se pudo actualizar la orden.');
         } finally {
             setIsProcessing(false);
