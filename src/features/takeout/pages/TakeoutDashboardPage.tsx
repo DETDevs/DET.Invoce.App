@@ -181,7 +181,7 @@ export const TakeoutDashboardPage = () => {
             </p>
           </div>
           <button
-            onClick={refetch}
+            onClick={() => refetch()}
             disabled={loading}
             className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors active:scale-95 disabled:opacity-60"
           >
