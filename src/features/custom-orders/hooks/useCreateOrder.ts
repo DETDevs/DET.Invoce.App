@@ -6,6 +6,7 @@ import type { CreateOrderFormData } from "@/features/custom-orders/types";
 import type { OrderItem, ProductOption } from "@/shared/types";
 import { useOrdersStore } from "../store/useOrdersStore";
 import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
+import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 
@@ -129,6 +130,29 @@ export const useCreateOrder = () => {
       };
 
       await reservationOrderApi.save(payload);
+
+      // Registrar abono como movimiento de caja
+      if (deposit > 0 && session?.cashRegisterId) {
+        try {
+          const types = await cashRegisterApi.getMovementType();
+          const inType = types.find((t) => t.flow === "IN" && t.isActive);
+          if (inType) {
+            await cashRegisterApi.saveMovement({
+              cashMovementId: 0,
+              cashRegisterId: 0,
+              cashMovementTypeId: inType.cashMovementTypeId,
+              amount: deposit,
+              description: `Abono pedido ${formData.customerName || "S/N"}`,
+              createdBy: user?.name || "Sistema",
+              flow: "IN",
+              createdDate: new Date().toISOString(),
+            });
+          }
+        } catch (movErr) {
+          console.warn("[useCreateOrder] No se pudo registrar abono como movimiento de caja", movErr);
+        }
+      }
+
       await useOrdersStore.getState().fetchOrders();
       toast.success("Pedido guardado correctamente");
       navigate("/tablero");

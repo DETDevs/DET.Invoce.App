@@ -48,7 +48,7 @@ interface OrdersState {
     fetchOrders: () => Promise<void>;
     addOrder: (order: Order) => void;
     updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
-    registerPayment: (orderId: string, amount: number) => void;
+    registerPayment: (orderId: string, amount: number) => Promise<void>;
     removeOrder: (orderId: string) => void;
     setOrders: (orders: Order[]) => void;
 }
@@ -173,17 +173,34 @@ export const useOrdersStore = create<OrdersState>()(
             }
         },
 
-        registerPayment: (orderId, amount) =>
+        registerPayment: async (orderId, amount) => {
+            const order = get().orders.find((o) => o.id === orderId);
             set((state) => ({
-                orders: state.orders.map((order) => {
-                    if (order.id !== orderId) return order;
-                    const newDeposit = Number(order.deposit) + Number(amount);
-                    let newPaymentStatus: PaymentStatus = order.paymentStatus;
-                    if (newDeposit >= Number(order.total)) newPaymentStatus = 'Pagado';
+                orders: state.orders.map((o) => {
+                    if (o.id !== orderId) return o;
+                    const newDeposit = Number(o.deposit) + Number(amount);
+                    let newPaymentStatus: PaymentStatus = o.paymentStatus;
+                    if (newDeposit >= Number(o.total)) newPaymentStatus = 'Pagado';
                     else if (newDeposit > 0) newPaymentStatus = 'Abonado';
-                    return { ...order, deposit: newDeposit, paymentStatus: newPaymentStatus };
+                    return { ...o, deposit: newDeposit, paymentStatus: newPaymentStatus };
                 }),
-            })),
+            }));
+
+            // Persistir el deposit actualizado en el backend
+            if (order?.reservationOrderId) {
+                try {
+                    const newDeposit = Number(order.deposit) + Number(amount);
+                    await reservationOrderApi.save({
+                        reservationOrderId: order.reservationOrderId,
+                        deposit: newDeposit,
+                        total: order.total,
+                        orderDate: order.dueDate || new Date().toISOString(),
+                    });
+                } catch (err) {
+                    logError('[useOrdersStore] Error al persistir abono', err, { action: 'registerPayment' });
+                }
+            }
+        },
     })
 );
 

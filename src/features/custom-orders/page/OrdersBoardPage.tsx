@@ -7,6 +7,7 @@ import toast, { Toaster } from "react-hot-toast";
 
 import invoiceApi from "@/api/invoice/InvoiceAPI";
 import reservationOrderApi from "@/api/reservation-order/ReservationOrderAPI";
+import cashRegisterApi from "@/api/cash-register/CashRegisterAPI";
 import thermalTicketAPI from "@/api/thermal-ticket/ThermalTicketAPI";
 import { printThermalTicket } from "@/services/printService";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
@@ -15,6 +16,7 @@ import { KanbanColumn } from "@/features/custom-orders/components/KanbanColumn";
 import { OrderDetailsModal } from "@/features/custom-orders/components/OrderDetailsModal";
 import { type Order, type OrderStatus } from "@/shared/types";
 import { useOrdersStore } from "@/features/custom-orders/store/useOrdersStore";
+import { useCashBox } from "@/features/settings/pages/CashBoxContext";
 
 export const OrdersBoardPage = () => {
   const { orders, onDragEnd, moveOrder, registerPayment, removeOrder } =
@@ -31,6 +33,7 @@ export const OrdersBoardPage = () => {
   const [isInvoicing, setIsInvoicing] = useState(false);
 
   const { user } = useAuthStore();
+  const { session } = useCashBox();
   const readOnly = !["admin", "cajero"].includes(user?.role || "");
 
   const handleCardClick = (order: Order) => {
@@ -45,10 +48,33 @@ export const OrdersBoardPage = () => {
     toast.success("Estado del pedido actualizado");
   };
 
-  const handlePayment = (orderId: string, amount: number) => {
+  const handlePayment = async (orderId: string, amount: number) => {
     if (readOnly) return;
     registerPayment(orderId, amount);
     toast.success(`Pago de C$ ${amount} registrado`);
+
+    // Registrar abono como movimiento de caja
+    if (session?.cashRegisterId) {
+      try {
+        const order = orders.find((o) => o.id === orderId);
+        const types = await cashRegisterApi.getMovementType();
+        const inType = types.find((t) => t.flow === "IN" && t.isActive);
+        if (inType) {
+          await cashRegisterApi.saveMovement({
+            cashMovementId: 0,
+            cashRegisterId: 0,
+            cashMovementTypeId: inType.cashMovementTypeId,
+            amount,
+            description: `Abono pedido ${order?.customer || orderId}`,
+            createdBy: user?.name || "Sistema",
+            flow: "IN",
+            createdDate: new Date().toISOString(),
+          });
+        }
+      } catch (err) {
+        console.warn("[handlePayment] No se pudo registrar abono en caja", err);
+      }
+    }
 
     setSelectedOrder((prev) => {
       if (!prev) return null;
@@ -83,7 +109,7 @@ export const OrdersBoardPage = () => {
       const response = await invoiceApi.saveFromReservationOrder({
         reservationOrderId: order.reservationOrderId ?? 0,
         paymentmethod: paymentMethod,
-        amountPaid: remaining > 0 ? remaining : order.total,
+        amountPaid: remaining > 0 ? remaining : 0,
       });
 
       const invoiceNumber =
