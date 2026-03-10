@@ -66,6 +66,55 @@ function clearAuthAndRedirect() {
     }
 }
 
+// ── Proactive token refresh ──────────────────────────────────────────
+// Refreshes the JWT 5 minutes before it expires to prevent 401 errors
+// during long tablet sessions.
+
+function getTokenExpiryMs(token: string): number | null {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp) return payload.exp * 1000;
+    } catch { /* malformed token */ }
+    return null;
+}
+
+let proactiveRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleProactiveRefresh() {
+    if (proactiveRefreshTimer) clearTimeout(proactiveRefreshTimer);
+
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    const expiryMs = getTokenExpiryMs(token);
+    if (!expiryMs) return;
+
+    const REFRESH_MARGIN_MS = 5 * 60 * 1000; // 5 minutes before expiry
+    const msUntilRefresh = expiryMs - Date.now() - REFRESH_MARGIN_MS;
+
+    if (msUntilRefresh <= 0) {
+        // Already close to expiry — refresh now
+        refreshTokenIfNeeded().then((newToken) => {
+            if (newToken) scheduleProactiveRefresh();
+        });
+        return;
+    }
+
+    proactiveRefreshTimer = setTimeout(async () => {
+        const newToken = await refreshTokenIfNeeded();
+        if (newToken) {
+            scheduleProactiveRefresh(); // Reschedule for the new token
+        }
+    }, msUntilRefresh);
+}
+
+// Start proactive scheduling on load, and re-check on focus/online
+if (typeof window !== 'undefined') {
+    scheduleProactiveRefresh();
+    window.addEventListener('focus', () => scheduleProactiveRefresh());
+    window.addEventListener('online', () => scheduleProactiveRefresh());
+}
+
 async function apiCall<T>(url: string, options: RequestInit): Promise<T> {
     if (!url.startsWith('http')) {
         url = `${environments.BASE_API_URI}${url.startsWith('/') ? url : `/${url}`}`;

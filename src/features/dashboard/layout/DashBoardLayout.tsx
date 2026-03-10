@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "@/features/dashboard/components/SideBar";
 import { SidebarProvider, useSidebar } from "@/shared/context/SidebarContext";
+import { NetworkStatusBar } from "@/shared/ui/NetworkStatusBar";
 
 const LayoutContent = () => {
   const { isCollapsed } = useSidebar();
@@ -13,6 +14,7 @@ const LayoutContent = () => {
           isCollapsed ? "ml-0 lg:ml-[72px]" : "ml-0 lg:ml-64"
         }`}
       >
+        <NetworkStatusBar />
         <Outlet />
       </main>
     </div>
