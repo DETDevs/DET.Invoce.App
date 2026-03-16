@@ -50,6 +50,7 @@ export interface CashCloseReportData {
     cashInTotal: number;
     cashOutTotal: number;
     returnsTotal: number;
+    depositsTotal: number;
     expectedTotal: number;
     invoiceCount: number;
     returnsCount: number;

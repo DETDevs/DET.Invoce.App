@@ -148,6 +148,24 @@ export const PrintableReceipt = ({
             + {fmtCompact(data.cashInTotal)}
           </td>
         </tr>
+        {data.depositsTotal > 0 && (
+          <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+            <td style={{ padding: "6px 0", color: "#666", fontSize: "12px" }}>
+              Abonos Pedidos
+            </td>
+            <td
+              style={{
+                padding: "6px 0",
+                textAlign: "right",
+                fontWeight: 600,
+                color: "#d97706",
+                fontSize: "12px",
+              }}
+            >
+              + {fmtCompact(data.depositsTotal)}
+            </td>
+          </tr>
+        )}
         <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
           <td style={{ padding: "6px 0", color: "#666", fontSize: "12px" }}>
             Egresos

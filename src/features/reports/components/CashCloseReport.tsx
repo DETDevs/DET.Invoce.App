@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Landmark,
@@ -9,6 +9,7 @@ import {
   Wallet,
   Copy,
   Download,
+  Receipt,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { KPICard } from "./KPICard";
@@ -64,6 +65,7 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
       ``,
       `Fondo Inicial:      ${fmt(data.initialAmount)}`,
       `Ventas del Día:     ${fmt(data.salesTotal)} (${data.invoiceCount} facturas)`,
+      `Abonos Pedidos:     ${fmt(data.depositsTotal)}`,
       `Otros Ingresos:     ${fmt(data.cashInTotal)}`,
       `Egresos:            ${fmt(data.cashOutTotal)}`,
       `Devoluciones:       ${fmt(data.returnsTotal)} (${data.returnsCount})`,
@@ -185,6 +187,15 @@ export const CashCloseReport = ({ data }: CashCloseReportProps) => {
             color="green"
             tooltip="Movimientos manuales de entrada de efectivo."
           />
+          {data.depositsTotal > 0 && (
+            <KPICard
+              title="Abonos Pedidos"
+              value={fmtCompact(data.depositsTotal)}
+              icon={Receipt}
+              color="amber"
+              tooltip="Abonos de pedidos personalizados pendientes de facturar. Ya está contabilizado en el total esperado."
+            />
+          )}
           <KPICard
             title="Egresos"
             value={fmtCompact(data.cashOutTotal)}

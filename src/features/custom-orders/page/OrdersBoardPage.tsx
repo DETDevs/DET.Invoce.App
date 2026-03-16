@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { logError } from "@/shared/utils/logError";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useNavigate } from "react-router-dom";
@@ -53,12 +53,13 @@ export const OrdersBoardPage = () => {
     registerPayment(orderId, amount);
     toast.success(`Pago de C$ ${amount} registrado`);
 
-    // Registrar abono como movimiento de caja
+    // Registrar abono como movimiento de caja (el dinero entra físicamente)
     if (session?.cashRegisterId) {
       try {
         const order = orders.find((o) => o.id === orderId);
         const types = await cashRegisterApi.getMovementType();
-        const inType = types.find((t) => t.flow === "IN" && t.isActive);
+        const SYSTEM_TYPE_IDS = [1]; // Tipo "Venta" — excluir
+        const inType = types.find((t) => t.flow === "IN" && t.isActive && !SYSTEM_TYPE_IDS.includes(t.cashMovementTypeId));
         if (inType) {
           await cashRegisterApi.saveMovement({
             cashMovementId: 0,
@@ -109,7 +110,7 @@ export const OrdersBoardPage = () => {
       const response = await invoiceApi.saveFromReservationOrder({
         reservationOrderId: order.reservationOrderId ?? 0,
         paymentmethod: paymentMethod,
-        amountPaid: remaining > 0 ? remaining : 0,
+        amountPaid: remaining > 0 ? remaining : order.total,
       });
 
       const invoiceNumber =

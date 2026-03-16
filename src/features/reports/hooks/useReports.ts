@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { logError } from "@/shared/utils/logError";
 import type { ReportType, DateRangeType, SalesReportData, ProductsReportData, CashFlowReportData, OrdersReportData, ReservationsReportData, CashCloseReportData } from "@/features/reports/types";
 import reportApi from "@/api/report/ReportAPI";
@@ -128,7 +128,7 @@ export const useReports = () => {
     const [reservationsReport, setReservationsReport] = useState<ReservationsReportData>(emptyReservationsReport);
     const [cashCloseReport, setCashCloseReport] = useState<CashCloseReportData>({
         initialAmount: 0, salesTotal: 0, cashInTotal: 0, cashOutTotal: 0,
-        returnsTotal: 0, expectedTotal: 0, invoiceCount: 0, returnsCount: 0,
+        returnsTotal: 0, depositsTotal: 0, expectedTotal: 0, invoiceCount: 0, returnsCount: 0,
         paymentBreakdown: [], movementLines: [],
     });
 
@@ -394,24 +394,19 @@ export const useReports = () => {
         if (!session?.isOpen) {
             setCashCloseReport({
                 initialAmount: 0, salesTotal: 0, cashInTotal: 0, cashOutTotal: 0,
-                returnsTotal: 0, expectedTotal: 0, invoiceCount: 0, returnsCount: 0,
+                returnsTotal: 0, depositsTotal: 0, expectedTotal: 0, invoiceCount: 0, returnsCount: 0,
                 paymentBreakdown: [], movementLines: [],
             });
             return;
         }
         try {
-            const [totalSalesRes, totalInRes, totalOutRes, movementsRes, movementTypesRes, invoicesRes] = await Promise.all([
-                reportApi.getTotalSales({ dateFrom, dateTo, cashRegisterId }),
-                reportApi.getTotalCashIncome({ dateFrom, dateTo, cashRegisterId }),
-                reportApi.getTotalCashOut({ dateFrom, dateTo, cashRegisterId }),
+            const [movementsRes, movementTypesRes, invoicesRes, reservationsRes] = await Promise.all([
                 cashRegisterApi.getMovement({ cashRegisterId: cashRegisterId ?? null }),
                 cashRegisterApi.getMovementType(),
                 invoiceApi.getAll(cashRegisterId),
+                reservationOrderApi.getAll(cashRegisterId),
             ]);
 
-            const salesTotal = totalSalesRes?.totalSales || 0;
-            const cashInTotal = totalInRes?.manualIncome || 0;
-            const cashOutTotal = totalOutRes?.totalCashOut || 0;
             const initialAmount = session?.initialAmount ?? 0;
 
             const types = Array.isArray(movementTypesRes) ? movementTypesRes : [];
@@ -421,6 +416,52 @@ export const useReports = () => {
                 const to = new Date(dateTo);
                 return md >= from && md <= to;
             });
+
+            // Helper para calcular total de factura (misma lógica que mapBackendInvoice en useInvoices)
+            const getInvoiceTotal = (inv: any): number => {
+                if (inv.total != null && inv.total > 0) return inv.total;
+                const details = Array.isArray(inv.details) ? inv.details : [];
+                return details.reduce((s: number, d: any) => s + (d.unitPrice ?? 0) * (d.quantity ?? 1), 0);
+            };
+
+            // Filtrar facturas completadas en el rango de fechas
+            const rawInvoices = Array.isArray(invoicesRes) ? invoicesRes : [];
+            const fromDate = new Date(dateFrom);
+            const toDate = new Date(dateTo);
+            const completedInvoices = rawInvoices.filter(
+                (inv: any) => {
+                    if (inv.status !== "PAID" && inv.status !== "completed") return false;
+                    const invDate = new Date(inv.invoiceDate ?? inv.createdAt);
+                    return invDate >= fromDate && invDate <= toDate;
+                }
+            );
+
+            // Crear mapa de depósitos por ID de pedido para cruzar con facturas
+            const rawReservations = Array.isArray(reservationsRes) ? reservationsRes : [];
+            const depositMap = new Map<number, number>();
+            rawReservations.forEach((res: any) => {
+                if (res.reservationOrderId && res.deposit > 0) {
+                    depositMap.set(res.reservationOrderId, res.deposit);
+                }
+            });
+
+            // salesTotal: para facturas de pedidos (reservationOrderId), restar el depósito
+            // porque ese dinero ya entró como movimiento de caja (Otros Ingresos)
+            const salesTotal = completedInvoices.reduce((sum: number, inv: any) => {
+                const invoiceTotal = getInvoiceTotal(inv);
+                const resId = inv.reservationOrderId;
+                if (resId && depositMap.has(resId)) {
+                    const deposit = depositMap.get(resId) || 0;
+                    return sum + Math.max(invoiceTotal - deposit, 0);
+                }
+                return sum + invoiceTotal;
+            }, 0);
+
+            // Calcular movimientos cash-in y cash-out desde los movimientos (client-side)
+            const SYSTEM_TYPE_IDS = [1]; // Tipo "Venta" generado por sistema
+            const manualMovements = movements.filter(m => !SYSTEM_TYPE_IDS.includes(m.cashMovementTypeId));
+            const cashInTotal = manualMovements.filter(m => m.flow === "IN").reduce((sum, m) => sum + m.amount, 0);
+            const cashOutTotal = manualMovements.filter(m => m.flow === "OUT").reduce((sum, m) => sum + m.amount, 0);
 
             const movementLines = movements.map(m => {
                 const t = types.find(x => x.cashMovementTypeId === m.cashMovementTypeId);
@@ -439,24 +480,14 @@ export const useReports = () => {
 
             const returnsTotal = movementLines.filter(m => m.type === "devolucion").reduce((acc, m) => acc + m.amount, 0);
             const returnsCount = movementLines.filter(m => m.type === "devolucion").length;
+
+            const depositsTotal = 0; // Los abonos ahora se registran como movimientos de caja (cashInTotal)
             const expectedTotal = initialAmount + salesTotal + cashInTotal - cashOutTotal;
-
-
-            const rawInvoices = Array.isArray(invoicesRes) ? invoicesRes : [];
-            const fromDate = new Date(dateFrom);
-            const toDate = new Date(dateTo);
-            const completedInvoices = rawInvoices.filter(
-                (inv: any) => {
-                    if (inv.status !== "PAID" && inv.status !== "completed") return false;
-                    const invDate = new Date(inv.invoiceDate ?? inv.createdAt);
-                    return invDate >= fromDate && invDate <= toDate;
-                }
-            );
 
             const paymentMap = new Map<string, { amount: number; count: number }>();
             completedInvoices.forEach((inv: any) => {
                 const method = inv.paymentmethod || inv.paymentMethod || "CASH";
-                const total = inv.total ?? (inv.details ?? []).reduce((s: number, d: any) => s + (d.unitPrice ?? 0) * (d.quantity ?? 1), 0);
+                const total = getInvoiceTotal(inv);
                 const current = paymentMap.get(method) || { amount: 0, count: 0 };
                 paymentMap.set(method, {
                     amount: current.amount + total,
@@ -473,6 +504,7 @@ export const useReports = () => {
                 cashInTotal,
                 cashOutTotal,
                 returnsTotal,
+                depositsTotal,
                 expectedTotal,
                 invoiceCount: completedInvoices.length,
                 returnsCount,
@@ -497,7 +529,7 @@ export const useReports = () => {
             setReservationsReport(emptyReservationsReport);
             setCashCloseReport({
                 initialAmount: 0, salesTotal: 0, cashInTotal: 0, cashOutTotal: 0,
-                returnsTotal: 0, expectedTotal: 0, invoiceCount: 0, returnsCount: 0,
+                returnsTotal: 0, depositsTotal: 0, expectedTotal: 0, invoiceCount: 0, returnsCount: 0,
                 paymentBreakdown: [], movementLines: [],
             });
             setIsLoading(false);

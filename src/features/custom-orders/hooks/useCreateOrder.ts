@@ -131,11 +131,12 @@ export const useCreateOrder = () => {
 
       await reservationOrderApi.save(payload);
 
-      // Registrar abono como movimiento de caja
+      // Registrar abono como movimiento de caja (el dinero entra físicamente)
       if (deposit > 0 && session?.cashRegisterId) {
         try {
           const types = await cashRegisterApi.getMovementType();
-          const inType = types.find((t) => t.flow === "IN" && t.isActive);
+          const SYSTEM_TYPE_IDS = [1]; // Tipo "Venta" — excluir
+          const inType = types.find((t) => t.flow === "IN" && t.isActive && !SYSTEM_TYPE_IDS.includes(t.cashMovementTypeId));
           if (inType) {
             await cashRegisterApi.saveMovement({
               cashMovementId: 0,
