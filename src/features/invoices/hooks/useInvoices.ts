@@ -161,10 +161,10 @@ export const useInvoices = () => {
     const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
 
     const summary = useMemo(() => {
-        const totalSales = filteredInvoices.reduce((sum, inv) => sum + inv.total, 0);
-        const totalReturned = filteredInvoices.reduce((sum, inv) => {
-            return sum + (inv.returns?.reduce((r, ret) => r + ret.totalReturned, 0) ?? 0);
-        }, 0);
+        const completedInvoices = filteredInvoices.filter(inv => inv.status === "completed");
+        const returnedInvoices = filteredInvoices.filter(inv => inv.status === "returned");
+        const totalSales = completedInvoices.reduce((sum, inv) => sum + inv.total, 0);
+        const totalReturned = returnedInvoices.reduce((sum, inv) => sum + inv.total, 0);
         return {
             totalInvoices: filteredInvoices.length,
             totalSales,

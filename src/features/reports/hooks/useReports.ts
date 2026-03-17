@@ -478,8 +478,17 @@ export const useReports = () => {
                 };
             });
 
-            const returnsTotal = movementLines.filter(m => m.type === "devolucion").reduce((acc, m) => acc + m.amount, 0);
-            const returnsCount = movementLines.filter(m => m.type === "devolucion").length;
+            // Devoluciones: sumar tanto de movimientos como de facturas con status REFUND
+            const refundedInvoices = rawInvoices.filter((inv: any) => {
+                if (inv.status !== "REFUND" && inv.status !== "returned") return false;
+                const invDate = new Date(inv.invoiceDate ?? inv.createdAt);
+                return invDate >= fromDate && invDate <= toDate;
+            });
+            const invoiceReturnsTotal = refundedInvoices.reduce((sum: number, inv: any) => sum + getInvoiceTotal(inv), 0);
+            const movementReturnsTotal = movementLines.filter(m => m.type === "devolucion").reduce((acc, m) => acc + m.amount, 0);
+            // Usar el mayor de los dos para no duplicar (backend puede registrar ambos)
+            const returnsTotal = Math.max(invoiceReturnsTotal, movementReturnsTotal);
+            const returnsCount = refundedInvoices.length + movementLines.filter(m => m.type === "devolucion").length;
 
             const depositsTotal = 0; // Los abonos ahora se registran como movimientos de caja (cashInTotal)
             const expectedTotal = initialAmount + salesTotal + cashInTotal - cashOutTotal;
